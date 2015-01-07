@@ -16,10 +16,13 @@ import play.api.Logger
 import play.api.Play.current
 import play.modules.reactivemongo.json.collection.JSONCollection
 import play.modules.reactivemongo.ReactiveMongoPlugin
+import com.tegonal.play.json.TypedId.BaseId
+import models.BaseEntity
+import play.api.libs.json.Json.JsValueWrapper
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
-trait BaseDAO[T] {
+trait BaseDAO[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def coll: JSONCollection
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]]
@@ -39,9 +42,13 @@ trait BaseDAO[T] {
   def findIds(sel: JsObject): Future[Seq[BSONObjectID]]
 
   def aggregate(pipelineOps: Seq[PipelineOperator]): Future[Stream[BSONDocument]]
+
+  def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
+
+  def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
-abstract class BaseReactiveMongoDAO[T](implicit ctx: ExecutionContext, format: Format[T]) extends BaseDAO[T] {
+abstract class BaseReactiveMongoDAO[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) extends BaseDAO[T, ID] {
 
   lazy val db = ReactiveMongoPlugin.db
 
@@ -114,5 +121,16 @@ abstract class BaseReactiveMongoDAO[T](implicit ctx: ExecutionContext, format: F
   def aggregate(pipelineOps: Seq[PipelineOperator]): Future[Stream[BSONDocument]] = {
     val cmd = Aggregate(coll.name, pipelineOps)
     coll.db.command(cmd)
+  }
+
+  def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]] = {
+    val sel = Json.obj("id" -> fact(id))
+    find(sel) map (_.headOption.map(_._1))
+  }
+
+  def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError] = {
+    val selector = Json.obj("id" -> fact(obj.id))
+    val modifier = Json.obj("$set" -> obj)
+    coll.update(selector, modifier)
   }
 }

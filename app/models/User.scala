@@ -1,5 +1,6 @@
 package models
 
+import models.BaseFormat._
 import play.api.libs.json.Json
 import com.tegonal.play.json.TypedId._
 import play.api.libs.json._
@@ -14,7 +15,7 @@ case class User(
   id: UserId,
   firstName: String,
   lastName: String,
-  active: Boolean)
+  active: Boolean) extends BaseEntity[UserId]
 
 object User {
   implicit val userFormat = Json.format[User]
