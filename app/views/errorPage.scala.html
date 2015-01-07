@@ -1,0 +1,24 @@
+@(ex: Throwable)(implicit lang: Lang)
+
+@import java.io.{StringWriter, PrintWriter}
+
+<!DOCTYPE html>
+<html>
+<body>
+	<div class="jumbotron">
+		<h1>@ex</h1>
+		<p>@ex.getCause.getMessage</p>
+		<button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#demo">
+			Stacktrace
+		</button>
+		<div id="demo" class="collapse">
+			<pre>@{
+				val sw = new StringWriter()
+				ex.printStackTrace(new PrintWriter(sw))
+				sw.toString
+				}
+			</pre>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+object InitialData {
+  def init() = {
+
+  }
+}
