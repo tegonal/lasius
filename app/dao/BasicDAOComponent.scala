@@ -2,12 +2,10 @@ package dao
 
 trait BasicDAOComponent {
   val userDAO: UserDAO
-  val projectDAO: ProjectDAO
-  val categoryDAO: CategoryDAO
+  val structureDAO: StructureDAO
 }
 
 trait MongoBasicDAOComponent extends BasicDAOComponent {
   val userDAO = new UserMongoDAO
-  val projectDAO = new ProjectMongoDAO
-  val categoryDAO = new CategoryMongoDAO
+  val structureDAO = new StructureMongoDAO
 }

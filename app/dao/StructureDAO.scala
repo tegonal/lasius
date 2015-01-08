@@ -7,9 +7,9 @@ import play.modules.reactivemongo.json.BSONFormats._
 import play.api.libs.json._
 import models._
 
-trait ProjectDAO extends BaseDAO[Project, ProjectId] {
+trait StructureDAO extends BaseDAO[Category, CategoryId] {
 }
 
-class ProjectMongoDAO extends BaseReactiveMongoDAO[Project, ProjectId] with ProjectDAO {
-  def coll = db.collection[JSONCollection]("Project")
+class StructureMongoDAO extends BaseReactiveMongoDAO[Category, CategoryId] with StructureDAO {
+  def coll = db.collection[JSONCollection]("Category")
 }
