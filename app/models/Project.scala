@@ -11,7 +11,7 @@ object ProjectId {
   implicit val idFormat: Format[ProjectId] = Json.idformat[ProjectId](ProjectId.apply _)
 }
 
-case class Project(id: ProjectId)
+case class Project(id: ProjectId) extends BaseEntity[ProjectId]
 
 object Project {
   implicit val projectFormat: Format[Project] = Json.format[Project]

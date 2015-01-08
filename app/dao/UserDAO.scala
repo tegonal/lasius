@@ -11,14 +11,6 @@ import reactivemongo.core.commands.LastError
 import models.UserId
 import play.api.libs.json.Json.JsValueWrapper
 
-trait UserDAOComponent {
-  val userDAO: UserDAO
-}
-
-trait MongoUserDAOComponent extends UserDAOComponent {
-  val userDAO = new UserMongoDAO
-}
-
 trait UserDAO extends BaseDAO[User, UserId] {
 }
 

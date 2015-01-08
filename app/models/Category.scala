@@ -11,7 +11,7 @@ object CategoryId {
   implicit val idFormat: Format[CategoryId] = Json.idformat[CategoryId](CategoryId.apply _)
 }
 
-case class Category(id: CategoryId)
+case class Category(id: CategoryId) extends BaseEntity[CategoryId]
 
 object Category {
   implicit val categoryFormat: Format[Category] = Json.format[Category]
