@@ -1,9 +1,8 @@
 package models
 
-import models.BaseFormat._
-import play.api.libs.json.Json
-import com.tegonal.play.json.TypedId._
+import com.tegonal.play.json._
 import play.api.libs.json._
+import com.tegonal.play.json.TypedId._
 
 case class UserId(value: String) extends StringBaseId
 

@@ -1,6 +1,7 @@
 package models
 
 import reactivemongo.bson.BSONObjectID
+
 import com.tegonal.play.json._
 import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
