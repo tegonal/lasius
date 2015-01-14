@@ -1,4 +1,4 @@
-package dao
+package repositories
 
 import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.bson.BSONObjectID
@@ -22,7 +22,7 @@ import play.api.libs.json.Json.JsValueWrapper
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
-trait BaseDAO[T <: BaseEntity[ID], ID <: BaseId[_]] {
+trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def coll: JSONCollection
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]]
@@ -48,7 +48,7 @@ trait BaseDAO[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
-abstract class BaseReactiveMongoDAO[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) extends BaseDAO[T, ID] {
+abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) extends BaseRepository[T, ID] {
 
   lazy val db = ReactiveMongoPlugin.db
 

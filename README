@@ -8,3 +8,4 @@ The second goal of Lasius is to combine several different kind of techniques/arc
 used in their main scope:
 - Eventsourcing -> All time booking operations
 - BigPipe -> Integrate various content into dashboard page in one single request using chunked http transmition
+- TypedId -> Use typed id as primary and foreign keys, use implicit convertion wherever possible

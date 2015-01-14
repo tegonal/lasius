@@ -1,4 +1,4 @@
-package dao
+package repositories
 
 import models.User
 import play.api.libs.concurrent.Execution.Implicits._
@@ -11,9 +11,9 @@ import reactivemongo.core.commands.LastError
 import models.UserId
 import play.api.libs.json.Json.JsValueWrapper
 
-trait UserDAO extends BaseDAO[User, UserId] {
+trait UserRepository extends BaseRepository[User, UserId] {
 }
 
-class UserMongoDAO extends BaseReactiveMongoDAO[User, UserId] with UserDAO {
+class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with UserRepository {
   def coll = db.collection[JSONCollection]("User")
 }

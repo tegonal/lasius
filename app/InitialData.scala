@@ -1,19 +1,19 @@
-import dao.MongoBasicDAOComponent
 import play.api.Logger
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
+import repositories._
 
-object InitialData extends MongoBasicDAOComponent {
+object InitialData extends MongoBasicRepositoryComponent {
   def init() = {
     Logger.debug("Initialize user data...")
-    userDAO.coll.drop map { r =>
+    userRepository.coll.drop map { r =>
       initializeUsers()
     } recoverWith {
       case t => initializeUsers()
     }
 
     Logger.debug("Initialize project data...")
-    structureDAO.coll.drop map { r =>
+    structureRepository.coll.drop map { r =>
       initializeStructure()
     } recoverWith {
       case t => initializeStructure()
@@ -21,11 +21,11 @@ object InitialData extends MongoBasicDAOComponent {
   }
 
   def initializeUsers() = {
-    userDAO.insert(User(UserId("noob"), "Demo", "User", true))
+    userRepository.insert(User(UserId("noob"), "Demo", "User", true))
   }
 
   def initializeStructure() = {
-    structureDAO.insert(Category(CategoryId("Projects"),
+    structureRepository.insert(Category(CategoryId("Projects"),
       Seq(Project(ProjectId("Lasius"),
         Seq(Tag(TagId("LS-1")),
           Tag(TagId("LS-2")))),
@@ -35,7 +35,7 @@ object InitialData extends MongoBasicDAOComponent {
         Project(ProjectId("Apus"),
           Seq(Tag(TagId("AP-1")),
             Tag(TagId("AP-2")))))))
-    structureDAO.insert(Category(CategoryId("Administration"),
+    structureRepository.insert(Category(CategoryId("Administration"),
       Seq(Project(ProjectId("Marketing"),
         Seq(Tag(TagId("Sales")),
           Tag(TagId("Cold Aquisition")))),
