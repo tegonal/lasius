@@ -3,21 +3,22 @@ package services
 import akka.actor.ActorLogging
 import akka.actor.Actor
 import akka.actor.ActorRef
-import domain.UserBookingAggregate
+import domain.UserTimeBookingAggregate
 import akka.actor.Terminated
 import models.UserId
 import models.ProjectId
 import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props
-import domain.UserBookingAggregate.UserBookingCommand
 
-object BookingManagerService {
+object TimeBookingManagerService {
 
-  def props: Props = Props(new BookingManagerService)
+  def props: Props = Props(new TimeBookingManagerService)
 }
 
-class BookingManagerService extends Actor with ActorLogging {
+class TimeBookingManagerService extends Actor with ActorLogging {
+
+  import domain.UserTimeBookingAggregate._
 
   /**
    * Implicit convertion from userid object model to string based representation used in akka system
@@ -34,7 +35,7 @@ class BookingManagerService extends Actor with ActorLogging {
    * @param aggregateId Aggregate id
    * @param command Command that should be passed to aggregate
    */
-  def processAggregateCommand(aggregateId: UserId, command: UserBookingCommand) = {
+  def processAggregateCommand(aggregateId: UserId, command: UserTimeBookingCommand) = {
     val maybeChild = context child aggregateId
     maybeChild match {
       case Some(child) =>
@@ -46,7 +47,7 @@ class BookingManagerService extends Actor with ActorLogging {
   }
 
   def processCommand: Receive = {
-    case cmd: UserBookingCommand =>
+    case cmd: UserTimeBookingCommand =>
       processAggregateCommand(cmd.userId, cmd)
   }
 
@@ -58,5 +59,5 @@ class BookingManagerService extends Actor with ActorLogging {
     agg
   }
 
-  def aggregateProps(id: UserId) = UserBookingAggregate.props(id)
+  def aggregateProps(id: UserId) = UserTimeBookingAggregate.props(id)
 }
