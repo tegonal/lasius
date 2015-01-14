@@ -1,0 +1,42 @@
+package domain
+
+import akka.persistence._
+import akka.actor._
+
+object AggregateRoot {
+  trait State
+  trait Command
+  trait Event
+
+  case object Removed extends State
+}
+
+trait AggregateRoot extends PersistentActor with ActorLogging {
+
+  import AggregateRoot._
+  var state: State
+
+  def updateState(evt: Event): Unit
+  def restoreFromSnapshot(metadata: SnapshotMetadata, state: State)
+
+  protected def afterEventPersisted(evt: Event): Unit = {
+    updateState(evt)
+    publish(evt)
+  }
+
+  private def publish(event: Event) =
+    context.system.eventStream.publish(event)
+
+  val receiveCommand: Receive = {
+    case _ =>
+      log.debug("received command")
+  }
+
+  override val receiveRecover: Receive = {
+    case evt: Event =>
+      updateState(evt)
+    case SnapshotOffer(metadata, state: State) =>
+      restoreFromSnapshot(metadata, state)
+      log.debug("recovering aggregate from snapshot")
+  }
+}

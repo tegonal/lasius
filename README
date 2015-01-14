@@ -1,4 +1,10 @@
-This is your new Play application
+Lasius
 =================================
 
-This file will be packaged with your application, when using `activator dist`.
+Lasius is in the style of hamster a simple time booking and tracking platform and aims to provided 
+an easy interface to book your daily work time on different projects/tasks.
+
+The second goal of Lasius is to combine several different kind of techniques/architecture, all of 
+used in their main scope:
+- Eventsourcing -> All time booking operations
+- BigPipe -> Integrate various content into dashboard page in one single request using chunked http transmition

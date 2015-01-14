@@ -7,10 +7,10 @@ import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
 import org.joda.time.DateTime
 
-case class BookingId(value: BSONObjectID) extends BaseBSONObjectId
+case class BookingId(value: String) extends StringBaseId
 
 object BookingId {
-  implicit val idFormat: Format[BookingId] = BaseFormat.idformat[BookingId](BookingId.apply _)
+  implicit val idFormat: Format[BookingId] = Json.idformat[BookingId](BookingId.apply _)
 }
 
 case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId]
