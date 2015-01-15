@@ -30,25 +30,29 @@ class TimeBookingManagerService extends Actor with ActorLogging {
 
   /**
    * Processes aggregate command.
-   * Creates an aggregate (if not already created) and handles commands caching while aggregate is being killed.
+   * oCreates an aggregate (if not already created) and handles commands caching while aggregate is being killed.
    *
    * @param aggregateId Aggregate id
    * @param command Command that should be passed to aggregate
    */
   def processAggregateCommand(aggregateId: UserId, command: UserTimeBookingCommand) = {
     val maybeChild = context child aggregateId
+    log.debug(s"processAgregateCommand -> addregateId:$aggregateId, child:$maybeChild")
     maybeChild match {
       case Some(child) =>
-        child forward command
+        child ! command
       case None =>
         val child = create(aggregateId)
+        log.debug(s"forwardCommand to $child")
         child forward command
     }
   }
 
   def processCommand: Receive = {
     case cmd: UserTimeBookingCommand =>
+      log.debug(s"TimeBookingManagerService -> processCommand:$cmd")
       processAggregateCommand(cmd.userId, cmd)
+    case c => log.debug(s"TimeBookingManagerService -> unknown command:$c")
   }
 
   override def receive = processCommand

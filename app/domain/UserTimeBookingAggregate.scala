@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import akka.actor._
 import akka.persistence._
 import java.util.UUID
+import play.api.Logger
 
 object UserTimeBookingAggregate {
   import AggregateRoot._
@@ -30,13 +31,18 @@ object UserTimeBookingAggregate {
   case class RemoveBooking(userId: UserId, bookingId: BookingId) extends UserTimeBookingCommand
   case class AppendBooking(userId: UserId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
-  def props(userId: UserId): Props = Props(new UserTimeBookingAggregate(userId))
+  def props(userId: UserId): Props = {
+    Logger.debug(s"Create actor:$userId")
+    Props(new UserTimeBookingAggregate(userId))
+  }
 
 }
 
 class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   import UserTimeBookingAggregate._
   import AggregateRoot._
+
+  log.debug(s"UserTimeBookingAggregate: created $userId")
 
   override def persistenceId: String = userId.value
 
@@ -47,33 +53,36 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
    *
    * @param evt Event to apply
    */
-  override def updateState(evt: Event): Unit = evt match {
-    case UserTimeBookingStarted(projectId, tags, start) =>
-      log.debug(s"UserBookingStarted - projectId: $projectId, tags:$tags, start:$start")
-      context.become(created)
-      state = state match {
-        case ub: UserTimeBooking => startUserBooking(ub, projectId, tags, start, None)
-        case _ => state
-      }
-    case UserTimeBookingStopped(bookingId, end) =>
-      log.debug(s"UserBookingStopped - bookingId: $bookingId, end: $end")
-      state = state match {
-        case ub: UserTimeBooking => endUserBooking(ub, bookingId, end)
-        case _ => state
-      }
-    case UserTimeBookingRemoved(bookingId) =>
-      log.debug(s"UserBookingRemoved - bookingId: $bookingId")
-      state = state match {
-        case ub: UserTimeBooking => removeUserBooking(ub, bookingId)
-        case _ => state
-      }
-    case UserTimeBookingAdded(projectId, tags, start, end) =>
-      log.debug(s"UserBookingAdded - project: $projectId, tags: $tags, time: $start - $end")
-      context.become(created)
-      state = state match {
-        case ub: UserTimeBooking => startUserBooking(ub, projectId, tags, start, Some(end))
-        case _ => state
-      }
+  override def updateState(evt: Event): Unit = {
+    log.debug(s"updateStart:$evt")
+    evt match {
+      case UserTimeBookingStarted(projectId, tags, start) =>
+        log.debug(s"UserBookingStarted - projectId: $projectId, tags:$tags, start:$start")
+        context.become(created)
+        state = state match {
+          case ub: UserTimeBooking => startUserBooking(ub, projectId, tags, start, None)
+          case _ => state
+        }
+      case UserTimeBookingStopped(bookingId, end) =>
+        log.debug(s"UserBookingStopped - bookingId: $bookingId, end: $end")
+        state = state match {
+          case ub: UserTimeBooking => endUserBooking(ub, bookingId, end)
+          case _ => state
+        }
+      case UserTimeBookingRemoved(bookingId) =>
+        log.debug(s"UserBookingRemoved - bookingId: $bookingId")
+        state = state match {
+          case ub: UserTimeBooking => removeUserBooking(ub, bookingId)
+          case _ => state
+        }
+      case UserTimeBookingAdded(projectId, tags, start, end) =>
+        log.debug(s"UserBookingAdded - project: $projectId, tags: $tags, time: $start - $end")
+        context.become(created)
+        state = state match {
+          case ub: UserTimeBooking => startUserBooking(ub, projectId, tags, start, Some(end))
+          case _ => state
+        }
+    }
   }
 
   def startUserBooking(ub: UserTimeBooking, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: Option[DateTime]) = {
@@ -104,6 +113,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   val created: Receive = {
     case StartBooking(_, projectId, tags, start) =>
+      log.debug(s"StartBooking -> projectId:$projectId, tags:$tags, start:$start")
       //if another booking is still in progress
       state match {
         case b: UserTimeBooking =>
@@ -112,6 +122,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
       persist(UserTimeBookingStarted(projectId, tags, start))(afterEventPersisted)
     case EndBooking(_, bookingId, end) =>
+      log.debug(s"EndBooking -> bookingId:$bookingId")
       persist(UserTimeBookingStopped(bookingId, end))(afterEventPersisted)
     case RemoveBooking(_, bookingId) =>
       persist(UserTimeBookingRemoved(bookingId))(afterEventPersisted)
@@ -119,10 +130,14 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       persist(UserTimeBookingAdded(bookingId, tags, start, end))(afterEventPersisted)
     case KillAggregate =>
       context.stop(self)
+    case other =>
+      log.debug(s"Received unknown command")
   }
 
   val removed: Receive = {
     case KillAggregate =>
       context.stop(self)
   }
+
+  override val receiveCommand: Receive = created
 }

@@ -7,12 +7,14 @@ import org.joda.time.DateTime
 import play.api.mvc.Action
 import domain.UserTimeBookingAggregate._
 import akka.actor.ActorRef
-import Boot._
+import core.Global._
+import play.api.Logger
 
 class TimeBookingController {
   self: Controller =>
 
   def start(userId: UserId, projectId: ProjectId, tags: Seq[TagId], start: DateTime = DateTime.now()) = Action {
+    Logger.debug(s"TimeBokingController -> start - userId:$userId, projectId: $projectId, tags:$tags, start:$start")
     timeBookingManagerService ! StartBooking(userId, projectId, tags, start)
     Ok
   }

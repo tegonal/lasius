@@ -27,10 +27,10 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
   private def publish(event: Event) =
     context.system.eventStream.publish(event)
 
-  val receiveCommand: Receive = {
-    case _ =>
-      log.debug("received command")
-  }
+  //val receiveCommand: Receive = {
+  //case _ =>
+  //log.debug("received command")
+  //}
 
   override val receiveRecover: Receive = {
     case evt: Event =>

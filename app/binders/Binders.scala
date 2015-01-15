@@ -1,44 +1,46 @@
-import play.api.mvc.PathBindable
-import models._
-import com.tegonal.play.json.TypedId._
-import play.api.mvc.QueryStringBindable
-import org.joda.time.DateTime
-import java.text.SimpleDateFormat
-import org.joda.time.DateTimeZone
-import org.joda.time.format.DateTimeFormat
+package binders
 
-object `package` {
+import org.joda.time.format._
+import org.joda.time._
+import play.api.mvc._
+import com.tegonal.play.json.TypedId._
+import java.text.SimpleDateFormat
+import models._
+
+object Binders {
+
+  val format = "ddmmyyyyHHmm"
 
   implicit def OptionBindable[T: PathBindable] = new PathBindable[Option[T]] {
-    def bind(key: String, value: String): Either[String, Option[T]] =
+    override def bind(key: String, value: String): Either[String, Option[T]] =
       implicitly[PathBindable[T]].
         bind(key, value).
         fold(
           left => Left(left),
           right => Right(Some(right)))
 
-    def unbind(key: String, value: Option[T]): String = value map (_.toString) getOrElse ""
+    override def unbind(key: String, value: Option[T]): String = value map (_.toString) getOrElse ""
   }
 
   implicit def StringBaseIdPathBindable[T <: StringBaseId](implicit stringBinder: PathBindable[String], fact: String => T) = new PathBindable[T] {
 
-    def bind(key: String, value: String): Either[String, T] =
+    override def bind(key: String, value: String): Either[String, T] =
       for {
         id <- stringBinder.bind(key, value).right
       } yield fact(id)
 
-    def unbind(key: String, id: T): String =
+    override def unbind(key: String, id: T): String =
       stringBinder.unbind(key, id.value)
   }
 
   implicit def NumberBaseIdPathBindable[T <: NumberBaseId](implicit numberBinder: PathBindable[Number], fact: Number => T) = new PathBindable[T] {
 
-    def bind(key: String, value: String): Either[String, T] =
+    override def bind(key: String, value: String): Either[String, T] =
       for {
         id <- numberBinder.bind(key, value).right
       } yield fact(id)
 
-    def unbind(key: String, id: T): String =
+    override def unbind(key: String, id: T): String =
       numberBinder.unbind(key, id.value)
   }
 
@@ -87,8 +89,7 @@ object `package` {
       } yield {
         dateStr match {
           case (Right(dateStr)) => {
-            val formatter = new SimpleDateFormat(
-              "EEE, d MMM yyyy HH:mm:ss z");
+            val formatter = new SimpleDateFormat(format);
             try {
               val someDate = formatter.parse(dateStr);
               Right(new DateTime(someDate.getTime(), DateTimeZone.UTC))
@@ -102,8 +103,7 @@ object `package` {
     }
 
     override def unbind(key: String, value: DateTime) = {
-      val fmt = DateTimeFormat
-        .forPattern("EEE, d MMM yyyy HH:mm:ss z");
+      val fmt = DateTimeFormat.forPattern(format);
       strBinder.unbind(key, fmt.print(value))
     }
 
@@ -129,8 +129,9 @@ object `package` {
     }
   }
 
-  implicit def UserIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[UserId](stringBinder, UserId.apply _)
+  implicit def UserIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[models.UserId](stringBinder, UserId.apply _)
   implicit def ProjectIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[ProjectId](stringBinder, ProjectId.apply _)
+  implicit def BookingIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[BookingId](stringBinder, BookingId.apply _)
   implicit def TagIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[TagId](stringBinder, TagId.apply _)
   implicit def TagIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[TagId](stringBinder, TagId.apply _)
 }

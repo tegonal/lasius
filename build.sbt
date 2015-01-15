@@ -1,3 +1,5 @@
+import play.PlayImport.PlayKeys._
+
 name := """lasius"""
 
 version := "1.0-SNAPSHOT"
@@ -14,4 +16,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
   cache,
   ws
+)
+
+routesImport ++= Seq(
+	"binders.Binders._",
+	"play.api.i18n.Lang"
 )
