@@ -13,3 +13,6 @@ GET /booking/start/:userId/:projectId/		controllers.TimeBookingController.start(
 GET /booking/stop/:userId/:bookingId/	controllers.TimeBookingController.stop(userId:models.UserId, bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 GET /booking/remove/:userId/:bookingId/	controllers.TimeBookingController.remove(userId:models.UserId, bookingId:models.BookingId)
 GET /booking/append/:userId/:projectId/		controllers.TimeBookingController.append(userId:models.UserId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
+
+# CurrentUserTimeBookings
+GET /current/:userId				controllers.CurrentUserTimeBookingsController.index(userId: models.UserId)

@@ -1,0 +1,10 @@
+@(userId: models.UserId, booking: Option[models.Booking])
+
+@import org.joda.time.DateTime
+
+@main("Current user time booking") {
+
+    <h1>@userId</h1>
+    <p>@booking.map {b => b.projectId: (@DateTime.now - @b.start)}</p>
+
+}

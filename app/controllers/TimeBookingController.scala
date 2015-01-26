@@ -1,7 +1,7 @@
 package controllers
 
 import play.api.mvc.Controller
-import services.TimeBookingManagerService
+import services.TimeBookingViewService
 import models._
 import org.joda.time.DateTime
 import play.api.mvc.Action

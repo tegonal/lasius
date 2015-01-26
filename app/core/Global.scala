@@ -8,13 +8,16 @@ import controllers._
 import play.api.mvc.RequestHeader
 import scala.concurrent.Future
 import akka.actor.ActorSystem
-import services.TimeBookingManagerService
+import services.TimeBookingViewService
+import views.CurrentUserTimeBookingsView
 
 object Global extends GlobalSettings {
 
   val system = ActorSystem("lasius-actor-system")
   val executionContext = system.dispatcher
-  val timeBookingManagerService = system.actorOf(TimeBookingManagerService.props)
+  val timeBookingManagerService = system.actorOf(TimeBookingViewService.props)
+
+  val currentUserTimeBookingsView = system.actorOf(CurrentUserTimeBookingsView.props)
 
   override def onStart(app: Application) {
     InitialData.init()

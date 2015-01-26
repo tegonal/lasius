@@ -11,12 +11,12 @@ import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props
 
-object TimeBookingManagerService {
+object TimeBookingViewService {
 
-  def props: Props = Props(new TimeBookingManagerService)
+  def props: Props = Props(new TimeBookingViewService)
 }
 
-class TimeBookingManagerService extends Actor with ActorLogging {
+class TimeBookingViewService extends Actor with ActorLogging {
 
   import domain.UserTimeBookingAggregate._
 
