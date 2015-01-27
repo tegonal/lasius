@@ -13,7 +13,10 @@ object BookingId {
   implicit val idFormat: Format[BookingId] = Json.idformat[BookingId](BookingId.apply _)
 }
 
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId]
+@SerialVersionUID(1241414)
+case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
+  def duration = DateTime.now.minus(start.getMillis)
+}
 
 object Booking {
   implicit val bookingFormat = Json.format[Booking]

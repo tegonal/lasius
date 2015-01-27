@@ -1,6 +1,7 @@
 package views
 
 import akka.persistence.PersistentView
+
 import models.UserId
 import models.Booking
 import akka.actor.Props
@@ -31,7 +32,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       state = updateBooking(userId, Some(e.booking))
     case e: UserTimeBookingStopped =>
-       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
+      log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
       state = updateBooking(userId, None)
     case e: UserTimeBookingAdded =>
       if (!e.booking.end.isDefined) {

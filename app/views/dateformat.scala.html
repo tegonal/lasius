@@ -1,0 +1,6 @@
+@(date: org.joda.time.DateTime, pattern: String = "yyyy-MM-dd")
+@import org.joda.time.DateTime
+@import org.joda.time.format._
+
+@DateTimeFormat.forPattern(pattern).print(date)
+
