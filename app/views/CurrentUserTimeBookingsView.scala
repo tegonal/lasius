@@ -11,27 +11,28 @@ object CurrentUserTimeBookingsView {
   case class GetCurrentTimeBooking(userId: UserId)
   case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking])
 
-  def props: Props = Props(new CurrentUserTimeBookingsView)
+  def props(userId: UserId): Props = Props(new CurrentUserTimeBookingsView(userId))
 }
 
-class CurrentUserTimeBookingsView extends PersistentView with ActorLogging {
+class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
 
   import domain.UserTimeBookingAggregate._
   import views.CurrentUserTimeBookingsView._
 
-  override val persistenceId = "current-time-bookings"
-  override val viewId = "current-time-bookings"
+  override val persistenceId = userId.value
+  override val viewId = userId.value + "-current-time-bookings"
 
-  case class CurrentTimeBookings(bookings: Map[UserId, Option[Booking]])
+  case class CurrentTimeBookings(booking: Option[Booking])
 
-  var state: CurrentTimeBookings = CurrentTimeBookings(Map())
+  var state: CurrentTimeBookings = CurrentTimeBookings(None)
 
   val receive: Receive = {
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
-      state = updateBooking(e.booking.userId, Some(e.booking))
+      state = updateBooking(userId, Some(e.booking))
     case e: UserTimeBookingStopped =>
-      state = updateBooking(e.booking.userId, None)
+       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
+      state = updateBooking(userId, None)
     case e: UserTimeBookingAdded =>
       if (!e.booking.end.isDefined) {
         state = updateBooking(e.booking.userId, Some(e.booking))
@@ -41,13 +42,12 @@ class CurrentUserTimeBookingsView extends PersistentView with ActorLogging {
         state = updateBooking(e.booking.userId, None)
       }
     case GetCurrentTimeBooking(userId) =>
-      val res = state.bookings.get(userId).flatten
-      log.debug(s"GetCurrentTimeBooking($userId) -> $res")
+      val res = state.booking
+      log.debug(s"GetCurrentTimeBooking($userId) -> $res:$sender")
       sender ! CurrentUserTimeBooking(userId, res)
   }
 
   private def updateBooking(userId: UserId, booking: Option[Booking]) = {
-    val newBookings = state.bookings.updated(userId, booking)
-    state.copy(bookings = newBookings)
+    state.copy(booking = booking)
   }
 }

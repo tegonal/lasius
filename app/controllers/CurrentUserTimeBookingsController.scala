@@ -14,7 +14,7 @@ class CurrentUserTimeBookingsController {
   self: Controller =>
   def index(userId: UserId) = Action.async {
     implicit val timeout = Timeout(5 second)
-    (currentUserTimeBookingsView ? GetCurrentTimeBooking(userId)).mapTo[CurrentUserTimeBooking].map { resp: CurrentUserTimeBooking =>
+    (currentUserTimeBookingsViewService ? GetCurrentTimeBooking(userId)).mapTo[CurrentUserTimeBooking].map { resp: CurrentUserTimeBooking =>
       Ok(views.html.currentUserTimeBookingsView(resp.userId, resp.booking))
     }
   }

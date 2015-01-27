@@ -10,6 +10,7 @@ import scala.concurrent.Future
 import akka.actor.ActorSystem
 import services.TimeBookingViewService
 import views.CurrentUserTimeBookingsView
+import services.CurrentUserTimeBookingsViewService
 
 object Global extends GlobalSettings {
 
@@ -17,7 +18,7 @@ object Global extends GlobalSettings {
   val executionContext = system.dispatcher
   val timeBookingManagerService = system.actorOf(TimeBookingViewService.props)
 
-  val currentUserTimeBookingsView = system.actorOf(CurrentUserTimeBookingsView.props)
+  val currentUserTimeBookingsViewService = system.actorOf(CurrentUserTimeBookingsViewService.props)
 
   override def onStart(app: Application) {
     InitialData.init()
