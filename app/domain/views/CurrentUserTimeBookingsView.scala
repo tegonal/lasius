@@ -1,11 +1,15 @@
-package views
+package domain.views
 
 import akka.persistence.PersistentView
-
 import models.UserId
 import models.Booking
 import akka.actor.Props
 import akka.actor.ActorLogging
+import akka.actor.actorRef2Scala
+import domain.UserTimeBookingAggregate.UserTimeBookingAdded
+import domain.UserTimeBookingAggregate.UserTimeBookingRemoved
+import domain.UserTimeBookingAggregate.UserTimeBookingStarted
+import domain.UserTimeBookingAggregate.UserTimeBookingStopped
 
 object CurrentUserTimeBookingsView {
 
@@ -18,7 +22,7 @@ object CurrentUserTimeBookingsView {
 class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
 
   import domain.UserTimeBookingAggregate._
-  import views.CurrentUserTimeBookingsView._
+  import domain.views.CurrentUserTimeBookingsView._
 
   override val persistenceId = userId.value
   override val viewId = userId.value + "-current-time-bookings"

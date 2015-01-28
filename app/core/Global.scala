@@ -9,7 +9,7 @@ import play.api.mvc.RequestHeader
 import scala.concurrent.Future
 import akka.actor.ActorSystem
 import services.TimeBookingViewService
-import views.CurrentUserTimeBookingsView
+import domain.views.CurrentUserTimeBookingsView
 import services.CurrentUserTimeBookingsViewService
 
 object Global extends GlobalSettings {

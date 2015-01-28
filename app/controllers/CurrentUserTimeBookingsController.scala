@@ -4,7 +4,7 @@ import play.api.mvc.Controller
 import models.UserId
 import play.api.mvc.Action
 import core.Global._
-import views.CurrentUserTimeBookingsView._
+import domain.views.CurrentUserTimeBookingsView._
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._

@@ -10,15 +10,15 @@ import models.ProjectId
 import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props
-import views.CurrentUserTimeBookingsView._
-import views.CurrentUserTimeBookingsView
+import domain.views.CurrentUserTimeBookingsView._
+import domain.views.CurrentUserTimeBookingsView
 
 object CurrentUserTimeBookingsViewService {
 
   def props: Props = Props(new CurrentUserTimeBookingsViewService)
 }
 
-class CurrentUserTimeBookingsViewService extends UserService[views.CurrentUserTimeBookingsView.GetCurrentTimeBooking] {
+class CurrentUserTimeBookingsViewService extends UserService[domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking] {
 
   import domain.UserTimeBookingAggregate._
 
