@@ -8,8 +8,15 @@ import play.api.libs.json._
 import models._
 
 trait StructureRepository extends BaseRepository[Category, CategoryId] {
+  def findAllCategories(): Future[Traversable[Category]]
 }
 
 class StructureMongoRepository extends BaseReactiveMongoRepository[Category, CategoryId] with StructureRepository {
   def coll = db.collection[JSONCollection]("Category")
+
+  def findAllCategories(): Future[Traversable[Category]] = {
+    val sel = Json.obj()
+    find(sel) map (_.map(_._1))
+  }
+
 }
