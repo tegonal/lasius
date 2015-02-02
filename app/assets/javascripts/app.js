@@ -8,7 +8,8 @@ define(['angular',
     function(angular) {
   'use strict';
 
-  var mod = angular.module('lasiusApp', ['routes',
+  var mod = angular.module('app', ['ngRoute', 
+                                    'routes',
                                          'filters',
                                          'directives.ngCurrentTimeBooking',
                                          'directives.ngBooking',
