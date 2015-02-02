@@ -18,7 +18,8 @@ GET /booking/remove/:userId/:bookingId/	controllers.TimeBookingController.remove
 GET /booking/append/:userId/:projectId/		controllers.TimeBookingController.append(userId:models.UserId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 
 # CurrentUserTimeBookings
-GET /current/:userId				controllers.CurrentUserTimeBookingsController.index(userId: models.UserId)
+GET /currentView/:userId				controllers.CurrentUserTimeBookingsController.index(userId: models.UserId)
+GET /current/:userId				controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking(userId: models.UserId)
 
 # Static
 # ~~~~

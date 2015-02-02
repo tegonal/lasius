@@ -5,16 +5,20 @@ define(['angular'], function(angular) {
   var mod = angular.module('directives.ngCurrentTimeBooking', []);
   mod.directive('ngCurrentTimeBooking', function() {
     return {
-      restrict: 'AE',
+      restrict: 'E',
       transclude: true,
       templateUrl: '/assets/directives/ng-current-time-booking-tmpl.html',
-      scope: true,
-      controller: ['$scope', '$http', '$modal', function($scope, $http, $modal) {
+      scope:  {
+        currentTimeBookingService: '=',
+        userId: '=',
+        booking: '=currentTimeBooking'
+      },
+      link: function(scope, iElement, iAttrs) {
+        //scope.currentTimeBookingService.getCurrentTimeBooking(scope.userId).then(function(data) {
+        //  scope.booking = data.booking;
+      //});
         
-      }],
-      link: function(scope, iElement, iAttrs, ctrl) {
-        //noting to do here
-      }
+        }
     };
   });
   return mod;

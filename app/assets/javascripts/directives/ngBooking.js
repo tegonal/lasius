@@ -5,14 +5,13 @@ define(['angular'], function(angular) {
   var mod = angular.module('directives.ngBooking', []);
   mod.directive('ngBooking', function() {
     return {
-      restrict: 'AE',
+      restrict: 'E',
       transclude: true,
       templateUrl: '/assets/directives/ng-booking-tmpl.html',
-      scope: true,
-      controller: ['$scope', '$http', '$modal', function($scope, $http, $modal) {
-        
-      }],
-      link: function(scope, iElement, iAttrs, ctrl) {
+      scope:  {
+        bookingService: '='
+      },
+      link: function(scope, iElement, iAttrs) {
         //noting to do here
       }
     };

@@ -4,7 +4,8 @@ define(['angular',
         './directives/ngCurrentTimeBooking',
         './directives/ngBooking',
         './services/helper', 
-        './services/playRoutes'],
+        './services/playRoutes',
+        './services/currentTimeBooking'],
     function(angular) {
   'use strict';
 
@@ -15,7 +16,8 @@ define(['angular',
                                          'directives.ngCurrentTimeBooking',
                                          'directives.ngBooking',
                                          'services.helper', 
-                                         'services.playRoutes']);
+                                         'services.playRoutes', 
+                                         'services.currentTimeBooking']);
     
   return mod;
 });
