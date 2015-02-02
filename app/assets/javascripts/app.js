@@ -9,6 +9,7 @@ define(['angular',
   'use strict';
 
   var mod = angular.module('app', ['ngRoute', 
+                                   'ui.bootstrap',
                                     'routes',
                                          'filters',
                                          'directives.ngCurrentTimeBooking',
