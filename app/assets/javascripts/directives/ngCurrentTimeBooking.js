@@ -10,13 +10,12 @@ define(['angular'], function(angular) {
       templateUrl: '/assets/directives/ng-current-time-booking-tmpl.html',
       scope:  {
         currentTimeBookingService: '=',
-        userId: '=',
-        booking: '=currentTimeBooking'
+        userId: '='
       },
       link: function(scope, iElement, iAttrs) {
-        //scope.currentTimeBookingService.getCurrentTimeBooking(scope.userId).then(function(data) {
-        //  scope.booking = data.booking;
-      //});
+        scope.currentTimeBookingService.getCurrentTimeBooking(scope.userId).then(function(data) {
+          scope.booking = data.booking;
+        });
         
         }
     };
