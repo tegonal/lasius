@@ -16,7 +16,8 @@ object InEvent {
 
 sealed trait OutEvent
 case object HelloClient extends OutEvent
-case class UserLoggedOut(userId: String) extends OutEvent
+case class UserLoggedOut(userId: UserId) extends OutEvent
+case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking]) extends OutEvent
 
 object OutEvent {
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")

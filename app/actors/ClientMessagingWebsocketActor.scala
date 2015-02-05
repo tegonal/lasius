@@ -7,37 +7,37 @@ import play.api.libs.iteratee.Concurrent
 import actors.ControlCommands._
 
 object ControlCommands {
-  case class SendToClient(senderUserId: String, event: OutEvent, receivers: List[String] = Nil)
+  case class SendToClient(senderUserId: UserId, event: OutEvent, receivers: List[UserId] = Nil)
 }
 
 object ClientMessagingWebsocketActor {
-  def props(out: ActorRef, userId: String) = Props(new ClientMessagingWebsocketActor(out, userId))
+  def props(out: ActorRef, userId: UserId) = Props(new ClientMessagingWebsocketActor(out, userId))
   var actors: Map[String, ActorRef] = Map()
 
   /**
    * Broadcast OutEvent to every client except sender itself
    */
-  def broadcast(senderUserId: String, event: OutEvent) = {
+  def broadcast(senderUserId: UserId, event: OutEvent) = {
     actors.values.map(_ ! SendToClient(senderUserId, event))
   }
 
   /**
    * Send OutEvent to a list of receiving clients exclusing sender itself
    */
-  def send(senderUserId: String, event: OutEvent, receivers: List[String]) = {
+  def send(senderUserId: UserId, event: OutEvent, receivers: List[UserId]) = {
     actors.values.map(_ ! SendToClient(senderUserId, event, receivers))
   }
 
-  def !(senderUserId: String, event: OutEvent, receivers: List[String]) = {
+  def !(senderUserId: UserId, event: OutEvent, receivers: List[UserId]) = {
     send(senderUserId, event, receivers)
   }
 }
 
-class ClientMessagingWebsocketActor(out: ActorRef, userId: String) extends Actor {
+class ClientMessagingWebsocketActor(out: ActorRef, userId: UserId) extends Actor {
   //val (enumerator, channel) = Concurrent.broadcast[OutEvent]
 
   //append to map of active actors
-  ClientMessagingWebsocketActor.actors += (userId -> self)
+  ClientMessagingWebsocketActor.actors += (userId.value -> self)
 
   def receive = {
     case HelloServer(client) =>
@@ -51,7 +51,7 @@ class ClientMessagingWebsocketActor(out: ActorRef, userId: String) extends Actor
       }
     case SendToClient(senderUserId, event, receivers) =>
       //send to specific clients only
-      if (senderUserId != userId && receivers.contains(userId)) {
+      if (receivers.contains(userId)) {
         out ! event
       }
   }
@@ -62,7 +62,7 @@ class ClientMessagingWebsocketActor(out: ActorRef, userId: String) extends Actor
 
   override def postStop() = {
     //remove from active actors
-    ClientMessagingWebsocketActor.actors -= (userId)
+    ClientMessagingWebsocketActor.actors -= (userId.value)
     super.postStop
   }
 }

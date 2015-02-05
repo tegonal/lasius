@@ -12,11 +12,12 @@ import domain.UserTimeBookingAggregate.UserTimeBookingStarted
 import domain.UserTimeBookingAggregate.UserTimeBookingStopped
 import repositories.StructureRepository
 import repositories.StructureMongoRepository
+import actors.ClientMessagingWebsocketActor
+import models.CurrentUserTimeBooking
 
 object CurrentUserTimeBookingsView {
 
   case class GetCurrentTimeBooking(userId: UserId)
-  case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking])
 
   def props(userId: UserId): Props = Props(new CurrentUserTimeBookingsView(userId))
 }
@@ -37,21 +38,27 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       state = updateBooking(userId, Some(e.booking))
+      notifyClient()
     case e: UserTimeBookingStopped =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
       state = updateBooking(userId, None)
+      notifyClient()
     case e: UserTimeBookingAdded =>
       if (!e.booking.end.isDefined) {
         state = updateBooking(e.booking.userId, Some(e.booking))
+        notifyClient()
       }
     case e: UserTimeBookingRemoved =>
       if (!e.booking.end.isDefined) {
         state = updateBooking(e.booking.userId, None)
+        notifyClient()
       }
     case GetCurrentTimeBooking(userId) =>
-      val res = state.booking
-      log.debug(s"GetCurrentTimeBooking($userId) -> $res:$sender")
-      sender ! CurrentUserTimeBooking(userId, res)
+      notifyClient()
+  }
+
+  private def notifyClient() = {
+    ClientMessagingWebsocketActor ! (userId, CurrentUserTimeBooking(userId, state.booking), List(userId))
   }
 
   private def updateBooking(userId: UserId, booking: Option[Booking]) = {

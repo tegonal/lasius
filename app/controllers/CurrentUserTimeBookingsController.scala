@@ -13,21 +13,12 @@ import play.api.libs.json._
 
 class CurrentUserTimeBookingsController {
   self: Controller =>
-  def index(userId: UserId) = Action.async {
-    implicit val timeout = Timeout(5 second)
-    (currentUserTimeBookingsViewService ? GetCurrentTimeBooking(userId)).mapTo[CurrentUserTimeBooking].map { resp: CurrentUserTimeBooking =>
-      Ok(views.html.currentUserTimeBookingsView(resp.userId, resp.booking))
-    }
-  }
 
-  def getCurrentTimeBooking(userId: UserId) = Action.async {
-    implicit val timeout = Timeout(5 second)
-    (currentUserTimeBookingsViewService ? GetCurrentTimeBooking(userId)).mapTo[CurrentUserTimeBooking].map { resp: CurrentUserTimeBooking =>
-      Ok(Json.obj("booking" -> resp.booking))
-    }
+  def getCurrentTimeBooking(userId: UserId) = Action {
+    currentUserTimeBookingsViewService ! GetCurrentTimeBooking(userId)
+    Ok
   }
 }
 
 object CurrentUserTimeBookingsController extends CurrentUserTimeBookingsController with Controller {
-
 }

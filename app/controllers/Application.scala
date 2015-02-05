@@ -19,6 +19,6 @@ object Application extends Controller {
    */
   def messagingSocket = WebSocket.acceptWithActor[InEvent, OutEvent] { request =>
     out =>
-      ClientMessagingWebsocketActor.props(out, "noob")
+      ClientMessagingWebsocketActor.props(out, UserId("noob"))
   }
 }
