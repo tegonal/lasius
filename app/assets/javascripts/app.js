@@ -5,7 +5,8 @@ define(['angular',
         './directives/ngBooking',
         './services/helper', 
         './services/playRoutes',
-        './services/currentTimeBooking'],
+        './services/currentTimeBooking',
+        './services/messages'],
     function(angular) {
   'use strict';
 
@@ -17,7 +18,25 @@ define(['angular',
                                          'directives.ngBooking',
                                          'services.helper', 
                                          'services.playRoutes', 
-                                         'services.currentTimeBooking']);
-    
+                                         'services.currentTimeBooking',
+                                         'services.messages']);
+  
+  mod.factory('msgBus', ['$rootScope', function($rootScope) {
+    var msgBus = {};
+    msgBus.emitMsg = function(msg) {
+      $rootScope.$emit(msg.type, msg);
+    };
+    msgBus.onMsg = function(msg, scope, func) {
+      var unbind = $rootScope.$on(msg, func);
+      scope.$on('$destroy', unbind);
+    };
+    return msgBus;
+  }]);
+  
+  mod.run(['clientMessageService', function (clientMessageService) {
+    console.log("Start clientMessageService");
+    clientMessageService.start();
+  }]);
+  
   return mod;
 });
