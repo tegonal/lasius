@@ -2,12 +2,12 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('directives.ngCurrentTimeBooking', []);
-  mod.directive('ngCurrentTimeBooking', ['currentTimeBookingService', 'msgBus', function(currentTimeBookingService, msgBus) {
+  var mod = angular.module('directives.lasCurrentTimeBooking', []);
+  mod.directive('lasCurrentTimeBooking', ['currentTimeBookingService', 'msgBus', function(currentTimeBookingService, msgBus) {
     return {
       restrict: 'E',
       transclude: true,
-      templateUrl: '/assets/directives/ng-current-time-booking-tmpl.html',
+      templateUrl: '/assets/directives/las-current-time-booking-tmpl.html',
       scope:  {
         userId: '='
       },
