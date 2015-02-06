@@ -1,6 +1,13 @@
  <a class="brand" href="#">Lasius</a>
  <form class="navbar-form pull-right">
-     <input type="text" class="span2" placeholder="Category@Project">              
+ 	<ui-select ng-model="project.selected"
+             theme="bootstrap">
+	    <ui-select-match placeholder="Project@Category">{{$select.selected.name}}</ui-select-match>
+	    <ui-select-choices repeat="proj in projects  | filter: {name: $select.search}">
+	      <div ng-bind-html="proj.name | highlight: $select.search"></div>
+	    </ui-select-choices>
+  	</ui-select>
+ 	
      <input type="text" class="span2" placeholder="Tags">
      <button type="submit" class="btn">Start</button>
  </form>

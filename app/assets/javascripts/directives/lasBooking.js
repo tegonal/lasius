@@ -15,10 +15,11 @@ define(['angular'], function(angular) {
         //noting to do here
         structureService.getCategories(scope.userId).then(function(projects) {
           scope.projects = projects;
+          scope.project = {};
         });
       }
     };
-  });
+  }]);
   return mod;
 });
 

@@ -11,7 +11,9 @@ define(['angular',
     function(angular) {
   'use strict';
 
-  var mod = angular.module('app', ['ngRoute', 
+  var mod = angular.module('app', ['ngRoute',
+                                   'ngSanitize',
+                                   'ui.select',
                                    'ui.bootstrap',
                                     'routes',
                                          'filters',

@@ -8,7 +8,7 @@ define(['angular'], function (angular) {
   mod.factory('structureService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
     
     return {             
-      getCurrentTimeBooking: function (userId) {
+      getCategories: function (userId) {
         return playRoutes.controllers.StructureController.getCategories(userId).get().then(function (response) {
           return response.data;          
         }, function(reason) {
