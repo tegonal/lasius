@@ -12,11 +12,24 @@ define(['angular'], function(angular) {
         userId:'='
       },
       link: function(scope, iElement, iAttrs) {
+        
+        scope.projects = [];
+        scope.availableTags = [];
+        scope.project = {};          
+        scope.tags = {};
+        
         //noting to do here
         structureService.getCategories(scope.userId).then(function(projects) {
-          scope.projects = projects;
-          scope.project = {};
+          scope.projects = projects;          
         });
+        
+        scope.projectSelectionChanged = function() {
+           scope.availableTags = scope.project.selected.project.tags;
+        };
+        
+        scope.newTag = function(name) {
+          return {id: name};          
+        };
       }
     };
   }]);

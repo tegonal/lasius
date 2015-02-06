@@ -1,14 +1,22 @@
  <a class="brand" href="#">Lasius</a>
  <form class="navbar-form pull-right">
  	<ui-select ng-model="project.selected"
-             theme="bootstrap">
+             theme="bootstrap"
+             on-remove="projectSelectionChanged()"
+             on-select="projectSelectionChanged()">
 	    <ui-select-match placeholder="Project@Category">{{$select.selected.name}}</ui-select-match>
 	    <ui-select-choices repeat="proj in projects  | filter: {name: $select.search}">
 	      <div ng-bind-html="proj.name | highlight: $select.search"></div>
 	    </ui-select-choices>
   	</ui-select>
+  	<ui-select multiple ng-model="tags" theme="bootstrap" tagging="newTag" reset-search-input="true"
+  	tagging-tokens=",">
+	    <ui-select-match placeholder="Select Tags...">{{$item.id}}</ui-select-match>
+	    <ui-select-choices repeat="tag in availableTags | filter:$select.search">
+	      {{tag.id}}
+	    </ui-select-choices>
+	  </ui-select>
  	
-     <input type="text" class="span2" placeholder="Tags">
      <button type="submit" class="btn">Start</button>
  </form>
 
