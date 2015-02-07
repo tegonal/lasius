@@ -7,7 +7,7 @@ define(['angular',
         './services/playRoutes',
         './services/currentTimeBooking',
         './services/messages',
-        './services/structure'],
+        './services/booking'],
     function(angular) {
   'use strict';
 
@@ -23,7 +23,7 @@ define(['angular',
                                          'services.playRoutes', 
                                          'services.currentTimeBooking',
                                          'services.messages',
-                                         'services.structure']);
+                                         'services.booking']);
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
     var msgBus = {};
