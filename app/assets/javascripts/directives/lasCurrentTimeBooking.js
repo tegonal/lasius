@@ -17,9 +17,19 @@ define(['angular'], function(angular) {
         msgBus.onMsg('CurrentUserTimeBooking', scope, function(event, msg) {
           console.log('msg received' + msg.type);
           scope.booking = msg.booking;
+          
+          scope.disableButton = scope.booking === undefined;
+          
           console.log(msg);
           scope.$apply();           
         });
+        
+        scope.stopBooking = function(bookingId) {
+          currentTimeBookingService.stopBooking(scope.userId, bookingId).then(function() {
+            scope.disableButton = true;
+            //TODO: already remove
+          });
+        };
         
         }
     };
