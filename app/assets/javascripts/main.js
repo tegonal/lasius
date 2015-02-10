@@ -26,7 +26,9 @@
       'ng-grid': ['angular'],
       'bootstrap-select': ['angular', 'bootstrap'],
       'angular-sanitize': ['angular'],
-      'ui.select': ['angular', 'bootstrap', 'bootstrap-select', 'angular-sanitize']
+      'ui.select': ['angular', 'bootstrap', 'bootstrap-select', 'angular-sanitize'],
+      'moment': [],
+      'angular-moment': ['angular', 'moment']
     },
     paths: {
       'requirejs': ['../lib/requirejs/require'],
@@ -41,7 +43,9 @@
       'angular-translate-loader-static-files': [ '../lib/angular-translate-loader-static-files/angular-translate-loader-static-files' ],
       'bootstrap-select': ['../lib/bootstrap-select/js/bootstrap-select'],
       'angular-sanitize': ['../lib/angular-sanitize/angular-sanitize'],
-      'ui.select': ['../lib/angular-ui-select/select']
+      'ui.select': ['../lib/angular-ui-select/select'],
+      'moment': ['../lib/momentjs/moment', '../lib/momentjs/locale/de'],
+      'angular-moment': ['../lib/angular-moment/angular-moment']
     }
   });
 
@@ -53,7 +57,7 @@
   // Load the app. This is kept minimal so it doesn't need much updating.
   require(['angular', 'angular-cookies', 'angular-route', 'jquery', 'bootstrap', 
            'angular-ui-bootstrap', 'angular-sanitize', 'ui.select', 'angular-translate', 
-           'angular-translate-loader-static-files', './app'],
+           'angular-translate-loader-static-files', 'moment', 'angular-moment', './app'],
     function (angular) {
       angular.bootstrap(document, ['app']);
     }

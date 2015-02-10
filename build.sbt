@@ -32,7 +32,9 @@ libraryDependencies ++= Seq(
   "org.webjars" % "angular-dragdrop" % "1.0.6",
   "org.webjars" % "bootstrap-select" % "1.6.3",
   "org.webjars" % "angular-ui-select" % "0.9.6",
-  "org.webjars" % "angular-sanitize" % "1.3.11"
+  "org.webjars" % "angular-sanitize" % "1.3.11",
+  "org.webjars" % "angular-moment" % "0.8.2-1",
+  "org.webjars" % "momentjs" % "2.9.0"
 )
 
 routesImport ++= Seq(

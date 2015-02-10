@@ -13,6 +13,7 @@ define(['angular',
 
   var mod = angular.module('app', ['ngRoute',
                                    'ngSanitize',
+                                   'angularMoment',
                                    'ui.select',
                                    'ui.bootstrap',
                                     'routes',
@@ -41,6 +42,15 @@ define(['angular',
     console.log("Start clientMessageService");
     clientMessageService.start();
   }]);
+  
+  mod.run(function(amMoment) {
+    amMoment.changeLocale('de');
+  });
+  
+  mod.constant('angularMomentConfig', {
+    preprocess: 'unix', // optional
+    timezone: 'Europe/London' // optional
+  });
   
   return mod;
 });

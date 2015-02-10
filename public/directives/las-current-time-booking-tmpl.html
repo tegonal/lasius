@@ -1,5 +1,5 @@
  <h1>{{booking.userId}}</h1>
  <div class="booking"><strong>{{booking.projectId}}</strong>({{booking.id}})</div>
- 	<p>Started:{{booking.start| date : "HH:mm:ss"}}</p>
+ 	<p>Started:<span am-time-ago="booking.start" am-preprocess="utc"></p>
  	<button class="btn" ng-click="stopBooking(booking.id)" ng-disabled="disableButton">Stop</button>
  </div>
