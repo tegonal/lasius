@@ -117,7 +117,8 @@ object Binders {
       for {
         values <- params.get(key).toList
         rawValue <- values
-        bound <- implicitly[QueryStringBindable[T]].bind(key, Map(key -> Seq(rawValue)))
+        splitValue <- rawValue.split(",")
+        bound <- implicitly[QueryStringBindable[T]].bind(key, Map(key -> Seq(splitValue)))
         value <- bound.right.toOption
       } yield value
     }
