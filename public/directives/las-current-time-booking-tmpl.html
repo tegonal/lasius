@@ -1,8 +1,15 @@
- <div class="booking">
+ <div class="booking" ng-if="!noBooking">
     <h1>{{booking.projectId}}</h1>
     <span ng-repeat="tag in booking.tags" style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
         <span>{{tag}}</span>        
     </span>
-  	<p>Started:<span am-time-ago="booking.start" am-preprocess="utc"></p>
- 	<button class="btn" ng-click="stopBooking(booking.id)" ng-disabled="disableButton">Stop</button>
+  	<p>Started:
+  	<span ng-if="duration.moment.hours() > 1">{{duration.moment | amDateFormat:'H'}} hours</span>
+  	<span ng-if="duration.moment.hours() = 1">1 hour</span>
+  	<span ng-if="duration.moment.minutes() > 1">{{duration.moment | amDateFormat:'m'}} minutes</span>
+  	<span ng-if="duration.moment.minutes() = 1">1 minute</span>
+  	<span>{{duration.moment | amDateFormat:'s'}} seconds</span>
+  	</p>
+ 	<button class="btn" ng-click="stopBooking(booking.id)">Stop</button>
  </div>
+ <div class="no_booking" ng-if="noBooking">No Booking</div>
