@@ -60,6 +60,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     log.debug(s"updateStart:$evt")
     evt match {
       case e: UserTimeBookingInitialized =>
+        log.debug(s"UserTimeBookingInitialized")
         context become created
       case UserTimeBookingStarted(booking) =>
         log.debug(s"UserBookingStarted - $booking")
@@ -106,16 +107,17 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   override def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
-    this.state = state
     state match {
       case Removed => context become removed
       case Created => context become created
       case _: User => context become uninitialized
+      case s: UserTimeBooking => this.state = s
     }
   }
 
   val uninitialized: Receive = {
     case e =>
+      log.debug(s"InitBooking -> userId: $userId")
       persist(UserTimeBookingInitialized(userId))(afterEventPersisted)
       context become created
       created(e)
@@ -166,5 +168,5 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       context.stop(self)
   }
 
-  override val receiveCommand: Receive = created
+  override val receiveCommand: Receive = uninitialized
 }

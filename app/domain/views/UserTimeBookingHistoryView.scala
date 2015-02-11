@@ -58,7 +58,7 @@ class UserTimeBookingHistoryView(userId: UserId) extends PersistentView with Act
       }
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingHistoryView -> booking removed:$booking")
-      bookingHistoryRepository.coll.remove(booking.id)
+      bookingHistoryRepository.coll.remove(booking)
       notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
   }
 
