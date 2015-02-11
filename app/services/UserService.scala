@@ -11,6 +11,10 @@ import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props
 
+object UserService {
+  case class StartUserTimeBookingView(userId: UserId)
+}
+
 abstract class UserService[C] extends Actor with ActorLogging {
 
   /**
@@ -45,12 +49,11 @@ abstract class UserService[C] extends Actor with ActorLogging {
 
   override def receive = processCommand
 
-  
   protected def create(id: UserId): ActorRef = {
     val agg = context.actorOf(aggregateProps(id), id)
     context watch agg
     agg
   }
 
-  def aggregateProps(id: UserId):Props
+  def aggregateProps(id: UserId): Props
 }

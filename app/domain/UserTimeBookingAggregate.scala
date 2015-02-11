@@ -10,6 +10,7 @@ import play.api.Logger
 object UserTimeBookingAggregate {
   import AggregateRoot._
 
+  case class UserTimeBookingInitialized(userId: UserId) extends Event
   case class UserTimeBookingStarted(booking: Booking) extends Event
   case class UserTimeBookingStopped(booking: Booking) extends Event
   case class UserTimeBookingRemoved(booking: Booking) extends Event
@@ -58,9 +59,10 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   override def updateState(evt: Event): Unit = {
     log.debug(s"updateStart:$evt")
     evt match {
+      case e: UserTimeBookingInitialized =>
+        context become created
       case UserTimeBookingStarted(booking) =>
         log.debug(s"UserBookingStarted - $booking")
-        context.become(created)
         state = state match {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
           case _ => state
@@ -79,7 +81,6 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         }
       case UserTimeBookingAdded(booking) =>
         log.debug(s"UserBookingAdded - $booking")
-        context.become(created)
         state = state match {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
           case _ => state
@@ -108,8 +109,16 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     this.state = state
     state match {
       case Removed => context become removed
-      case _: User => context become created
+      case Created => context become created
+      case _: User => context become uninitialized
     }
+  }
+
+  val uninitialized: Receive = {
+    case e =>
+      persist(UserTimeBookingInitialized(userId))(afterEventPersisted)
+      context become created
+      created(e)
   }
 
   val created: Receive = {

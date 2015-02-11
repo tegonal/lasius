@@ -19,6 +19,10 @@ case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent
 case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking]) extends OutEvent
 
+case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
+case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
+case class UserTimeBookingHistoryEntryRemoved(bookingId: BookingId) extends OutEvent
+
 object OutEvent {
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
 }

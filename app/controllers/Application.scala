@@ -7,6 +7,8 @@ import models.Events._
 import scala.concurrent.Future
 import actors.ClientMessagingWebsocketActor
 import play.api.Play.current
+import services.UserService.StartUserTimeBookingView
+import core.Global._
 
 object Application extends Controller {
 

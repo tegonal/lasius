@@ -1,6 +1,7 @@
 package controllers
 
 import play.api.mvc.Controller
+
 import repositories.StructureRepository
 import repositories.BasicRepositoryComponent
 import play.api.mvc.Action

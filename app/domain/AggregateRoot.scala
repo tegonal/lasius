@@ -9,6 +9,8 @@ object AggregateRoot {
   trait Event
 
   case object Removed extends State
+  case object Created extends State
+  case object Uninitialized extends State
 }
 
 trait AggregateRoot extends PersistentActor with ActorLogging {
