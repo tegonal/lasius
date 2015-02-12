@@ -3,11 +3,13 @@ define(['angular',
         './filters',
         './directives/lasCurrentTimeBooking',
         './directives/lasBooking',
+        './directives/lasBookingHistory',
         './services/helper', 
         './services/playRoutes',
         './services/currentTimeBooking',
         './services/messages',
-        './services/booking'],
+        './services/booking',
+        './services/bookingHistory'],
     function(angular) {
   'use strict';
 
@@ -20,11 +22,13 @@ define(['angular',
                                          'filters',
                                          'directives.lasCurrentTimeBooking',
                                          'directives.lasBooking',
+                                         'directives.lasBookingHistory',
                                          'services.helper', 
                                          'services.playRoutes', 
                                          'services.currentTimeBooking',
                                          'services.messages',
-                                         'services.booking']);
+                                         'services.booking',
+                                         'services.bookingHistory']);
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
     var msgBus = {};
