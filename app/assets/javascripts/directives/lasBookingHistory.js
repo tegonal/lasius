@@ -13,13 +13,29 @@ define(['angular'], function(angular) {
       },
       link: function(scope, iElement, iAttrs) {
         
-        var pattern = 'DDMMYYYYHHmmss';
-        var from = moment().startOf('day').format(pattern);
-        var to = moment().endOf('day').format(pattern);
+        scope.date = moment();
         
-        bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
-          scope.bookings = bookings;          
-        });
+        
+        var pattern = 'DDMMYYYYHHmmss';               
+        
+        var load = function() {
+          var from = scope.date.startOf('day').format(pattern);
+          var to = scope.date.endOf('day').format(pattern);
+          
+          bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
+            scope.bookings = bookings;          
+          });
+        };
+        load();
+        
+        scope.dayMinus = function() {
+          scope.date = scope.date.subtract(1, 'day');
+          load();
+        };
+        scope.dayPlus = function() {
+          scope.date = scope.date.add(1, 'day');
+          load();
+        };
         
         scope.diff = function(booking) {
           return moment(booking.end).subtract(booking.start);
