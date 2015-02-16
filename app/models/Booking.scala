@@ -16,7 +16,6 @@ object BookingId {
 
 @SerialVersionUID(1241414)
 case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
-  def duration = DateTime.now.minus(start.getMillis)
 }
 
 object Booking {

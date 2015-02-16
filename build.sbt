@@ -34,7 +34,10 @@ libraryDependencies ++= Seq(
   "org.webjars" % "angular-ui-select" % "0.9.6",
   "org.webjars" % "angular-sanitize" % "1.3.11",
   "org.webjars" % "angular-moment" % "0.8.2-1",
-  "org.webjars" % "momentjs" % "2.9.0"
+  "org.webjars" % "momentjs" % "2.9.0",
+  "org.webjars" % "nvd3" % "8415ee55d3",
+  "org.webjars" % "d3js" % "3.5.3",
+  "org.webjars" % "angularjs-nvd3-directives" % "0.0.7-1"
 )
 
 routesImport ++= Seq(
