@@ -1,9 +1,0 @@
-@(userId: models.UserId, booking: Option[models.Booking])
-
-
-@main("Current user time booking") {
-
-    <h1>@userId</h1>
-    <p>@booking.map {b => @b.projectId: @dateformat(b.duration, "HH:mm:ss")}</p>
-
-}
