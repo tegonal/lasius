@@ -16,8 +16,8 @@ define(['angular'], function (angular) {
           return reason.data;
         });
       },
-      start: function(userId, projectId, tags) {
-        return playRoutes.controllers.TimeBookingController.start(userId, projectId, tags).get().then(function (response) {
+      start: function(userId, categoryId, projectId, tags) {
+        return playRoutes.controllers.TimeBookingController.start(userId, categoryId, projectId, tags).get().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

@@ -38,7 +38,7 @@ define(['angular'], function(angular) {
             this.push(value.id);
           }, tagStrings);
           
-          bookingService.start(scope.userId, scope.project.selected.project.id, tagStrings).then(function(result) {
+          bookingService.start(scope.userId, scope.project.selected.categoryId, scope.project.selected.project.id, tagStrings).then(function(result) {
             //reset current selection
             scope.project = {};
             scope.tags = {};          

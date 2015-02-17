@@ -15,6 +15,9 @@ trait BookingStatisticRepository[M <: models.BaseEntity[I], I <: com.tegonal.pla
   def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean]
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
+
+  def add(model: M): Future[M] = ???
+  def subtract(model: M): Future[M] = ???
 }
 
 trait BookingByProjectRepository extends BookingStatisticRepository[BookingByProject, BookingByProjectId] {

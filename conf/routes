@@ -15,10 +15,10 @@ GET           /messagingSocket              controllers.Application.messagingSoc
 GET     /assets/*file              			controllers.Assets.at(path="/public", file)
 
 # TimeBooking
-GET /booking/start/:userId/:projectId		controllers.TimeBookingController.start(userId:models.UserId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+GET /booking/start/:userId/:categoryId/:projectId		controllers.TimeBookingController.start(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 GET /booking/stop/:userId/:bookingId		controllers.TimeBookingController.stop(userId:models.UserId, bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 GET /booking/remove/:userId/:bookingId		controllers.TimeBookingController.remove(userId:models.UserId, bookingId:models.BookingId)
-GET /booking/append/:userId/:projectId		controllers.TimeBookingController.append(userId:models.UserId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
+GET /booking/append/:userId/:categoryId/:projectId		controllers.TimeBookingController.append(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 
 # TimeBookingHistory
 GET /history/:userId						controllers.TimeBookingHistoryController.getTimeBookingHistory(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)

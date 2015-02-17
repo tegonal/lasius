@@ -31,9 +31,9 @@ case class UserTimeBookingByProjectEntryAdded(booking: BookingByProject) extends
 case class UserTimeBookingByCategoryEntryAdded(booking: BookingByCategory) extends OutEvent
 case class UserTimeBookingByTagEntryAdded(booking: BookingByTag) extends OutEvent
 
-case class UserTimeBookingByProjectEntryRemoved(bookingId: BookingByProjectId) extends OutEvent
-case class UserTimeBookingByCategoryEntryRemoved(bookingId: BookingByCategoryId) extends OutEvent
-case class UserTimeBookingByTagEntryRemoved(bookingId: BookingByTagId) extends OutEvent
+case class UserTimeBookingByProjectEntryRemoved(booking: BookingByProject) extends OutEvent
+case class UserTimeBookingByCategoryEntryRemoved(booking: BookingByCategory) extends OutEvent
+case class UserTimeBookingByTagEntryRemoved(booking: BookingByTag) extends OutEvent
 
 object OutEvent {
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")

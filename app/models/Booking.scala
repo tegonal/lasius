@@ -15,7 +15,7 @@ object BookingId {
 }
 
 @SerialVersionUID(1241414)
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
+case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
 }
 
 object Booking {

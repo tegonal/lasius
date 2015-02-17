@@ -27,10 +27,10 @@ object UserTimeBookingAggregate {
     val userId: UserId
   }
 
-  case class StartBooking(userId: UserId, projectId: ProjectId, tags: Seq[TagId], start: DateTime) extends UserTimeBookingCommand
+  case class StartBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime) extends UserTimeBookingCommand
   case class EndBooking(userId: UserId, bookingId: BookingId, end: DateTime) extends UserTimeBookingCommand
   case class RemoveBooking(userId: UserId, bookingId: BookingId) extends UserTimeBookingCommand
-  case class AppendBooking(userId: UserId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
+  case class AppendBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
   def props(userId: UserId): Props = {
     Logger.debug(s"Create actor:$userId")
@@ -124,7 +124,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   val created: Receive = {
-    case StartBooking(_, projectId, tags, start) =>
+    case StartBooking(_, categoryId, projectId, tags, start) =>
       log.debug(s"StartBooking -> projectId:$projectId, tags:$tags, start:$start")
       //if another booking is still in progress
       state match {
@@ -135,7 +135,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           }
       }
 
-      val newBooking = Booking(newBookingId, start, None, userId, projectId, tags)
+      val newBooking = Booking(newBookingId, start, None, userId, categoryId, projectId, tags)
       persist(UserTimeBookingStarted(newBooking))(afterEventPersisted)
     case EndBooking(_, bookingId, end) =>
       log.debug(s"EndBooking -> bookingId:$bookingId")
@@ -155,8 +155,8 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
             persist(UserTimeBookingRemoved(removedB))(afterEventPersisted)
           }
       }
-    case AppendBooking(userId, projectId, tags, start, end) =>
-      persist(UserTimeBookingAdded(Booking(newBookingId, start, Some(end), userId, projectId, tags)))(afterEventPersisted)
+    case AppendBooking(userId, categoryId, projectId, tags, start, end) =>
+      persist(UserTimeBookingAdded(Booking(newBookingId, start, Some(end), userId, categoryId, projectId, tags)))(afterEventPersisted)
     case KillAggregate =>
       context.stop(self)
     case other =>

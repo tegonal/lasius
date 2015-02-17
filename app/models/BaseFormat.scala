@@ -7,16 +7,20 @@ import scala.util.Success
 import org.joda.time.Duration
 import org.joda.time.DateMidnight
 import org.joda.time.DateTime
+import models.BaseFormat.CompositeBaseId
 
 trait BaseEntity[ID <: BaseId[_]] {
   val id: ID
 }
 
 object BaseFormat {
+  trait CompositeBaseId[I1, I2] extends BaseId[(I1, I2)]
+
   trait BaseBSONObjectId extends BaseId[BSONObjectID]
 
   //extended format function
   def idformat[I <: BaseBSONObjectId](implicit fact: Factory[BSONObjectID, I]) = new BSONObjectIdTypedIdFormat[I]
+  def idformat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: Factory[(I1, I2), I], f: Format[I1], f2: Format[I2]) = new CompositeIdTypedIdFormat[I, I1, I2]
 
   implicit val durationFormat: Format[Duration] = new Format[Duration] {
     def reads(json: JsValue): JsResult[Duration] = json match {
@@ -58,4 +62,26 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
   }
 
   def writes(id: I): JsValue = JsString(id.value.stringify)
+}
+
+class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: Factory[(I1, I2), I], f1: Format[I1], f2: Format[I2]) extends Format[I] {
+  def reads(json: JsValue): JsResult[I] = json match {
+    case JsArray(values) => {
+      Json.fromJson[I1](values(0)) match {
+        case JsSuccess(i1, _) =>
+          Json.fromJson[I2](values(1)) match {
+            case JsSuccess(i2, _) =>
+              JsSuccess(fact(i1, i2))
+            case _ => JsError(s"Unexpected JSON value $json")
+          }
+        case _ => JsError(s"Unexpected JSON value $json")
+      }
+
+    }
+    case _ => JsError(s"Unexpected JSON value $json")
+  }
+
+  def writes(id: I): JsValue = {
+    Json.arr(Json.toJson[I1](id.value._1), Json.toJson[I2](id.value._2))
+  }
 }
