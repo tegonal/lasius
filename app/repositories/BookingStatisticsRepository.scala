@@ -11,10 +11,10 @@ import play.api.Logger
 import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
 
-trait BookingStatisticRepository[M, I] extends BaseRepository[M, I] {
-  def deleteStatistics(userId: UserId): Future[Boolean]
+trait BookingStatisticRepository[M <: models.BaseEntity[I], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I] {
+  def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean]
 
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
+  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
 }
 
 trait BookingByProjectRepository extends BookingStatisticRepository[BookingByProject, BookingByProjectId] {
@@ -26,9 +26,9 @@ trait BookingByCategoryRepository extends BookingStatisticRepository[BookingByCa
 trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, BookingByTagId] {
 }
 
-abstract class BookingStatisticMongoRepository[M, I](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I] {
+abstract class BookingStatisticMongoRepository[M <: models.BaseEntity[I], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I] {
 
-  def deleteStatistic(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean] = {
+  def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean] = {
     val sel = Json.obj("userId" -> userId)
     find(sel) flatMap { res =>
       Future.sequence(res map {

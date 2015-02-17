@@ -26,9 +26,9 @@ object BaseFormat {
       }
       case _ => JsError(s"Unexpected JSON value $json")
     }
-  }
 
-  def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
+    def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
+  }
 
   implicit val dateMidnightFormat: Format[DateMidnight] = new Format[DateMidnight] {
     def reads(json: JsValue): JsResult[DateMidnight] = json match {
@@ -38,9 +38,9 @@ object BaseFormat {
       }
       case _ => JsError(s"Unexpected JSON value $json")
     }
-  }
 
-  def writes(duration: DateMidnight): JsNumber = JsNumber(duration.getMillis)
+    def writes(duration: DateMidnight): JsNumber = JsNumber(duration.getMillis)
+  }
 }
 
 class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factory[BSONObjectID, I]) extends Format[I] {
