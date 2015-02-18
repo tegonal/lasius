@@ -20,7 +20,7 @@ class TimeBookingStatisticsController {
       val aggregatedMap = bookings.groupBy(_.tagId) map { entry =>
         (entry._1, entry._2.map(_.duration.getMillis).foldLeft(0l)((a, b) => a + b))
       }
-      Ok(Json.arr(aggregatedMap.map(entry => Json.obj("label" -> entry._1, "value" -> entry._2))))
+      Ok(Json.toJson(aggregatedMap.map(entry => Json.obj("label" -> entry._1, "value" -> entry._2))))
     }
   }
 }

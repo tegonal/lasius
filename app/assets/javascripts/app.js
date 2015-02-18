@@ -4,12 +4,14 @@ define(['angular',
         './directives/lasCurrentTimeBooking',
         './directives/lasBooking',
         './directives/lasBookingHistory',
+        './directives/lasBookingTagStats',
         './services/helper', 
         './services/playRoutes',
         './services/currentTimeBooking',
         './services/messages',
         './services/booking',
-        './services/bookingHistory'],
+        './services/bookingHistory',
+        './services/bookingStatistics'],
     function(angular) {
   'use strict';
   
@@ -22,6 +24,7 @@ define(['angular',
 
   var mod = angular.module('app', ['ngRoute',
                                    'ngSanitize',
+                                   'nvd3ChartDirectives',
                                    'angularMoment',
                                    'ui.select',
                                    'ui.bootstrap',
@@ -30,12 +33,14 @@ define(['angular',
                                          'directives.lasCurrentTimeBooking',
                                          'directives.lasBooking',
                                          'directives.lasBookingHistory',
+                                         'directives.lasBookingTagStats',
                                          'services.helper', 
                                          'services.playRoutes', 
                                          'services.currentTimeBooking',
                                          'services.messages',
                                          'services.booking',
-                                         'services.bookingHistory']);
+                                         'services.bookingHistory',
+                                         'services.bookingStatistics']);
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
     var msgBus = {};
