@@ -8,9 +8,10 @@ import org.joda.time.Duration
 import org.joda.time.DateMidnight
 import org.joda.time.DateTime
 import models.BaseFormat.CompositeBaseId
+import org.joda.time.LocalDate
 
-trait BaseEntity[ID <: BaseId[_]] {
-  val id: ID
+trait BaseEntity[I <: BaseId[_]] {
+  val id: I
 }
 
 object BaseFormat {
@@ -34,16 +35,16 @@ object BaseFormat {
     def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
   }
 
-  implicit val dateMidnightFormat: Format[DateMidnight] = new Format[DateMidnight] {
-    def reads(json: JsValue): JsResult[DateMidnight] = json match {
+  implicit val localDateFormat: Format[LocalDate] = new Format[LocalDate] {
+    def reads(json: JsValue): JsResult[LocalDate] = json match {
 
-      case JsNumber(millis) => {
-        JsSuccess(new DateTime(millis).toDateMidnight())
+      case JsString(date) => {
+        JsSuccess(LocalDate.parse(date))
       }
       case _ => JsError(s"Unexpected JSON value $json")
     }
 
-    def writes(duration: DateMidnight): JsNumber = JsNumber(duration.getMillis)
+    def writes(duration: LocalDate): JsString = JsString(duration.toString())
   }
 }
 

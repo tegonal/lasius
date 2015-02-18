@@ -11,6 +11,7 @@ import org.joda.time.Days
 import org.joda.time.DateMidnight
 import org.joda.time.Duration
 import org.joda.time.DateTime
+import org.joda.time.LocalDate
 
 object UserTimeBookingStatisticsView {
 
@@ -48,14 +49,14 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       notifyClient(events)
     case UserTimeBookingAdded(booking) =>
       if (booking.end.isDefined) {
-        log.debug(s"UserTimeBookingHistoryView -> booking added:$booking")
+        log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
         val durations = calculatDurations(booking)
         storeDurations(durations)
         val events = getEventsDurations(durations, true)
         notifyClient(events)
       }
     case UserTimeBookingRemoved(booking) =>
-      log.debug(s"UserTimeBookingHistoryView -> booking removed:$booking")
+      log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
@@ -116,38 +117,42 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   protected def calculatDurations(booking: Booking) = {
     //split booking by dates
     val startDate = booking.start
-    val startDateMidnight = startDate.toDateMidnight
+    val startDateLocalDate = startOfDay(startDate)
     val endDate = booking.end.get
-    val endDateMidnight = endDate.toDateMidnight
+    val endDateLocalDate = startOfDay(endDate)
 
-    val daysBetween = Days.daysBetween(startDateMidnight, endDateMidnight).getDays()
+    val daysBetween = Days.daysBetween(startDateLocalDate, endDateLocalDate).getDays()
 
     //handle if start and end date are within same day
     if (daysBetween == 0) {
       val duration = endDate.minus(startDate.getMillis).toLocalDate.toInterval.toDuration
-      getDurations(booking, startDateMidnight, duration)
+      getDurations(booking, startDateLocalDate.toLocalDate, duration)
     } else {
       //extract duration at start date
       val endOfStart = endOfDay(startDate)
       val startDuration = endOfStart.minus(startDate.getMillis).toLocalDate.toInterval.toDuration
 
-      val startDurations = getDurations(booking, startDateMidnight, startDuration)
+      val startDurations = getDurations(booking, startDateLocalDate.toLocalDate, startDuration)
 
       //extract whole day for duration inbetween start and end date
       val inBetweenDurations = if (daysBetween > 1) {
-        for (dayDiff <- 0 to daysBetween - 1) {
-          val date = startDateMidnight.plusDays(dayDiff)
+        for {
+          dayDiff <- 0 to daysBetween - 1
+        } yield {
+          val date = startDateLocalDate.plusDays(dayDiff)
 
           val dayDuration = Duration.standardDays(1)
-          getDurations(booking, date, dayDuration)
+          getDurations(booking, date.toLocalDate, dayDuration)
         }
+      } else {
+        Seq()
       }
 
       //extract duration on end date      
-      val endDuration = endOfStart.minus(endDateMidnight.getMillis).toLocalDate.toInterval.toDuration
-      val endDurations = getDurations(booking, endDateMidnight, endDuration)
+      val endDuration = endOfStart.minus(endDateLocalDate.getMillis).toLocalDate.toInterval.toDuration
+      val endDurations = getDurations(booking, endDateLocalDate.toLocalDate(), endDuration)
 
-      startDurations +: inBetweenDurations +: endDurations
+      (startDurations ++ inBetweenDurations) ++: endDurations
     }
 
   }
@@ -156,9 +161,13 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
     return date.withHourOfDay(23).withMinuteOfHour(59).withSecondOfMinute(59);
   }
 
-  private def getDurations(booking: Booking, day: DateMidnight, duration: Duration) = {
+  private def startOfDay(date: DateTime): DateTime = {
+    return date.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0);
+  }
+
+  private def getDurations(booking: Booking, day: LocalDate, duration: Duration): Seq[_] = {
     Seq(BookingByCategory(BookingByCategoryId(day, booking.categoryId), duration),
-      BookingByProject(BookingByProjectId(day, booking.projectId), duration)) +: booking.tags.map(tagId => BookingByTag(BookingByTagId(day, tagId), duration))
+      BookingByProject(BookingByProjectId(day, booking.projectId), duration)) ++ booking.tags.map(tagId => BookingByTag(BookingByTagId(day, tagId), duration))
   }
 
   private def notifyClient(events: Seq[OutEvent]) = {

@@ -1,7 +1,6 @@
 package core
 
 import models._
-
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
@@ -14,6 +13,7 @@ import domain.views.CurrentUserTimeBookingsView
 import services.CurrentUserTimeBookingsViewService
 import services.TimeBookingHistoryViewService
 import services.UserService.StartUserTimeBookingView
+import services.TimeBookingStatisticsViewService
 
 object Global extends GlobalSettings {
 
@@ -23,6 +23,7 @@ object Global extends GlobalSettings {
 
   val currentUserTimeBookingsViewService = system.actorOf(CurrentUserTimeBookingsViewService.props)
   val timeBookingHistoryViewService = system.actorOf(TimeBookingHistoryViewService.props)
+  val timeBookingStatisticsViewService = system.actorOf(TimeBookingStatisticsViewService.props)
 
   override def onStart(app: Application) {
     InitialData.init()
@@ -31,6 +32,7 @@ object Global extends GlobalSettings {
     //TODO: start actor views when user logs in    
     timeBookingHistoryViewService ! StartUserTimeBookingView(UserId("noob"))
     currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(UserId("noob"))
+    timeBookingStatisticsViewService ! StartUserTimeBookingView(UserId("noob"))
 
     ()
   }

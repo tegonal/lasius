@@ -35,6 +35,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
 
+  def findFirst(sel: JsObject, skip: Int = 0)(implicit ctx: ExecutionContext): Future[Option[(T, BSONObjectID)]]
+
   def findStream(sel: JsObject, skip: Int = 0, pageSize: Int = 0)(implicit ctx: ExecutionContext): Enumerator[TraversableOnce[(T, BSONObjectID)]]
 
   def findByIds(ids: Traversable[BSONObjectID], limit: Int)(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
@@ -45,7 +47,7 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
 
-  def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
+  //def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) extends BaseRepository[T, ID] {
@@ -112,6 +114,10 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
     l.map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID])))
   }
 
+  def findFirst(sel: JsObject, skip: Int = 0)(implicit ctx: ExecutionContext): Future[Option[(T, BSONObjectID)]] = {
+    find(sel, 1, skip) map (_.headOption)
+  }
+
   def findStream(sel: JsObject, skip: Int = 0, pageSize: Int = 0)(implicit ctx: ExecutionContext): Enumerator[TraversableOnce[(T, BSONObjectID)]] = {
     val cursor = coll.find(sel).options(QueryOpts().skip(skip)).cursor[JsObject]
     val enum = if (pageSize != 0) cursor.enumerateBulks(pageSize) else cursor.enumerateBulks()
@@ -128,9 +134,9 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
     find(sel) map (_.headOption.map(_._1))
   }
 
-  def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError] = {
+  /*def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError] = {
     val selector = Json.obj("id" -> fact(obj.id))
     val modifier = Json.obj("$set" -> obj)
     coll.update(selector, modifier)
-  }
+  }*/
 }
