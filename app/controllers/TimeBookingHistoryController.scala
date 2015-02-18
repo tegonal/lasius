@@ -1,6 +1,7 @@
 package controllers
 
 import play.api.mvc.Controller
+
 import repositories.UserBookingHistoryRepositoryComponent
 import org.joda.time.DateTime
 import models.UserId

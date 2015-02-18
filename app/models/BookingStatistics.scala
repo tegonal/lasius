@@ -15,31 +15,31 @@ trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   def -(that: E): E
 }
 
-case class BookingByProjectId(value: (LocalDate, ProjectId)) extends CompositeBaseId[LocalDate, ProjectId]
+case class BookingByProjectId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 
 object BookingByProjectId {
-  implicit val idFormat: Format[BookingByProjectId] = BaseFormat.idformat[BookingByProjectId, LocalDate, ProjectId](BookingByProjectId.apply _, BaseFormat.localDateFormat, ProjectId.idFormat)
+  implicit val idFormat: Format[BookingByProjectId] = BaseFormat.idformat[BookingByProjectId](BookingByProjectId.apply _)
 }
 
-case class BookingByCategoryId(value: (LocalDate, CategoryId)) extends CompositeBaseId[LocalDate, CategoryId]
+case class BookingByCategoryId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 
 object BookingByCategoryId {
-  implicit val idFormat: Format[BookingByCategoryId] = BaseFormat.idformat[BookingByCategoryId, LocalDate, CategoryId](BookingByCategoryId.apply _, BaseFormat.localDateFormat, CategoryId.idFormat)
+  implicit val idFormat: Format[BookingByCategoryId] = BaseFormat.idformat[BookingByCategoryId](BookingByCategoryId.apply _)
 }
 
-case class BookingByTagId(value: (LocalDate, TagId)) extends CompositeBaseId[LocalDate, TagId]
+case class BookingByTagId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 
 object BookingByTagId {
-  implicit val idFormat: Format[BookingByTagId] = BaseFormat.idformat[BookingByTagId, LocalDate, TagId](BookingByTagId.apply _, BaseFormat.localDateFormat, TagId.idFormat)
+  implicit val idFormat: Format[BookingByTagId] = BaseFormat.idformat[BookingByTagId](BookingByTagId.apply _)
 }
 
-case class BookingByProject(id: BookingByProjectId, duration: Duration) extends OperatorEntity[BookingByProjectId, BookingByProject] {
+case class BookingByProject(id: BookingByProjectId, userId: UserId, day: DateTime, projectId: ProjectId, duration: Duration) extends OperatorEntity[BookingByProjectId, BookingByProject] {
   def +(that: BookingByProject): BookingByProject = {
-    BookingByProject(id, duration.plus(that.duration))
+    BookingByProject(id, userId, day, projectId, duration.plus(that.duration))
   }
 
   def -(that: BookingByProject): BookingByProject = {
-    BookingByProject(id, duration.minus(that.duration))
+    BookingByProject(id, userId, day, projectId, duration.minus(that.duration))
   }
 }
 
@@ -47,13 +47,13 @@ object BookingByProject {
   implicit val bookingByProjectFormat = Json.format[BookingByProject]
 }
 
-case class BookingByCategory(id: BookingByCategoryId, duration: Duration) extends OperatorEntity[BookingByCategoryId, BookingByCategory] {
+case class BookingByCategory(id: BookingByCategoryId, userId: UserId, day: DateTime, categoryId: CategoryId, duration: Duration) extends OperatorEntity[BookingByCategoryId, BookingByCategory] {
   def +(that: BookingByCategory): BookingByCategory = {
-    BookingByCategory(id, duration.plus(that.duration))
+    BookingByCategory(id, userId, day, categoryId, duration.plus(that.duration))
   }
 
   def -(that: BookingByCategory): BookingByCategory = {
-    BookingByCategory(id, duration.minus(that.duration))
+    BookingByCategory(id, userId, day, categoryId, duration.minus(that.duration))
   }
 }
 
@@ -61,13 +61,13 @@ object BookingByCategory {
   implicit val bookingByCategoryFormat = Json.format[BookingByCategory]
 }
 
-case class BookingByTag(id: BookingByTagId, duration: Duration) extends OperatorEntity[BookingByTagId, BookingByTag] {
+case class BookingByTag(id: BookingByTagId, userId: UserId, day: DateTime, tagId: TagId, duration: Duration) extends OperatorEntity[BookingByTagId, BookingByTag] {
   def +(that: BookingByTag): BookingByTag = {
-    BookingByTag(id, duration.plus(that.duration))
+    BookingByTag(id, userId, day, tagId, duration.plus(that.duration))
   }
 
   def -(that: BookingByTag): BookingByTag = {
-    BookingByTag(id, duration.minus(that.duration))
+    BookingByTag(id, userId, day, tagId, duration.minus(that.duration))
   }
 }
 

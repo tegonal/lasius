@@ -9,19 +9,21 @@ import org.joda.time.DateMidnight
 import org.joda.time.DateTime
 import models.BaseFormat.CompositeBaseId
 import org.joda.time.LocalDate
+import reactivemongo.bson.BSONDateTime
+import reactivemongo.bson.BSONHandler
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
 }
 
 object BaseFormat {
-  trait CompositeBaseId[I1, I2] extends BaseId[(I1, I2)]
+  trait CompositeBaseId[I1, I2] extends BaseId[((String, I1), (String, I2))]
 
   trait BaseBSONObjectId extends BaseId[BSONObjectID]
 
   //extended format function
   def idformat[I <: BaseBSONObjectId](implicit fact: Factory[BSONObjectID, I]) = new BSONObjectIdTypedIdFormat[I]
-  def idformat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: Factory[(I1, I2), I], f: Format[I1], f2: Format[I2]) = new CompositeIdTypedIdFormat[I, I1, I2]
+  def idformat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f: Format[I1], ff2: Format[I2]) = new CompositeIdTypedIdFormat[I, I1, I2]
 
   implicit val durationFormat: Format[Duration] = new Format[Duration] {
     def reads(json: JsValue): JsResult[Duration] = json match {
@@ -38,13 +40,18 @@ object BaseFormat {
   implicit val localDateFormat: Format[LocalDate] = new Format[LocalDate] {
     def reads(json: JsValue): JsResult[LocalDate] = json match {
 
-      case JsString(date) => {
-        JsSuccess(LocalDate.parse(date))
+      case JsNumber(millis) => {
+        JsSuccess(DateTime.now().withMillis(millis.toLong).toLocalDate)
       }
       case _ => JsError(s"Unexpected JSON value $json")
     }
 
-    def writes(duration: LocalDate): JsString = JsString(duration.toString())
+    def writes(duration: LocalDate): JsNumber = JsNumber(duration.toDate().getDate())
+  }
+
+  implicit object BSONDateTimeHandler extends BSONHandler[BSONDateTime, DateTime] {
+    def read(time: BSONDateTime) = new DateTime(time.value)
+    def write(jdtime: DateTime) = BSONDateTime(jdtime.getMillis)
   }
 }
 
@@ -65,12 +72,12 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
   def writes(id: I): JsValue = JsString(id.value.stringify)
 }
 
-class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: Factory[(I1, I2), I], f1: Format[I1], f2: Format[I2]) extends Format[I] {
+class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f1: Format[I1], f2: Format[I2]) extends Format[I] {
   def reads(json: JsValue): JsResult[I] = json match {
-    case JsArray(values) => {
-      Json.fromJson[I1](values(0)) match {
+    case JsObject(values) => {
+      Json.fromJson[I1](values(0)._2) match {
         case JsSuccess(i1, _) =>
-          Json.fromJson[I2](values(1)) match {
+          Json.fromJson[I2](values(1)._2) match {
             case JsSuccess(i2, _) =>
               JsSuccess(fact(i1, i2))
             case _ => JsError(s"Unexpected JSON value $json")
@@ -83,6 +90,6 @@ class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fa
   }
 
   def writes(id: I): JsValue = {
-    Json.arr(Json.toJson[I1](id.value._1), Json.toJson[I2](id.value._2))
+    Json.obj(id.value._1._1 -> Json.toJson[I1](id.value._1._2), id.value._2._1 -> Json.toJson[I2](id.value._2._2))
   }
 }

@@ -46,9 +46,9 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]] = {
     val sel = Json.obj("userId" -> userId,
-      And -> Json.arr(Json.obj("start" -> Json.obj(GreaterOrEqualsThan -> from)),
-        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to))))
-    Logger.debug(s"findByUserAndRange:$sel")
+      And -> Json.arr(Json.obj("day" -> Json.obj(GreaterOrEqualsThan -> from)),
+        Json.obj("day" -> Json.obj(LowerOrEqualsThan -> to))))
+    Logger.debug(s"findByUserAndRange:$this:$sel")
     find(sel) map (_.map(_._1))
   }
 

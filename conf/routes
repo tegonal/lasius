@@ -29,6 +29,9 @@ GET /current/:userId						controllers.CurrentUserTimeBookingsController.getCurre
 # StructureController
 GET /structure/:userId						controllers.StructureController.getCategories(userId:models.UserId)
 
+# Statistics
+GET /stats/aggregated/bytags/:userId			controllers.TimeBookingStatisticsController.getAggregatedStatisticsByTagAndRange(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+
 # Static
 # ~~~~
 # Map static resources from the /public folder to the /assets URL path
