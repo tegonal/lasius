@@ -15,15 +15,23 @@
 <table class="table">
 	<tr>
 		<th>Project Id</th>
+		<th>Tags</th>
 		<th>From</th>
 		<th>To</th>
 		<th>Amount</th>
 	</tr>
     <tr ng-repeat="booking in bookings">
-        <td>{{booking.projectId}}</td>
-        <td>{{booking.start | date: 'dd.MM HH:mm'}}</td>
-        <td>{{booking.end | date: 'dd.MM HH:mm'}}</td>
-        <td>{{diff(booking) | amDateFormat:'H:m'}}</td>
+        <td>{{booking.projectId}}@{{booking.categoryId}}</td>
+        <td>
+            <span ng-repeat="tag in booking.tags" >
+		        <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
+		            <span>{{tag}}</span>        
+		        </span>
+            </span>
+        </td>
+        <td>{{booking.start | date: 'HH:mm'}}</td>
+        <td>{{booking.end | date: 'HH:mm'}}</td>
+        <td>{{diff(booking)| number : 1}}</td>
     </tr>
 </table>
 </div>

@@ -38,7 +38,7 @@ define(['angular'], function(angular) {
         };
         
         scope.diff = function(booking) {
-          return moment(booking.end).subtract(booking.start);
+          return moment.duration(booking.end).subtract(booking.start).asHours();
         };
       }
     };
