@@ -44,7 +44,13 @@ define(['angular'], function(angular) {
         scope.dayPlus = function() {
           scope.date = scope.date.add(1, 'day');
           load();
-        };        
+        }; 
+        
+        scope.callbackFunction = function(){
+          return function(chart){
+              console.log('inner callback function', chart);
+          };
+        };
       }
     };
   }]);
