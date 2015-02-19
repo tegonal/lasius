@@ -30,7 +30,7 @@ GET /current/:userId						controllers.CurrentUserTimeBookingsController.getCurre
 GET /structure/:userId						controllers.StructureController.getCategories(userId:models.UserId)
 
 # Statistics
-GET /stats/aggregated/bytags/:userId			controllers.TimeBookingStatisticsController.getAggregatedStatisticsByTagAndRange(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /stats/aggregated/:userId			controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
 
 # Static
 # ~~~~

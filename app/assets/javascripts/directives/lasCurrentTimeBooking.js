@@ -54,22 +54,24 @@ define(
                           }
                         }
 
-                        function updateTime(momentInstance) {
+                        function updateTime(momentInstance, apply) {
                           scope.duration.moment = moment().subtract(momentInstance);
                           
-                          scope.$apply();                          
+                          if (apply) {
+                            scope.$apply();
+                          }
 
                           // update every second
                           activeTimeout = $window.setTimeout(function() {
-                            updateTime(momentInstance);
+                            updateTime(momentInstance, true);
                           }, 1000);
                         }
 
-                        function updateMoment() {
+                        function updateMoment(apply) {
                           cancelTimer();
                           if (currentValue) {
                             var momentValue = moment.duration(currentValue);
-                            updateTime(momentValue);
+                            updateTime(momentValue, false);
                           }
                         }
 

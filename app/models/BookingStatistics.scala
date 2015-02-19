@@ -11,6 +11,8 @@ import org.bson.BSONObject
 import org.joda.time.LocalDate
 
 trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
+  val duration: Duration
+
   def +(that: E): E
   def -(that: E): E
 }
