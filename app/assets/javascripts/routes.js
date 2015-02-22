@@ -10,7 +10,7 @@ define(['angular',
 
   mod.config(['$routeProvider', function($routeProvider) {
     $routeProvider
-      .when('/', {templateUrl: '/assets/dashboard.html', controller:dashboardController.DashboardCtrl})
+      .when('/', {templateUrl: '/assets/home.html', controller:dashboardController.DashboardCtrl})
       .otherwise({redirectTo: '/assets/notFound.html'});
   }]);
   

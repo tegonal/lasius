@@ -1,3 +1,32 @@
 body {
   margin-top: 150px;
 }
+
+.main_nav {
+	background-color: #e9eff1;
+	padding-bottom:0px;
+	padding-top:10px;	
+}
+
+.main_content {
+	padding-top:160px;
+}
+
+.booking {
+	margin-bottom: 10px;
+	padding-bottom: 10px !important;
+}
+
+.text_big {
+	font-size: 40pt;
+}
+
+.text_big small {
+	font-size: 12pt;
+}
+
+.align_center {
+	text-align: center;	
+}
+.current_booking_content {
+}
