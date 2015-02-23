@@ -1,5 +1,6 @@
 body {
-  margin-top: 150px;
+  margin-top: 360px;
+  padding-left: 20px;
 }
 
 .main_nav {
@@ -9,7 +10,6 @@ body {
 }
 
 .main_content {
-	padding-top:160px;
 }
 
 .booking {
@@ -29,4 +29,8 @@ body {
 	text-align: center;	
 }
 .current_booking_content {
+}
+
+.navbar-default {
+	margin-bottom:0px;
 }
