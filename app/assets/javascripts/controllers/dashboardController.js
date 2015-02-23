@@ -18,6 +18,17 @@ define(['angular'], function(angular) {
     $scope.dateSelection = function() {
       return function(){ return $scope.date;};
     };
+    
+    $scope.contentTypeMapping = {
+        "workview": "assets/workview.html",
+        "bookings": "assets/bookings.html",
+        "statistics": "assets/statistics.html"
+    };
+    
+    $scope.contentType = "workview";
+    $scope.selectContentType = function (contentType) {
+      $scope.contentType = contentType;      
+    };
   };
   
   DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', 'moment'];  
