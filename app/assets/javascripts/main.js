@@ -17,6 +17,7 @@
         deps: ['jquery'],
         exports: 'angular'
       },
+      'angular-animate': ['angular'],
       'angular-route': ['angular'],
       'angular-cookies': ['angular'],      
       'bootstrap': ['jquery'],
@@ -40,13 +41,14 @@
       'requirejs': ['../lib/requirejs/require'],
       'jquery': ['../lib/jquery/jquery'],
       'angular': ['../lib/angularjs/angular'],
+      'angular-animate': ['../lib/angularjs/angular-animate'],
       'angular-route': ['../lib/angularjs/angular-route'],
       'angular-cookies': ['../lib/angularjs/angular-cookies'],      
       'bootstrap': ['../lib/bootstrap/js/bootstrap'],
       'angular-ui-bootstrap': ['../lib/angular-ui-bootstrap/ui-bootstrap-tpls'],
       'jsRoutes': ['/jsroutes'],
       'angular-translate': ['../lib/angular-translate/angular-translate'],
-      'angular-translate-loader-static-files': [ '../lib/angular-translate-loader-static-files/angular-translate-loader-static-files' ],
+      'angular-translate-loader-static-files': [ '../lib/angular-translate-loader-static-files/angular-translate-loader-static-files' ],      
       'bootstrap-select': ['../lib/bootstrap-select/js/bootstrap-select'],
       'angular-sanitize': ['../lib/angular-sanitize/angular-sanitize'],
       'ui.select': ['../lib/angular-ui-select/select'],
@@ -66,7 +68,7 @@
   // Load the app. This is kept minimal so it doesn't need much updating.
   require(['angular', 'angular-cookies', 'angular-route', 'jquery', 'bootstrap', 
            'angular-ui-bootstrap', 'angular-sanitize', 'ui.select', 'angular-translate', 
-           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angularjs-nvd3-directives', './app'],
+           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angular-animate', 'angularjs-nvd3-directives', './app'],
     function (angular) {
       angular.bootstrap(document, ['app']);
     }

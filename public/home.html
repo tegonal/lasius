@@ -1,20 +1,24 @@
 <div class="navbar navbar-fixed-top main_nav">	
 	<div class="container-fluid">
 		<div class="row-fluid">
-			<div class="col-md-12">
+			<div class="col-md-11">
 				<div class="navbar-header">
 					<a class="navbar-brand" href="#">Lasius</a>
 				</div>
 			</div>
+			<div class="col-md-1">
+      			<span ng-if="currentBookingOn" class="glyphicon glyphicon-collapse-up" ng-click="showCurrentBooking(false)"></span>
+      			<span ng-if="!currentBookingOn" class="glyphicon glyphicon-collapse-down" ng-click="showCurrentBooking(true)"></span>
+			</div>
 		</div>
-		<div class="row-fluid">
+		<div class="row-fluid animate-if" ng-if="currentBookingOn" ng-animate-children>
 			<div class="col-md-4">				
 				<las-booking  user-id="'noob'"/>
 			</div>
 			<div class="col-md-1">
 			</div>
 			<div class="col-md-7">
-				<las-current-time-booking user-id="'noob'"></las-current-time-booking>
+				<las-current-time-booking user-id="'noob'"></las-current-time-booking>							
 			</div>
 		</div>
 	</div>

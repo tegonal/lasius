@@ -7,6 +7,11 @@ define(['angular'], function(angular) {
   var DashboardCtrl = function($q, $log, $scope, $rootScope, moment) {
     
     $scope.date = moment();
+    $scope.currentBookingOn = true;
+    
+    $scope.showCurrentBooking = function(on) {
+      $scope.currentBookingOn = on;
+    };
     
     $scope.dayMinus = function() {
       $scope.date = $scope.date.subtract(1, 'day');
