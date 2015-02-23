@@ -1,1 +1,34 @@
-Bookings
+<div class="btn-toolbar" role="toolbar">
+	  <div class="btn-group">
+	    <button type="button" class="btn btn-default" ng-click="dayMinus()">
+	      <span class="glyphicon glyphicon-chevron-left"></span>
+	    </button>
+	    
+	    <span class="title">{{date | amDateFormat:'Do MMM YYYY'}}</span>
+	     
+	    <button type="button" class="btn btn-default" ng-click="dayPlus()">
+	      <span class="glyphicon glyphicon-chevron-right"></span>
+	    </button>
+	  </div>
+	</div>
+	<div class="container_fluid">
+		<div class="row_fluid">
+			<div class="col-md-8">
+				<las-booking-history date="date" user-id="'noob'" ></las-booking-history>
+			</div>
+			<div class="col-md-4">
+				<div>		
+					By Category<br />
+					<las-booking-pie-stats date="date" user-id="'noob'" source="'category'"></las-booking-tag-stats>
+				</div>
+				<div>
+					By Project<br />
+					<las-booking-pie-stats date="date" user-id="'noob'" source="'project'"></las-booking-tag-stats>
+				</div>
+				<div>
+					By Tag<br />
+					<las-booking-pie-stats date="date" user-id="'noob'" source="'tag'"></las-booking-tag-stats>
+				</div>
+			</div>
+		</div>
+	</div>

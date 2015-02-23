@@ -9,37 +9,30 @@ define(['angular'], function(angular) {
       transclude: true,
       templateUrl: '/assets/directives/las-booking-history-tmpl.html',
       scope:  {
-        userId:'='
+        userId:'=',
+        date:'='
       },
       link: function(scope, iElement, iAttrs) {
         
-        scope.date = moment();
-        
-        
         var pattern = 'DDMMYYYYHHmmss';               
         
-        var load = function() {
-          var from = scope.date.startOf('day').format(pattern);
-          var to = scope.date.endOf('day').format(pattern);
+        var load = function(date) {
+          var from = date.startOf('day').format(pattern);
+          var to = date.endOf('day').format(pattern);
           
           bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
             scope.bookings = bookings;          
           });
         };
-        load();
-        
-        scope.dayMinus = function() {
-          scope.date = scope.date.subtract(1, 'day');
-          load();
-        };
-        scope.dayPlus = function() {
-          scope.date = scope.date.add(1, 'day');
-          load();
-        };
         
         scope.diff = function(booking) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
         };
+        
+        scope.$watch('date',
+            function(value){
+              load(value);                
+            }, true);
         
         msgBus.onMsg('UserTimeBookingHistoryEntryAdded', scope, function(
             event, msg) {
