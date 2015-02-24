@@ -15,6 +15,14 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      getStatistics: function (source, userId, from, to) {
+        return playRoutes.controllers.TimeBookingStatisticsController.getStatistics(source, userId, from, to).get().then(function (response) {
+          return response.data;
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);
