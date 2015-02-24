@@ -5,8 +5,8 @@ define(['angular'], function(angular) {
   'use strict';
 
   var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment) {
-    
-    $scope.date = moment();
+        
+    $scope.range = {};    
     $scope.currentBookingOn = true;
     
     $scope.showCurrentBooking = function(on) {
@@ -20,18 +20,7 @@ define(['angular'], function(angular) {
         $animate.setClass(content, 'main_content_closed', 'main_content');
       }
     };
-    
-    $scope.dayMinus = function() {
-      $scope.date = $scope.date.subtract(1, 'day');
-    };
-    $scope.dayPlus = function() {
-      $scope.date = $scope.date.add(1, 'day');
-    };
-    
-    $scope.dateSelection = function() {
-      return function(){ return $scope.date;};
-    };
-    
+        
     $scope.contentTypeMapping = {
         "workview": "assets/workview.html",
         "bookings": "assets/bookings.html",

@@ -10,7 +10,7 @@ define(['angular'], function(angular) {
       scope:  {
         userId:'=',
         source:'=',
-        date:'=',
+        range:'=',
         serie: '='
       },
       link: function(scope, iElement, iAttrs) {
@@ -28,12 +28,12 @@ define(['angular'], function(angular) {
         
         var pattern = 'DDMMYYYYHHmmss';        
         
-        var load = function(date) {
-          if (date === undefined) {
+        var load = function(range) {
+          if (range === undefined || range.from === undefined) {
             return;
           }
-          var from = date.startOf('day').format(pattern);
-          var to = date.endOf('day').format(pattern);
+          var from = range.from.format(pattern);
+          var to = range.to.format(pattern);
           
           bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
             scope.statistics = [{
@@ -43,7 +43,7 @@ define(['angular'], function(angular) {
           });
         };
         
-        scope.$watch('date',
+        scope.$watch('range',
             function(value){
               load(value);                              
             }, true);

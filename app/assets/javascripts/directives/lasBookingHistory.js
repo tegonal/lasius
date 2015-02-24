@@ -10,15 +10,18 @@ define(['angular'], function(angular) {
       templateUrl: '/assets/directives/las-booking-history-tmpl.html',
       scope:  {
         userId:'=',
-        date:'='
+        range:'='
       },
       link: function(scope, iElement, iAttrs) {
         
         var pattern = 'DDMMYYYYHHmmss';               
         
-        var load = function(date) {
-          var from = date.startOf('day').format(pattern);
-          var to = date.endOf('day').format(pattern);
+        var load = function(range) {
+          if (range === undefined || range.from === undefined) {
+            return;
+          }
+          var from = range.from.format(pattern);
+          var to = range.to.format(pattern);
           
           bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
             scope.bookings = bookings;          
@@ -29,7 +32,7 @@ define(['angular'], function(angular) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
         };
         
-        scope.$watch('date',
+        scope.$watch('range',
             function(value){
               load(value);                
             }, true);
@@ -37,7 +40,7 @@ define(['angular'], function(angular) {
         msgBus.onMsg('UserTimeBookingHistoryEntryAdded', scope, function(
             event, msg) {
           console.log('msg received' + msg.type);
-          if (scope.userId === msg.booking.userId && scope.date.startOf('day').unix() === moment(msg.booking.start).startOf('day').unix()) {
+          if (scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
             scope.bookings.push(msg.booking);
             scope.$apply();
           }          

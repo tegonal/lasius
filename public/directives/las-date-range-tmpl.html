@@ -1,0 +1,14 @@
+<div class="btn-toolbar" role="toolbar">
+      <div class="btn-group">
+        <button type="button" class="btn btn-default" ng-click="minus()">
+          <span class="glyphicon glyphicon-chevron-left"></span>
+        </button>
+        
+        <span class="title" ng-if="selection=='day'">{{date | amDateFormat:'Do MMM YYYY'}}</span>
+        <span class="title" ng-if="selection=='month'">{{range.from | amDateFormat:'Do MMM YYYY'}}-{{range.to | amDateFormat:'Do MMM YYYY'}}</span>
+         
+        <button type="button" class="btn btn-default" ng-click="plus()">
+          <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+      </div>
+    </div>
