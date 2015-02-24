@@ -6,7 +6,8 @@ define(['angular'], function(angular) {
 
   var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment) {
         
-    $scope.range = {};    
+    $scope.bookingRange = {};    
+    $scope.statisticRange = {};    
     $scope.currentBookingOn = true;
     
     $scope.showCurrentBooking = function(on) {
