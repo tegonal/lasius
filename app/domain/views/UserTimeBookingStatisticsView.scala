@@ -12,6 +12,7 @@ import org.joda.time.DateMidnight
 import org.joda.time.Duration
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import org.joda.time.Interval
 
 object UserTimeBookingStatisticsView {
 
@@ -125,12 +126,12 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
     //handle if start and end date are within same day
     if (daysBetween == 0) {
-      val duration = endDate.minus(startDate.getMillis).toLocalDate.toInterval.toDuration
+      val duration = new Interval(startDate, endDate).toDuration()
       getDurations(booking, startDateLocalDate, duration)
     } else {
       //extract duration at start date
       val endOfStart = endOfDay(startDate)
-      val startDuration = endOfStart.minus(startDate.getMillis).toLocalDate.toInterval.toDuration
+      val startDuration =  new Interval(endOfStart, startDate).toDuration()
 
       val startDurations = getDurations(booking, startDateLocalDate, startDuration)
 
@@ -149,7 +150,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       }
 
       //extract duration on end date      
-      val endDuration = endOfStart.minus(endDateLocalDate.getMillis).toLocalDate.toInterval.toDuration
+      val endDuration = new Interval(endDateLocalDate, endOfStart).toDuration()
       val endDurations = getDurations(booking, endDateLocalDate, endDuration)
 
       (startDurations ++ inBetweenDurations) ++: endDurations
