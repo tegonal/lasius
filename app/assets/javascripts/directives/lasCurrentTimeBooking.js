@@ -18,7 +18,8 @@ define(
                       transclude : true,
                       templateUrl : '/assets/directives/las-current-time-booking-tmpl.html',
                       scope : {
-                        userId : '='
+                        userId : '=',
+                        compact: '='
                       },
                       link : function(scope, iElement, iAttrs) {
                         var activeTimeout = null;
