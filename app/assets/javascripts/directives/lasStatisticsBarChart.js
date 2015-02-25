@@ -2,44 +2,42 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('directives.lasBookingBarStats', []);
-  mod.directive('lasBookingBarStats', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
+  var mod = angular.module('directives.lasStatisticsBarChart', []);
+  mod.directive('lasStatisticsBarChart', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
     return {
       restrict: 'E',
-      templateUrl: '/assets/directives/las-booking-bar-stats-tmpl.html',
+      templateUrl: '/assets/directives/las-statistics-bar-chart-tmpl.html',
       scope:  {
         userId:'=',
         source:'=',
         range:'=',
-        serie: '='
+        width: '=',
+        height: '=',
       },
       link: function(scope, iElement, iAttrs) {
         
         scope.xFunction = function(){
           return function(d) {
-              return d.label;
+              return d.day;
           };
         };
         scope.yFunction = function(){
           return function(d) { 
-            return d.value; 
+            return d.duration; 
           };
         };
-        
-        var pattern = 'DDMMYYYYHHmmss';        
-        
+                       
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
             return;
           }
+          
+          var pattern = 'DDMMYYYY000000';
           var from = range.from.format(pattern);
           var to = range.to.format(pattern);
-          
-          bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
-            scope.statistics = [{
-                "key": scope.serie,
-                "values": statistics
-            }];
+                  
+          bookingStatisticsService.getStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
+            scope.statistics = statistics;
           });
         };
         

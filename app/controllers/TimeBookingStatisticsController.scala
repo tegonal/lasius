@@ -1,6 +1,7 @@
 package controllers
 
 import play.api.mvc.Controller
+
 import repositories.UserBookingStatisticsRepositoryComponent
 import models._
 import play.api.mvc.Action
@@ -12,6 +13,7 @@ import repositories.MongoUserBookingStatisticsRepositoryComponent
 import repositories.BookingStatisticRepository
 import scala.concurrent.Future
 import repositories.BookingByCategoryRepository
+import utils.DateTimeUtils._
 
 class TimeBookingStatisticsController {
   self: Controller with UserBookingStatisticsRepositoryComponent =>
@@ -75,28 +77,40 @@ class TimeBookingStatisticsController {
 
   def getStatisticsByTag(userId: UserId, from: DateTime, to: DateTime, range: Seq[DateTime]) = {
     bookingByTagRepository.findByUserIdAndRange(userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.tagId) map { entry =>
-        (entry._1, range.map(r => entry._2.filter(_.day == r).headOption.map(b => toJson(b.day, b.duration.getMillis)).getOrElse(toJson(r, 0))))
+      val combinedMap = bookings.groupBy(_.tagId) map { entry =>
+        (entry._1, range.map { r =>
+          entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
+            toJson(r, b.duration.getMillis)
+          }.getOrElse(toJson(r, 0))
+        })
       }
-      Ok(Json.toJson(aggregatedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
+      Ok(Json.toJson(combinedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
     }
   }
 
   def getStatisticsByCategory(userId: UserId, from: DateTime, to: DateTime, range: Seq[DateTime]) = {
     bookingByCategoryRepository.findByUserIdAndRange(userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.categoryId) map { entry =>
-        (entry._1, range.map(r => entry._2.filter(_.day == r).headOption.map(b => toJson(b.day, b.duration.getMillis)).getOrElse(toJson(r, 0))))
+      val combinedMap = bookings.groupBy(_.categoryId) map { entry =>
+        (entry._1, range.map { r =>
+          entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
+            toJson(r, b.duration.getMillis)
+          }.getOrElse(toJson(r, 0))
+        })
       }
-      Ok(Json.toJson(aggregatedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
+      Ok(Json.toJson(combinedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
     }
   }
 
   def getStatisticsByProject(userId: UserId, from: DateTime, to: DateTime, range: Seq[DateTime]) = {
     bookingByProjectRepository.findByUserIdAndRange(userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.projectId) map { entry =>
-        (entry._1, range.map(r => entry._2.filter(_.day == r).headOption.map(b => toJson(b.day, b.duration.getMillis)).getOrElse(toJson(r, 0))))
+      val combinedMap = bookings.groupBy(_.projectId) map { entry =>
+        (entry._1, range.map { r =>
+          entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
+            toJson(r, b.duration.getMillis)
+          }.getOrElse(toJson(r, 0))
+        })
       }
-      Ok(Json.toJson(aggregatedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
+      Ok(Json.toJson(combinedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
     }
   }
 }

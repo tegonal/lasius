@@ -2,11 +2,11 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('directives.lasBookingPieStats', []);
-  mod.directive('lasBookingPieStats', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
+  var mod = angular.module('directives.lasBookingPieChart', []);
+  mod.directive('lasBookingPieChart', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
     return {
       restrict: 'E',
-      templateUrl: '/assets/directives/las-booking-pie-stats-tmpl.html',
+      templateUrl: '/assets/directives/las-booking-pie-chart-tmpl.html',
       scope:  {
         userId:'=',
         source:'=',

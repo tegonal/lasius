@@ -1,6 +1,7 @@
 package domain.views
 
 import akka.persistence.PersistentView
+
 import akka.actor._
 import domain.UserTimeBookingAggregate._
 import repositories._
@@ -13,6 +14,7 @@ import org.joda.time.Duration
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import org.joda.time.Interval
+import utils.DateTimeUtils._
 
 object UserTimeBookingStatisticsView {
 
@@ -118,29 +120,29 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   protected def calculatDurations(booking: Booking) = {
     //split booking by dates
     val startDate = booking.start
-    val startDateLocalDate = startOfDay(startDate)
+    val startDateStartOfDay = startDate.withTimeAtStartOfDay
     val endDate = booking.end.get
-    val endDateLocalDate = startOfDay(endDate)
+    val endDateStartOfDay = endDate.withTimeAtStartOfDay
 
-    val daysBetween = Days.daysBetween(startDateLocalDate, endDateLocalDate).getDays()
+    val daysBetween = Days.daysBetween(startDateStartOfDay, endDateStartOfDay).getDays()
 
     //handle if start and end date are within same day
     if (daysBetween == 0) {
       val duration = new Interval(startDate, endDate).toDuration()
-      getDurations(booking, startDateLocalDate, duration)
+      getDurations(booking, startDateStartOfDay, duration)
     } else {
       //extract duration at start date
-      val endOfStart = endOfDay(startDate)
-      val startDuration =  new Interval(endOfStart, startDate).toDuration()
+      val endOfStart = startDate.withTimeAtEndOfDay
+      val startDuration = new Interval(startDate, endOfStart).toDuration()
 
-      val startDurations = getDurations(booking, startDateLocalDate, startDuration)
+      val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
 
       //extract whole day for duration inbetween start and end date
       val inBetweenDurations = if (daysBetween > 1) {
         for {
           dayDiff <- 0 to daysBetween - 1
         } yield {
-          val date = startDateLocalDate.plusDays(dayDiff)
+          val date = startDateStartOfDay.plusDays(dayDiff)
 
           val dayDuration = Duration.standardDays(1)
           getDurations(booking, date, dayDuration)
@@ -150,20 +152,12 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       }
 
       //extract duration on end date      
-      val endDuration = new Interval(endDateLocalDate, endOfStart).toDuration()
-      val endDurations = getDurations(booking, endDateLocalDate, endDuration)
+      val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
+      val endDurations = getDurations(booking, endDateStartOfDay, endDuration)
 
       (startDurations ++ inBetweenDurations) ++: endDurations
     }
 
-  }
-
-  private def endOfDay(date: DateTime): DateTime = {
-    return date.withHourOfDay(23).withMinuteOfHour(59).withSecondOfMinute(59);
-  }
-
-  private def startOfDay(date: DateTime): DateTime = {
-    return date.withHourOfDay(0).withMinuteOfHour(0).withSecondOfMinute(0);
   }
 
   private def getDurations(booking: Booking, day: DateTime, duration: Duration): Seq[_] = {
