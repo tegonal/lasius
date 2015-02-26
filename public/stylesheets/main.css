@@ -70,3 +70,15 @@ body {
 .main_content_closed {
 	margin-top: 130px;  	
 }
+
+.animate-show-hide {
+}
+
+.animate-show-hide {
+   -webkit-transition:all linear 0.5s;
+  transition:all linear 0.5s;
+}
+
+.animate-show-hide.ng-hide {
+  opacity:0;
+}
