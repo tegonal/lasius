@@ -29,9 +29,9 @@
   		<div class="container-fluid">
 	  		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 	      		<ul class="nav navbar-nav">	
-	        		<li ng-class="contentType==='workview'?'active':''"><a href="#/" ng-click="selectContentType('workview')">Work view</a></li>
-	        		<li ng-class="contentType==='bookings'?'active':''"><a href="#/" ng-click="selectContentType('bookings')">Time bookings</a></li>
-	        		<li ng-class="contentType==='statistics'?'active':''"><a href="#/" ng-click="selectContentType('statistics')">Statistics</a></li>
+	        		<li ng-class="contentType==='workview'?'active':''"><a href="#/" ng-click="selectContentType('workview', true)">Work view</a></li>
+	        		<li ng-class="contentType==='bookings'?'active':''"><a href="#/" ng-click="selectContentType('bookings', false)">Time bookings</a></li>
+	        		<li ng-class="contentType==='statistics'?'active':''"><a href="#/" ng-click="selectContentType('statistics', false)">Statistics</a></li>
 	        	</ul>
 	        	<ul class="nav navbar-nav navbar-right">        	
 	        		<li><a href="#">Preferences</a></li>

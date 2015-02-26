@@ -29,8 +29,9 @@ define(['angular'], function(angular) {
     };
     
     $scope.contentType = "workview";
-    $scope.selectContentType = function (contentType) {
+    $scope.selectContentType = function (contentType, currentBookingOn) {
       $scope.contentType = contentType;      
+      $scope.showCurrentBooking(currentBookingOn);
     };
   };
   
