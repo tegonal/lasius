@@ -32,8 +32,20 @@ define(['angular'], function(angular) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
         };
         
+        var removeBooking = function(bookingId) {
+          for(var i=0;i<scope.bookings.length;i++){
+            if(scope.bookings[i].id === bookingId){
+              scope.bookings.splice(i, 1);
+              scope.$apply();
+              break;
+            }
+          }   
+        };
+        
         scope.removeTimeBooking = function(bookingId) {
-          bookingHistoryService.removeTimeBooking(scope.userId, bookingId);
+          bookingHistoryService.removeTimeBooking(scope.userId, bookingId).then(function(result){
+            removeBooking(bookingId);
+          });
         };
         
         scope.$watch('range',
@@ -48,16 +60,12 @@ define(['angular'], function(angular) {
             scope.bookings.push(msg.booking);
             scope.$apply();
           }          
-        });
+        });            
         
         msgBus.onMsg('UserTimeBookingHistoryEntryRemoved', scope, function(
             event, msg) {
           console.log('msg received' + msg.type);
-          for(var i=0;i<scope.bookings.length;i++){
-            if(scope.bookings[i].id === msg.bookingId){
-              scope.bookings.splice(i, 1);
-            }
-          }               
+          removeBooking(msg.bookingId);             
         });
         
         msgBus.onMsg('UserTimeBookingHistoryEntryCleaned', scope, function(
