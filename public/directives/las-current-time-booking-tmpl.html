@@ -13,7 +13,7 @@
 	  	<span class="text_big" ng-if="duration.moment.minutes() > 1">{{duration.moment.minutes()}} <small>minutes</small></span>
 	  	<span class="text_big" ng-if="duration.moment.minutes() == 1">1 <small>minute</small></span>
 	  	<span class="text_big" >{{duration.moment.seconds()}} <small>seconds</small></span>
-	  	<span>
+	  	<span ng-if="total_duration.moment">
 	  		(Total <span ng-if="total_duration.moment.hours() > 2"><b>{{total_duration.moment.hours()-1}}</b> <small>hours</small></span>
 	  		<span ng-if="total_duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
 	  		<span ng-if="total_duration.moment.minutes() > 1"><b>{{total_duration.moment.minutes()}}</b> <small>minutes</small></span>
@@ -44,7 +44,7 @@
         <span ng-if="duration.moment.minutes() > 1"><b>{{duration.moment.minutes()}}</b> <small>minutes</small></span>
         <span ng-if="duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
         <span><b>{{duration.moment | amDateFormat:'s'}}</b> <small>seconds</small></span>
-       <span>
+       <span ng-if="total_duration.moment">
 	  		<small>(Total</small> <span ng-if="total_duration.moment.hours() > 2"><b>{{total_duration.moment.hours()-1}}</b> <small>hours</small></span>
 	  		<span ng-if="total_duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
 	  		<span ng-if="total_duration.moment.minutes() > 1"><b>{{total_duration.moment.minutes()}}</b> <small>minutes</small></span>
