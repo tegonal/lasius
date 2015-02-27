@@ -1,7 +1,7 @@
  <div class="panel panel-info" ng-if="!compact && !noBooking">
  	<div class="panel-heading">
- 		{{booking.projectId}}<small>@{{booking.categoryId}}</small>
-    	<span ng-repeat="tag in booking.tags" >
+ 		{{booking.projectId}}<small>@{{result.booking.categoryId}}</small>
+    	<span ng-repeat="tag in result.booking.tags" >
 		    <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
 		        <span>{{tag}}</span>        
 		    </span>
@@ -12,7 +12,14 @@
 	  	<span class="text_big" ng-if="duration.moment.hours() == 2">1 <small>hour</small></span>
 	  	<span class="text_big" ng-if="duration.moment.minutes() > 1">{{duration.moment.minutes()}} <small>minutes</small></span>
 	  	<span class="text_big" ng-if="duration.moment.minutes() == 1">1 <small>minute</small></span>
-	  	<span class="text_big" >{{duration.moment | amDateFormat:'s'}} <small>seconds</small></span>
+	  	<span class="text_big" >{{duration.moment.seconds()}} <small>seconds</small></span>
+	  	<span>
+	  		(Total <span ng-if="total_duration.moment.hours() > 2"><b>{{total_duration.moment.hours()-1}}</b> <small>hours</small></span>
+	  		<span ng-if="total_duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
+	  		<span ng-if="total_duration.moment.minutes() > 1"><b>{{total_duration.moment.minutes()}}</b> <small>minutes</small></span>
+	  		<span ng-if="total_duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
+	  		<span ><b>{{total_duration.moment.seconds()}}</b> <small>seconds</small></span>)
+	  	</span>
   	</div>
   	<div class="panel-footer">
   		<button class="btn btn-warning btn-lg btn-block" ng-click="stopBooking(booking.id)">Stop</button>
@@ -25,9 +32,9 @@
  		<span class="text_big">No Booking</span>
  	</div>
  </div>
- <div ng-if="compact && !noBooking">
-    {{booking.projectId}}<small>@{{booking.categoryId}}</small>
-    <span ng-repeat="tag in booking.tags" >
+ <span ng-if="compact && !noBooking">
+    {{booking.projectId}}<small>@{{result.booking.categoryId}}</small>
+    <span ng-repeat="tag in result.booking.tags" >
             <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
                 <span>{{tag}}</span>        
             </span>
@@ -37,4 +44,11 @@
         <span ng-if="duration.moment.minutes() > 1"><b>{{duration.moment.minutes()}}</b> <small>minutes</small></span>
         <span ng-if="duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
         <span><b>{{duration.moment | amDateFormat:'s'}}</b> <small>seconds</small></span>
- </div>
+       <span>
+	  		<small>(Total</small> <span ng-if="total_duration.moment.hours() > 2"><b>{{total_duration.moment.hours()-1}}</b> <small>hours</small></span>
+	  		<span ng-if="total_duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
+	  		<span ng-if="total_duration.moment.minutes() > 1"><b>{{total_duration.moment.minutes()}}</b> <small>minutes</small></span>
+	  		<span ng-if="total_duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
+	  		<span ><b>{{total_duration.moment.seconds()}}</b> <small>seconds</small></span><small>)</small>
+	  	</span>
+ </span>

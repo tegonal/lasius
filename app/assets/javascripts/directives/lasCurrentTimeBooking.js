@@ -27,15 +27,16 @@ define(
                         var unwatchChanges;
 
                         scope.duration = {};
+                        scope.total_duration = {};
                         currentTimeBookingService
                             .getCurrentTimeBooking(scope.userId);
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
                           console.log('msg received' + msg.type);
-                          scope.booking = msg.booking;
+                          scope.result = msg;
 
-                          scope.noBooking = scope.booking === undefined;
+                          scope.noBooking = scope.result.booking === undefined;
 
                           console.log(msg);
                           scope.$apply();
@@ -57,6 +58,9 @@ define(
 
                         function updateTime(momentInstance, apply) {
                           scope.duration.moment = moment().subtract(momentInstance);
+                          if (scope.result.totalBySameBooking) {
+                            scope.total_duration.moment = moment(scope.duration.moment).add(moment.duration(scope.result.totalBySameBooking));
+                          }
                           
                           if (apply) {
                             scope.$apply();
@@ -72,11 +76,12 @@ define(
                           cancelTimer();
                           if (currentValue) {
                             var momentValue = moment.duration(currentValue);
+                            
                             updateTime(momentValue, false);
                           }
                         }
 
-                        unwatchChanges = scope.$watch('booking.start',
+                        unwatchChanges = scope.$watch('result.booking.start',
                             function(value) {
                               if ((typeof value === 'undefined') || (value === null) || (value === '')) {
                                 cancelTimer();
