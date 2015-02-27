@@ -82,3 +82,8 @@ body {
 .animate-show-hide.ng-hide {
   opacity:0;
 }
+
+.workview-chart {
+	position: absolute;	
+}
+}
