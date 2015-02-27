@@ -5,7 +5,7 @@
 		<th>Tags</th>	
 		<th></th>	
 	</tr>
-    <tr ng-repeat="favorite in favorites.favorites">
+    <tr ng-repeat="favorite in favorites.favorites" ng-class="isActive(favorite)?'active':''">
         <td>{{favorite.projectId}}@{{favorite.categoryId}}</td>
         <td>
             <span ng-repeat="tag in favorite.tags" >

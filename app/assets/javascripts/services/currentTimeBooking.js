@@ -7,7 +7,7 @@ define(['angular'], function (angular) {
   var mod = angular.module('services.currentTimeBooking', []);
   mod.factory('currentTimeBookingService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
     
-    return {             
+    return {     
       getCurrentTimeBooking: function (userId) {
         return playRoutes.controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking(userId).get().then(function (response) {
           return response.data;          
@@ -18,22 +18,6 @@ define(['angular'], function (angular) {
       },
       stopBooking: function(userId, bookingId) {
         return playRoutes.controllers.TimeBookingController.stop(userId, bookingId).post().then(function (response) {
-          return response.data;          
-        }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
-          return reason.data;
-        });
-      },
-      addFavorite: function(userId, categoryId, projectId, tags) {
-        return playRoutes.controllers.UserFavoritesController.addFavorite(userId, categoryId, projectId, tags).post().then(function (response) {
-          return response.data;          
-        }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
-          return reason.data;
-        });
-      },
-      removeFavorite: function(userId, categoryId, projectId, tags) {
-        return playRoutes.controllers.UserFavoritesController.removeFavorite(userId, categoryId, projectId, tags).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

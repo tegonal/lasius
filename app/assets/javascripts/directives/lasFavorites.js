@@ -22,6 +22,21 @@ define(['angular'], function(angular) {
             scope.favorites = favorites;
           });
         };
+        
+        scope.isActive = function(favorite) {
+          if (scope.booking === undefined) {
+            return false;
+          }
+          return scope.booking.categoryId === favorite.categoryId &&
+            scope.booking.projectId === favorite.projectId &&
+            scope.booking.tags.equals(favorite.tags);
+        };
+        
+        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
+            event, msg) {
+          scope.booking = msg.booking;
+          scope.$apply();
+        });
       }
     };
   }]);

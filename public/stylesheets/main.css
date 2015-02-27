@@ -94,3 +94,7 @@ body {
 .if-fade.ng-enter.ng-enter-active {
   opacity:1;
 }
+
+.table tbody tr.active td {
+    background-color: #aec7e8;
+}

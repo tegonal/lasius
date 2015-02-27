@@ -10,9 +10,10 @@ define(
               [
                   '$window',
                   'currentTimeBookingService',
+                  'favoritesService', 
                   'msgBus',
                   'moment',
-                  function($window,currentTimeBookingService, msgBus, moment) {
+                  function($window, currentTimeBookingService, favoritesService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -25,30 +26,60 @@ define(
                         var activeTimeout = null;
                         var currentValue;
                         var unwatchChanges;
+                        
+                        var isFavorite = function(booking) {
+                          if (booking === undefined || scope.favorites === undefined) {
+                            return false;
+                          }
+                          var length = scope.favorites.favorites.length;
+                          for (var i=0; i<length; ++i) {
+                            var favorite = scope.favorites.favorites[i];
+                            if (booking.categoryId === favorite.categoryId &&
+                              booking.projectId === favorite.projectId &&
+                              booking.tags.equals(favorite.tags)) {
+                              return true;
+                            }
+                          }
+                          return false;
+                        };
 
                         scope.duration = {};
                         scope.total_duration = {};
                         currentTimeBookingService
                             .getCurrentTimeBooking(scope.userId);
                         
+                        favoritesService.getFavorites(scope.userId).then(function(favorites) {
+                          scope.favorites = favorites;
+                          if (scope.result && scope.result.booking) {
+                            scope.result.booking.isFavorite = isFavorite(scope.result.booking);
+                          }
+                          scope.$apply();
+                        });
+                        
                         scope.addToFavorites = function() {
-                          currentTimeBookingService.addFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
-                            scope.result.booking.isFavorite = true;
+                          favoritesService.addFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                            scope.favorites = favorites;
+                            scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           });
                         };
                         
                         scope.removeFromFavorites = function() {
-                          currentTimeBookingService.removeFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
-                            scope.result.booking.isFavorite = false;
+                          favoritesService.removeFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                            scope.favorites = favorites;
+                            scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
                         };
+                        
+                       
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
-                          console.log('msg received' + msg.type);
                           scope.result = msg;
 
                           scope.noBooking = scope.result.booking === undefined;
+                          if (scope.result.booking) {
+                            scope.result.booking.isFavorite = isFavorite(scope.result.booking);
+                          }
 
                           console.log(msg);
                           scope.$apply();
@@ -105,7 +136,9 @@ define(
                               }
 
                               currentValue = value;
-                              updateMoment();                              
+                              updateMoment();
+                              
+                              scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                             });
 
                         scope.$on('$destroy', function() {
