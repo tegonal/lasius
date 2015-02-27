@@ -23,6 +23,22 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      addFavorite: function(userId, categoryId, projectId, tags) {
+        return playRoutes.controllers.UserFavoritesController.addFavorite(userId, categoryId, projectId, tags).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
+      },
+      removeFavorite: function(userId, categoryId, projectId, tags) {
+        return playRoutes.controllers.UserFavoritesController.removeFavorite(userId, categoryId, projectId, tags).delete().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);

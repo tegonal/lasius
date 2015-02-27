@@ -30,6 +30,18 @@ define(
                         scope.total_duration = {};
                         currentTimeBookingService
                             .getCurrentTimeBooking(scope.userId);
+                        
+                        scope.addToFavorites = function() {
+                          currentTimeBookingService.addFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                            scope.result.booking.isFavorite = true;
+                          });
+                        };
+                        
+                        scope.removeFromFavorites = function() {
+                          currentTimeBookingService.removeFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                            scope.result.booking.isFavorite = false;
+                          });
+                        };
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
