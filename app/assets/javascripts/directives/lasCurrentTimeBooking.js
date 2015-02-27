@@ -53,7 +53,6 @@ define(
                           if (scope.result && scope.result.booking) {
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           }
-                          scope.$apply();
                         });
                         
                         scope.addToFavorites = function() {
@@ -136,9 +135,7 @@ define(
                               }
 
                               currentValue = value;
-                              updateMoment();
-                              
-                              scope.result.booking.isFavorite = isFavorite(scope.result.booking);
+                              updateMoment();                              
                             });
 
                         scope.$on('$destroy', function() {
