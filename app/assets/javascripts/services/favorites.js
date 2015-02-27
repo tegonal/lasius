@@ -8,7 +8,7 @@ define(['angular'], function (angular) {
   mod.factory('favoritesService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
     
     return {             
-      getCategories: function (userId) {
+      getFavorites: function (userId) {
         return playRoutes.controllers.UserFavoritesController.getFavorites(userId).get().then(function (response) {
           return response.data;          
         }, function(reason) {
@@ -25,7 +25,7 @@ define(['angular'], function (angular) {
         });
       },
       removeFavorite: function(userId, categoryId, projectId, tags) {
-        return playRoutes.controllers.UserFavoritesController.removeFavorite(userId, categoryId, projectId, tags).post().then(function (response) {
+        return playRoutes.controllers.UserFavoritesController.removeFavorite(userId, categoryId, projectId, tags).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

@@ -5,16 +5,16 @@
 		<th>Tags</th>	
 		<th></th>	
 	</tr>
-    <tr ng-repeat="favorite in favorites">
-        <td>{{favorite.bookingStub.projectId}}@{{favorite.bookingStub.categoryId}}</td>
+    <tr ng-repeat="favorite in favorites.favorites">
+        <td>{{favorite.projectId}}@{{favorite.categoryId}}</td>
         <td>
-            <span ng-repeat="tag in favorite.bookingStub.tags" >
+            <span ng-repeat="tag in favorite.tags" >
 		        <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
 		            <span>{{tag}}</span>        
 		        </span>
             </span>
         </td>
-        <td class="glyphicon glyphicon-remove" ng-click="removeFavorite(favorite.bookingStub)"></td>
+        <td class="glyphicon glyphicon-remove" ng-click="removeFavorite(favorite.categoryId, favorite.projectId, favorite.tags)"></td>
     </tr>
 </table>
 </div>
