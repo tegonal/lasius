@@ -3,37 +3,42 @@
 # ~~~~
 
 # Home page
-GET     /                           		controllers.Application.index
+GET     /                           				controllers.Application.index
 
 # JavaScript routes object
-GET           /jsroutes.js                  controllers.JSController.jsRoutes()
+GET           /jsroutes.js                  		controllers.JSController.jsRoutes()
 
 # Core Application routes
-GET           /messagingSocket              controllers.Application.messagingSocket()
+GET           /messagingSocket             			controllers.Application.messagingSocket()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file              			controllers.Assets.at(path="/public", file)
+GET     /assets/*file              					controllers.Assets.at(path="/public", file)
 
 # TimeBooking
-GET /booking/start/:userId/:categoryId/:projectId		controllers.TimeBookingController.start(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
-GET /booking/stop/:userId/:bookingId		controllers.TimeBookingController.stop(userId:models.UserId, bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
-GET /booking/remove/:userId/:bookingId		controllers.TimeBookingController.remove(userId:models.UserId, bookingId:models.BookingId)
-GET /booking/append/:userId/:categoryId/:projectId		controllers.TimeBookingController.append(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
+POST /users/:userId/bookings/start					controllers.TimeBookingController.start(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST /users/:userId/bookings/stop					controllers.TimeBookingController.stop(userId:models.UserId, bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+DELETE /users/:userId/bookings/remove/:bookingId	controllers.TimeBookingController.remove(userId:models.UserId, bookingId:models.BookingId)
+POST /users/:userId/bookings/append					controllers.TimeBookingController.append(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 
 # TimeBookingHistory
-GET /history/:userId						controllers.TimeBookingHistoryController.getTimeBookingHistory(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /users/:userId/history							controllers.TimeBookingHistoryController.getTimeBookingHistory(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
 
 # CurrentUserTimeBookings
-GET /current/:userId						controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking(userId: models.UserId)
+GET /users/:userId/current							controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking(userId: models.UserId)
 
 # StructureController
-GET /structure/:userId						controllers.StructureController.getCategories(userId:models.UserId)
+GET /users/:userId/structure						controllers.StructureController.getCategories(userId:models.UserId)
 
 # Statistics
-GET /stats/aggregated/:userId			controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
-GET /stats/range/:userId				controllers.TimeBookingStatisticsController.getStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /users/:userId/stats/aggregated					controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /users/:userId/stats/range						controllers.TimeBookingStatisticsController.getStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+
+# Favorites
+GET    /users/:userId/favorites/					controllers.UserFavoritesController.getFavorites(userId:models.UserId)
+POST   /users/:userId/favorites/add		   		 	controllers.UserFavoritesController.addFavorite(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
+DELETE /users/:userId/favorites/remove				controllers.UserFavoritesController.removeFavorite(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
 
 # Static
 # ~~~~
 # Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                 controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file                	 		controllers.Assets.versioned(path="/public", file: Asset)

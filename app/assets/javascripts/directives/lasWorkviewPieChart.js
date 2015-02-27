@@ -43,6 +43,10 @@ define(['angular'], function(angular) {
         
         var updateCharts = function() {          
           var numberOfCharts = Math.ceil(scope.result.totalByDay / limit);
+          
+          //calculate percentage
+          scope.progress = scope.result.totalByDay / limit;
+                    
           var fullChartData = [
                                {
                                  label: "worked",
@@ -123,14 +127,15 @@ define(['angular'], function(angular) {
             event, msg) {
           
           scope.booking = msg.booking;
+          scope.result = msg;   
           if (scope.booking === undefined) {
             cancelTimer();
           }
           else {
-            
+            //add current duration
+            scope.result.totalByDay +=  moment().diff(msg.booking.start);   
           }
-          
-          scope.result = msg;                            
+                                            
           updateCharts();         
           
           console.log(msg);

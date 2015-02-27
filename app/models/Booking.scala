@@ -17,6 +17,10 @@ object BookingId {
 @SerialVersionUID(1241414)
 case class BookingStub(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId])
 
+object BookingStub {
+  implicit val bookingStubFormat: Format[BookingStub] = Json.format[BookingStub]
+}
+
 @SerialVersionUID(1241414)
 case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
   def createStub: BookingStub = {

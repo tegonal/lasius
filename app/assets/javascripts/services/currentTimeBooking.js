@@ -17,7 +17,7 @@ define(['angular'], function (angular) {
         });
       },
       stopBooking: function(userId, bookingId) {
-        return playRoutes.controllers.TimeBookingController.stop(userId, bookingId).get().then(function (response) {
+        return playRoutes.controllers.TimeBookingController.stop(userId, bookingId).post().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

@@ -17,6 +17,12 @@ define(['angular'], function(angular) {
     }
   });
   
+  mod.filter('percentage', ['$filter', function ($filter) {
+    return function (input, decimals) {
+      return $filter('number')(input * 100, decimals) + '%';
+    };
+  }]);
+  
   /**
    * AngularJS default filter with the following expression:
    * "person in people | filter: {name: $select.search, age: $select.search}"

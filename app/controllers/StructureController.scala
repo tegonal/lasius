@@ -2,16 +2,11 @@ package controllers
 
 import play.api.mvc.Controller
 
-import repositories.StructureRepository
-import repositories.BasicRepositoryComponent
+import repositories._
 import play.api.mvc.Action
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
-import models.UserId
-import repositories.MongoBasicRepositoryComponent
-import models.Category
-import models.Project
-import models.CategoryId
+import models._
 
 class StructureController {
   self: Controller with BasicRepositoryComponent =>

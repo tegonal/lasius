@@ -9,13 +9,15 @@ define(['angular',
         './directives/lasStatisticsBarChart',
         './directives/lasWorkviewPieChart',
         './directives/lasDateRange',
+        './directives/lasFavorites',
         './services/helper', 
         './services/playRoutes',
         './services/currentTimeBooking',
         './services/messages',
         './services/booking',
         './services/bookingHistory',
-        './services/bookingStatistics'],
+        './services/bookingStatistics',
+        './services/favorites'],
     function(angular) {
   'use strict';
   
@@ -43,13 +45,15 @@ define(['angular',
                                          'directives.lasStatisticsBarChart',
                                          'directives.lasWorkviewPieChart',
                                          'directives.lasDateRange',
+                                         'directives.lasFavorites',
                                          'services.helper', 
                                          'services.playRoutes', 
                                          'services.currentTimeBooking',
                                          'services.messages',
                                          'services.booking',
                                          'services.bookingHistory',
-                                         'services.bookingStatistics']);
+                                         'services.bookingStatistics',
+                                         'services.favorites']);
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
     var msgBus = {};

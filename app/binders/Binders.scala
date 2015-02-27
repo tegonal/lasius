@@ -132,8 +132,12 @@ object Binders {
 
   implicit def UserIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[models.UserId](stringBinder, UserId.apply _)
   implicit def ProjectIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[ProjectId](stringBinder, ProjectId.apply _)
+  implicit def ProjectIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[ProjectId](stringBinder, ProjectId.apply _)
   implicit def CategoryIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[CategoryId](stringBinder, CategoryId.apply _)
+  implicit def CategoryIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[CategoryId](stringBinder, CategoryId.apply _)
   implicit def BookingIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[BookingId](stringBinder, BookingId.apply _)
+  implicit def BookingIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[BookingId](stringBinder, BookingId.apply _)
   implicit def TagIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[TagId](stringBinder, TagId.apply _)
   implicit def TagIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[TagId](stringBinder, TagId.apply _)
+
 }

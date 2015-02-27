@@ -17,7 +17,7 @@ define(['angular'], function (angular) {
         });
       },
       removeTimeBooking: function (userId, bookingId) {
-        return playRoutes.controllers.TimeBookingController.remove(userId, bookingId).get().then(function (response) {
+        return playRoutes.controllers.TimeBookingController.remove(userId, bookingId).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);
