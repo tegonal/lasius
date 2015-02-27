@@ -1,8 +1,7 @@
 package domain.views
 
 import akka.persistence.PersistentView
-import models.UserId
-import models.Booking
+import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
 import akka.actor.actorRef2Scala
@@ -14,6 +13,9 @@ import repositories.StructureRepository
 import repositories.StructureMongoRepository
 import actors.ClientMessagingWebsocketActor
 import models.CurrentUserTimeBooking
+import org.joda.time.Duration
+import org.joda.time.DateTime
+import org.joda.time.Interval
 
 object CurrentUserTimeBookingsView {
 
@@ -30,27 +32,55 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
   override val persistenceId = userId.value
   override val viewId = userId.value + "-current-time-bookings"
 
-  case class CurrentTimeBookings(booking: Option[Booking])
+  case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
 
-  var state: CurrentTimeBookings = CurrentTimeBookings(None)
+  var state: CurrentTimeBookings = CurrentTimeBookings(None, DateTime.now, Map())
 
   val receive: Receive = {
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
-      state = updateBooking(userId, Some(e.booking))
+      val day = e.booking.start.withTimeAtStartOfDay
+      val durations = getMapForDay(day)
+      state = updateBooking(userId, Some(e.booking), day, durations)
       notifyClient()
     case e: UserTimeBookingStopped =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
-      state = updateBooking(userId, None)
+      val day = e.booking.end.get.withTimeAtStartOfDay
+      val durations = addDailyDuration(e.booking, day)
+      state = updateBooking(userId, None, day, durations)
       notifyClient()
     case e: UserTimeBookingAdded =>
-      if (!e.booking.end.isDefined) {
-        state = updateBooking(e.booking.userId, Some(e.booking))
+      e.booking.end.map { end =>
+        //check if on same day        
+        if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
+          //add to totals
+          val day = e.booking.end.get.withTimeAtStartOfDay
+          val durations = addDailyDuration(e.booking, day)
+          state = updateBooking(userId, None, day, durations)
+        }
+      }.getOrElse {
+        //no end defined, still in progress
+        val day = DateTime.now.withTimeAtStartOfDay
+        val durations = getMapForDay(day)
+
+        state = updateBooking(e.booking.userId, Some(e.booking), day, durations)
         notifyClient()
       }
     case e: UserTimeBookingRemoved =>
-      if (!e.booking.end.isDefined) {
-        state = updateBooking(e.booking.userId, None)
+      e.booking.end.map { end =>
+        //check if on same day        
+        if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
+          //remove from totals
+          val day = e.booking.end.get.withTimeAtStartOfDay
+          val durations = removeDailyDuration(e.booking, day)
+          state = updateBooking(e.booking.userId, state.booking, day, durations)
+          notifyClient()
+        }
+      }.getOrElse {
+        val day = DateTime.now.withTimeAtStartOfDay
+        val durations = getMapForDay(day)
+
+        state = updateBooking(e.booking.userId, None, day, durations)
         notifyClient()
       }
     case GetCurrentTimeBooking(userId) =>
@@ -58,10 +88,53 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
   }
 
   private def notifyClient() = {
-    ClientMessagingWebsocketActor ! (userId, CurrentUserTimeBooking(userId, state.booking), List(userId))
+    val totalBySameBooking = state.booking.map { b =>
+      state.dailyBookingsMap.get(b.createStub)
+    }.getOrElse(None)
+    val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
+    log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
+    ClientMessagingWebsocketActor ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
   }
 
-  private def updateBooking(userId: UserId, booking: Option[Booking]) = {
-    state.copy(booking = booking)
+  protected def addDailyDuration(booking: Booking, date: DateTime) = {
+    val currentBookings = getMapForDay(booking.end.get.withTimeAtStartOfDay)
+    val duration = calculateDuration(booking)
+    val stub = booking.createStub
+    val currentDuration = currentBookings.get(stub)
+
+    val total = currentDuration.map(_.plus(duration)).getOrElse(duration)
+    currentBookings + (stub -> total)
+  }
+
+  protected def removeDailyDuration(booking: Booking, date: DateTime) = {
+    val currentBookings = getMapForDay(booking.end.get.withTimeAtStartOfDay)
+    val duration = calculateDuration(booking)
+    val stub = booking.createStub
+    val currentDuration = currentBookings.get(stub)
+
+    val total = currentDuration.map(_.minus(duration)).getOrElse(duration)
+    currentBookings + (stub -> total)
+  }
+
+  protected def getMapForDay(day: DateTime): Map[BookingStub, Duration] = {
+    if (day.isEqual(state.currentDay)) {
+      state.dailyBookingsMap
+    } else {
+      Map()
+    }
+  }
+
+  protected def calculateDuration(booking: Booking) = {
+    //split booking by dates
+    val endDate = booking.end.get
+    val endDateTimeAtStartOfDay = endDate.withTimeAtStartOfDay
+    val start = if (booking.start.isBefore(endDateTimeAtStartOfDay)) endDateTimeAtStartOfDay else booking.start
+
+    //extract duration on end date      
+    new Interval(start, endDate).toDuration()
+  }
+
+  protected def updateBooking(userId: UserId, booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration]) = {
+    state.copy(booking = booking, currentDay = currentDay, dailyBookingsMap = dailyBookingsMap)
   }
 }

@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasWorkviewPieChart', []);
-  mod.directive('lasWorkviewPieChart', ['$window', 'bookingStatisticsService', 'msgBus', 'moment', function($window, bookingStatisticsService, msgBus, moment) {
+  mod.directive('lasWorkviewPieChart', ['$window', 'currentTimeBookingService', 'msgBus', 'moment', function($window, currentTimeBookingService, msgBus, moment) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-workview-pie-chart-tmpl.html',
@@ -41,8 +41,8 @@ define(['angular'], function(angular) {
         var limit = moment.duration(8, 'hours').asMilliseconds();
         scope.charts = [];
         
-        var generateCharts = function() {          
-          var numberOfCharts = Math.ceil(scope.result.total / limit);
+        var updateCharts = function() {          
+          var numberOfCharts = Math.ceil(scope.result.totalByDay / limit);
           var fullChartData = [
                                {
                                  label: "worked",
@@ -59,12 +59,12 @@ define(['angular'], function(angular) {
             scope.charts.push(fullChartData);
           }
           //set chart-2 to 100%
-          if (scope.charts[numberOfCharts-2][0].value != 100) {
+          if (scope.charts.length > 1 && scope.charts[numberOfCharts-2][0].value != 100) {
             scope.charts[numberOfCharts-2] = fullChartData;              
           }
           
           //push rest
-          var rest = scope.result.total - (numberOfCharts-1)*limit;
+          var rest = scope.result.totalByDay - (numberOfCharts-1)*limit;
           var open = limit - rest;
           
           if (scope.charts.length < numberOfCharts) {
@@ -95,27 +95,6 @@ define(['angular'], function(angular) {
           }
         };
         
-        var load = function(date) {
-          if (date === undefined) {
-            return;
-          }
-          var from = date.format(pattern);
-          var to = date.format(pattern);
-          
-          /*bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
-            scope.statistics = statistics;
-          });*/
-          
-          scope.result = {
-              total: moment.duration(10, 'hours').asMilliseconds(),
-              booking: {
-                start: moment.duration(1, 'hours').asMilliseconds()
-              }
-          };                            
-          generateCharts();          
-       };
-       
-       load(moment());
         
         function cancelTimer() {
           if (activeTimeout) {
@@ -128,8 +107,8 @@ define(['angular'], function(angular) {
 
           // update every minute
           var millis = 60000;
-          scope.result.total += moment.duration(millis, 'milliseconds').asMilliseconds();          
-          generateCharts();   
+          scope.result.totalByDay += moment.duration(millis, 'milliseconds').asMilliseconds();          
+          updateCharts();   
           
           if (apply) {
             scope.$apply();
@@ -150,6 +129,9 @@ define(['angular'], function(angular) {
           else {
             
           }
+          
+          scope.result = msg;                            
+          updateCharts();         
           
           console.log(msg);
           scope.$apply();
@@ -181,6 +163,8 @@ define(['angular'], function(angular) {
         scope.$on('$destroy', function() {
           cancelTimer();
         });
+        
+        currentTimeBookingService.getCurrentTimeBooking(scope.userId);
       }
     };
   }]);

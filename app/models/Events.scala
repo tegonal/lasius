@@ -1,10 +1,11 @@
 package models
 
 import play.api.libs.json._
-
 import play.api.mvc.WebSocket.FrameFormatter
 import reactivemongo.bson.BSONObjectID
 import julienrf.variants.Variants
+import org.joda.time.Duration
+import models.BaseFormat._
 
 sealed trait InEvent
 
@@ -17,7 +18,7 @@ object InEvent {
 sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent
-case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking]) extends OutEvent
+case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
