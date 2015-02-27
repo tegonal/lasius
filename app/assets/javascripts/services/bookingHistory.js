@@ -15,6 +15,14 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      removeTimeBooking: function (userId, bookingId) {
+        return playRoutes.controllers.TimeBookingController.remove(userId, bookingId).get().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);

@@ -6,6 +6,7 @@
 		<th>From</th>
 		<th>To</th>
 		<th>Amount</th>
+		<th></th>
 	</tr>
     <tr ng-repeat="booking in bookings">
         <td>{{booking.projectId}}@{{booking.categoryId}}</td>
@@ -19,6 +20,7 @@
         <td>{{booking.start | date: 'HH:mm'}}</td>
         <td>{{booking.end | date: 'HH:mm'}}</td>
         <td>{{diff(booking)| number : 1}}</td>
+        <td class="glyphicon glyphicon-remove" ng-click="removeTimeBooking(booking.id)"></td>
     </tr>
 </table>
 </div>

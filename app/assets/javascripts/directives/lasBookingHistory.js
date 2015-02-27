@@ -32,6 +32,10 @@ define(['angular'], function(angular) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
         };
         
+        scope.removeTimeBooking = function(bookingId) {
+          bookingHistoryService.removeTimeBooking(scope.userId, bookingId);
+        };
+        
         scope.$watch('range',
             function(value){
               load(value);                
@@ -49,7 +53,7 @@ define(['angular'], function(angular) {
         msgBus.onMsg('UserTimeBookingHistoryEntryRemoved', scope, function(
             event, msg) {
           console.log('msg received' + msg.type);
-          for(i=0;i<scope.bookings.length;i++){
+          for(var i=0;i<scope.bookings.length;i++){
             if(scope.bookings[i].id === msg.bookingId){
               scope.bookings.splice(i, 1);
             }
