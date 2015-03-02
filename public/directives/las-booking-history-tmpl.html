@@ -1,5 +1,5 @@
 <div class="booking-table">
-<table class="table">
+<table class="table table-stripe">
 	<tr>
 		<th>Project</th>
 		<th>Tags</th>
@@ -7,6 +7,12 @@
 		<th>To</th>
 		<th>Amount</th>
 		<th></th>
+	</tr>	
+	<tr>
+		<!-- Total row -->
+		<th colspan="4">Total</th>
+		<th>{{bookings | sumFilter:diff| number : 1}}</th>
+		<td></td>
 	</tr>
     <tr ng-repeat="booking in bookings">
         <td>{{booking.projectId}}@{{booking.categoryId}}</td>
