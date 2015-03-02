@@ -138,7 +138,6 @@ define(['angular'], function(angular) {
                                             
           updateCharts();         
           
-          console.log(msg);
           scope.$apply();
         });
         

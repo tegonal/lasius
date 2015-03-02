@@ -51,6 +51,60 @@ define(['angular'], function(angular) {
               console.log('inner callback function', chart);
           };
         };
+        
+        msgBus.onMsg('UserTimeBookingByCategoryEntryAdded', scope, function(
+            event, msg) {
+          if (scope.source==='category' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+            //TODO: implement specific operation to save performance
+            load(scope.range);
+            scope.$apply();
+          }          
+        });            
+        
+        msgBus.onMsg('UserTimeBookingByProjectEntryAdded', scope, function(
+            event, msg) {
+          if (scope.source==='project' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+          //TODO: implement specific operation to save performance
+            load(scope.range);
+            scope.$apply();
+          }          
+        });
+        
+        msgBus.onMsg('UserTimeBookingByTagEntryAdded', scope, function(
+            event, msg) {
+          if (scope.source==='tag' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+          //TODO: implement specific operation to save performance
+            load(scope.range);
+            scope.$apply();
+          }          
+        });
+        
+        msgBus.onMsg('UserTimeBookingByCategoryEntryRemoved', scope, function(
+            event, msg) {
+          if (scope.source==='category' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+            //TODO: implement specific operation to save performance
+              load(scope.range);
+              scope.$apply();
+            }             
+        });
+        
+        msgBus.onMsg('UserTimeBookingByProjectEntryRemoved', scope, function(
+            event, msg) {
+          if (scope.source==='project' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+            //TODO: implement specific operation to save performance
+              load(scope.range);
+              scope.$apply();
+            }             
+        });
+        
+        msgBus.onMsg('UserTimeBookingByTagEntryRemoved', scope, function(
+            event, msg) {
+          if (scope.source==='tag' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {
+            //TODO: implement specific operation to save performance
+              load(scope.range);
+              scope.$apply();
+            }             
+        });
       }
     };
   }]);

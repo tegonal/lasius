@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBookingHistory', []);
-  mod.directive('lasBookingHistory', ['bookingHistoryService', 'msgBus', 'moment', function(bookingHistoryService, msgBus, moment) {
+  mod.directive('lasBookingHistory', ['bookingHistoryService', 'bookingService', 'msgBus', 'moment', function(bookingHistoryService, bookingService, msgBus, moment) {
     return {
       restrict: 'E',
       transclude: true,
@@ -48,6 +48,45 @@ define(['angular'], function(angular) {
           });
         };
         
+        var startBooking = function(booking) {
+          bookingService.start(scope.userId, booking.categoryId, booking.projectId, booking.tags).then(function(result) {
+            //assign dummy booking that row gets selected directly
+            scope.booking = {
+                projectId: booking.projectId,
+                categoryId: booking.categoryId,
+                tags: booking.tags
+            };
+          });
+        };
+        
+        var stopBooking = function() {
+          bookingService.stop(scope.userId, scope.booking.id).then(function() {
+            scope.booking = undefined;
+          });
+        };
+        
+        scope.startStop = function(favorite) {
+          if (scope.isActive(favorite)) {
+            stopBooking(favorite);
+          }
+          else {
+            startBooking(favorite);
+          }
+        };
+        
+        var isEquals = function(booking, favorite) {
+          if (booking === undefined || favorite === undefined) {
+            return false;
+          }
+          return booking.categoryId === favorite.categoryId &&
+            booking.projectId === favorite.projectId &&
+            booking.tags.equals(favorite.tags);
+        };
+        
+        scope.isActive = function(favorite) {
+          return isEquals(scope.booking, favorite);          
+        };
+        
         scope.$watch('range',
             function(value){
               load(value);                
@@ -74,6 +113,12 @@ define(['angular'], function(angular) {
           if (scope.userId === msg.userId) {
             scope.bookings.clear();            
           }            
+        });
+        
+        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
+            event, msg) {
+          scope.booking = msg.booking;
+          scope.$apply();
         });
       }
     };

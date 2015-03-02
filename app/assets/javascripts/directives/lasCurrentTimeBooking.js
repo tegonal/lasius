@@ -81,6 +81,7 @@ define(
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
                           scope.result = msg;
+                          scope.total_duration = {};
 
                           scope.noBooking = scope.result.booking === undefined;
                           if (scope.result.booking) {

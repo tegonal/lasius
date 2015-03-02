@@ -10,11 +10,11 @@
 	</tr>	
 	<tr>
 		<!-- Total row -->
-		<th colspan="4">Total</th>
+		<th colspan="4">Total</th9>
 		<th>{{bookings | sumFilter:diff| number : 1}}</th>
 		<td></td>
 	</tr>
-    <tr ng-repeat="booking in bookings">
+    <tr ng-repeat="booking in bookings" ng-class="isActive(booking)?'info':''" ng-click="startStop(booking)">
         <td>{{booking.projectId}}@{{booking.categoryId}}</td>
         <td>
             <span ng-repeat="tag in booking.tags" >
