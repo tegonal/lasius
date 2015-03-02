@@ -27,6 +27,15 @@ define(
                         var currentValue;
                         var unwatchChanges;
                         
+                        var isEquals = function(booking, favorite) {
+                          if (booking === undefined || favorite === undefined) {
+                            return false;
+                          }
+                          return booking.categoryId === favorite.categoryId &&
+                            booking.projectId === favorite.projectId &&
+                            booking.tags.equals(favorite.tags);
+                        };
+                        
                         var isFavorite = function(booking) {
                           if (booking === undefined || scope.favorites === undefined) {
                             return false;
@@ -34,9 +43,7 @@ define(
                           var length = scope.favorites.favorites.length;
                           for (var i=0; i<length; ++i) {
                             var favorite = scope.favorites.favorites[i];
-                            if (booking.categoryId === favorite.categoryId &&
-                              booking.projectId === favorite.projectId &&
-                              booking.tags.equals(favorite.tags)) {
+                            if (isEquals(booking, favorite)) {
                               return true;
                             }
                           }
@@ -82,6 +89,20 @@ define(
 
                           console.log(msg);
                           scope.$apply();
+                        });
+                        
+                        msgBus.onMsg('FavoriteRemoved', scope, function(
+                            event, msg) {
+                          if (msg.userId === scope.userId) {
+                            for(var i=0;i<scope.favorites.favorites.length;i++){
+                              if(isEquals(scope.favorites.favorites[i], msg.bookingStub)){
+                                scope.favorites.favorites.splice(i, 1);
+                                scope.result.booking.isFavorite = isFavorite(scope.result.booking);                                
+                                scope.$apply();
+                                return;
+                              }
+                            }
+                          }
                         });
 
                         scope.stopBooking = function(bookingId) {

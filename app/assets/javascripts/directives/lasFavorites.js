@@ -13,6 +13,16 @@ define(['angular'], function(angular) {
       },
       link: function(scope, iElement, iAttrs) {
         
+
+        var isEquals = function(booking, favorite) {
+          if (booking === undefined || favorite === undefined) {
+            return false;
+          }
+          return booking.categoryId === favorite.categoryId &&
+            booking.projectId === favorite.projectId &&
+            booking.tags.equals(favorite.tags);
+        };
+        
         favoritesService.getFavorites(scope.userId).then(function(favorites) {
           scope.favorites = favorites;
         });
@@ -47,21 +57,38 @@ define(['angular'], function(angular) {
           else {
             startBooking(favorite);
           }
-        };
+        };        
         
         scope.isActive = function(favorite) {
-          if (scope.booking === undefined) {
-            return false;
-          }
-          return scope.booking.categoryId === favorite.categoryId &&
-            scope.booking.projectId === favorite.projectId &&
-            scope.booking.tags.equals(favorite.tags);
+          return isEquals(scope.booking, favorite);          
         };
         
         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
             event, msg) {
           scope.booking = msg.booking;
           scope.$apply();
+        });
+                
+        msgBus.onMsg('FavoriteAdded', scope, function(
+            event, msg) {
+          if (msg.userId === scope.userId) {
+            scope.favorites.favorites.push(msg.bookingStub);
+          
+            scope.$apply();
+          }
+        });
+        
+        msgBus.onMsg('FavoriteRemoved', scope, function(
+            event, msg) {
+          if (msg.userId === scope.userId) {
+            for(var i=0;i<scope.favorites.favorites.length;i++){
+              if(isEquals(scope.favorites.favorites[i], msg.bookingStub)){
+                scope.favorites.favorites.splice(i, 1);
+                scope.$apply();
+                return;
+              }
+            }
+          }
         });
       }
     };
