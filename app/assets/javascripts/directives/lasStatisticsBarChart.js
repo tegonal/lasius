@@ -43,7 +43,7 @@ define(['angular'], function(angular) {
         
         scope.toolTipContentFunction = function(){
           return function(key, x, y, e, graph) {
-              return  '<h1>' + key + '</h1>' +
+              return  '<h3>' + key + '</h3>' +
                     '<p>' + y + ' hours</p>';
           };
         };               

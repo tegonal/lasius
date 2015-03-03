@@ -7,7 +7,8 @@
 		<nvd3-pie-chart data="chart" x="xFunction()" y="yFunction()" 
 		   showLegend="false" noData="No Statistics found!" tooltips="true" 
 		   width="{{250+$index*30}}" height="{{250+$index*30}}" donut="true"
-	            margin="margin($index, 30)" labelType="percent"  donutRatio=".65">
+	            margin="margin($index, 30)" labelType="percent"  donutRatio=".65"
+	            tooltipcontent="toolTipContentFunction()">
 	    	<svg></svg>
 	    </nvd3-pie-chart>
     </span>

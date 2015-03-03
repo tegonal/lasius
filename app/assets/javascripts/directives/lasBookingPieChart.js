@@ -31,7 +31,7 @@ define(['angular'], function(angular) {
           return function(key, x, y, e, graph) {
               //transfer into a readable format
               var time = (y.value / millisPerHour).toFixed(1); 
-              return  '<h1>' + key + '</h1>' +
+              return  '<h3>' + key + '</h3>' +
                     '<p>' + time + ' hours</p>';
           };
         };

@@ -27,6 +27,16 @@ define(['angular'], function(angular) {
           };
         };
         
+        var millisPerHour = 1000*60*60;
+        scope.toolTipContentFunction = function(){
+          return function(key, x, y, e, graph) {
+              //transfer into a readable format
+              var time = (y.value / millisPerHour).toFixed(1); 
+              return  '<h3>' + key + '</h3>' +
+                    '<p>' + time + ' hours</p>';
+          };
+        };
+        
         var pattern = 'DDMMYYYYHHmmss';
         
         scope.margin = function(index, offset) {
