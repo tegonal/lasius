@@ -26,6 +26,27 @@ define(['angular'], function(angular) {
             return d.duration; 
           };
         };
+        
+        var millisPerHour = 1000*60*60;
+        scope.yAxisFunction = function() {
+          return function(d) {
+            var time = (d / millisPerHour).toFixed(1); 
+            return time;
+          };
+        };
+        
+        scope.xAxisFunction = function() {
+          return function(day) {
+            return moment(day).format("D");            
+          };
+        };
+        
+        scope.toolTipContentFunction = function(){
+          return function(key, x, y, e, graph) {
+              return  '<h1>' + key + '</h1>' +
+                    '<p>' + y + ' hours</p>';
+          };
+        };               
                        
         var load = function(range) {
           if (range === undefined || range.from === undefined) {

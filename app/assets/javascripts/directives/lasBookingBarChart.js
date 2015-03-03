@@ -26,10 +26,16 @@ define(['angular'], function(angular) {
           return function(d) { 
             return d.value; 
           };
+        };  
+    
+        var millisPerHour = 1000*60*60;
+        scope.valueFormatFunction = function(){
+          return function(d){
+            var time = (d / millisPerHour).toFixed(1); 
+              return time+' hours';
+          };
         };
-                       
-        
-        
+                                         
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
             return;
