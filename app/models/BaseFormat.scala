@@ -11,6 +11,7 @@ import models.BaseFormat.CompositeBaseId
 import org.joda.time.LocalDate
 import reactivemongo.bson.BSONDateTime
 import reactivemongo.bson.BSONHandler
+import org.joda.time.DateTimeFieldType
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I

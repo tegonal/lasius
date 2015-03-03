@@ -65,7 +65,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       notifyClient(events)
   }
 
-  protected def storeDurations(durations: Seq[_]) = {
+  protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {
     durations map {
       _ match {
         case b: BookingByCategory =>
@@ -74,11 +74,13 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
           bookingByProjectRepository.add(b)
         case b: BookingByTag =>
           bookingByTagRepository.add(b)
+        case b@_ =>
+          log.warning(s"Unsupported duration:$b")
       }
     }
   }
 
-  protected def removeDurations(durations: Seq[_]) = {
+  protected def removeDurations(durations: Seq[OperatorEntity[_, _]]) = {
     durations map {
       _ match {
         case b: BookingByCategory =>
@@ -87,37 +89,41 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
           bookingByProjectRepository.subtract(b)
         case b: BookingByTag =>
           bookingByTagRepository.subtract(b)
+        case b@_ =>
+          log.warning(s"Unsupported duration:$b")
       }
     }
   }
 
-  protected def getEventsDurations(durations: Seq[_], add: Boolean) = {
+  protected def getEventsDurations(durations: Seq[_], add: Boolean): Seq[OutEvent] = {
     if (add) {
       durations map {
         _ match {
           case b: BookingByCategory =>
-            UserTimeBookingByCategoryEntryAdded(b)
+            Some(UserTimeBookingByCategoryEntryAdded(b))
           case b: BookingByProject =>
-            UserTimeBookingByProjectEntryAdded(b)
+            Some(UserTimeBookingByProjectEntryAdded(b))
           case b: BookingByTag =>
-            UserTimeBookingByTagEntryAdded(b)
+            Some(UserTimeBookingByTagEntryAdded(b))
+          case _ => None
         }
-      }
+      } flatten
     } else {
       durations map {
         _ match {
           case b: BookingByCategory =>
-            UserTimeBookingByCategoryEntryRemoved(b)
+            Some(UserTimeBookingByCategoryEntryRemoved(b))
           case b: BookingByProject =>
-            UserTimeBookingByProjectEntryRemoved(b)
+            Some(UserTimeBookingByProjectEntryRemoved(b))
           case b: BookingByTag =>
-            UserTimeBookingByTagEntryRemoved(b)
+            Some(UserTimeBookingByTagEntryRemoved(b))
+          case _ => None
         }
-      }
+      } flatten
     }
   }
 
-  protected def calculatDurations(booking: Booking) = {
+  protected def calculatDurations(booking: Booking): Seq[OperatorEntity[_, _]] = {
     //split booking by dates
     val startDate = booking.start
     val startDateStartOfDay = startDate.withTimeAtStartOfDay
@@ -155,12 +161,12 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
       val endDurations = getDurations(booking, endDateStartOfDay, endDuration)
 
-      (startDurations ++ inBetweenDurations) ++: endDurations
+      (startDurations ++ inBetweenDurations.flatten) ++ endDurations
     }
 
   }
 
-  private def getDurations(booking: Booking, day: DateTime, duration: Duration): Seq[_] = {
+  private def getDurations(booking: Booking, day: DateTime, duration: Duration): Seq[OperatorEntity[_, _]] = {
     Seq(BookingByCategory(BookingByCategoryId(), booking.userId, day, booking.categoryId, duration),
       BookingByProject(BookingByProjectId(), booking.userId, day, booking.projectId, duration)) ++
       booking.tags.map(tagId => BookingByTag(BookingByTagId(), booking.userId, day, tagId, duration))

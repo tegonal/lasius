@@ -38,8 +38,6 @@ define(['angular'], function (angular) {
                       $rootScope.messagingSocket = new WebSocket(securedUrl);
                       $rootScope.messagingSocket.onmessage = function(msg) { 
                          var data = JSON.parse(msg.data);
-                          console.log('received : ');
-                          console.log(data);
                           msgBus.emitMsg(data);
                       };
                       $rootScope.messagingSocket.onopen = function (event) {
