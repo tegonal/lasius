@@ -84,6 +84,11 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         notifyClient()
       }
     case GetCurrentTimeBooking(userId) =>
+      //check if still on same day
+      val day = DateTime.now.withTimeAtStartOfDay
+      val durations = getMapForDay(day)
+      state = updateBooking(userId, state.booking, day, durations)
+
       notifyClient()
   }
 
