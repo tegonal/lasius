@@ -32,6 +32,19 @@ define(['angular'], function(angular) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
         };
         
+        scope.sameDay = function(booking) {
+          return moment(booking.start).startOf('day').unix() === moment(booking.end).startOf('day').unix();          
+        };
+        
+        scope.dateFormat = function(booking) {
+          if (scope.sameDay(booking)) {
+            return 'H:m';
+          }
+          else {
+            return 'd.M H:m';
+          }          
+        };
+        
         var removeBooking = function(bookingId) {
           for(var i=0;i<scope.bookings.length;i++){
             if(scope.bookings[i].id === bookingId){
