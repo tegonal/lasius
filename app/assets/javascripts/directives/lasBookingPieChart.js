@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBookingPieChart', []);
-  mod.directive('lasBookingPieChart', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
+  mod.directive('lasBookingPieChart', ['MY_CONFIG', 'bookingStatisticsService', 'msgBus', 'moment', function(MY_CONFIG, bookingStatisticsService, msgBus, moment) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-booking-pie-chart-tmpl.html',
@@ -26,24 +26,21 @@ define(['angular'], function(angular) {
         };
         
 
-        var millisPerHour = 1000*60*60;
         scope.toolTipContentFunction = function(){
           return function(key, x, y, e, graph) {
               //transfer into a readable format
-              var time = (y.value / millisPerHour).toFixed(1); 
+              var time = (y.value / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
               return  '<h3>' + key + '</h3>' +
                     '<p>' + time + ' hours</p>';
           };
         };
         
-        var pattern = 'DDMMYYYYHHmmss';        
-        
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
             return;
           }
-          var from = range.from.format(pattern);
-          var to = range.to.format(pattern);
+          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
           
           bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
             scope.statistics = statistics;

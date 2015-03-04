@@ -57,6 +57,12 @@ define(['angular',
                                          'services.bookingStatistics',
                                          'services.favorites']);
   
+  //declare constants
+  mod.constant("MY_CONFIG", {
+    "DATE_PATTERN": "DDMMYYYYHHmm",
+    "MILLIS_PER_HOUR": 1000*60*60
+  });
+  
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
     var msgBus = {};
     msgBus.emitMsg = function(msg) {

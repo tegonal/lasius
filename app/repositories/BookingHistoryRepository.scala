@@ -35,8 +35,9 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
     val sel = Json.obj("userId" -> userId,
-      And -> Json.arr(Json.obj("start" -> Json.obj(GreaterOrEqualsThan -> from)),
-        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to))))
+      And -> Json.arr(
+        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
+        Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
     Logger.debug(s"findByUserAndRange:$sel")
     find(sel) map (_.map(_._1))
   }

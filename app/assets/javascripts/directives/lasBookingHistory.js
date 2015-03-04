@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBookingHistory', []);
-  mod.directive('lasBookingHistory', ['bookingHistoryService', 'bookingService', 'msgBus', 'moment', function(bookingHistoryService, bookingService, msgBus, moment) {
+  mod.directive('lasBookingHistory', ['MY_CONFIG', 'bookingHistoryService', 'bookingService', 'msgBus', 'moment', function(MY_CONFIG, bookingHistoryService, bookingService, msgBus, moment) {
     return {
       restrict: 'E',
       transclude: true,
@@ -14,14 +14,12 @@ define(['angular'], function(angular) {
       },
       link: function(scope, iElement, iAttrs) {
         
-        var pattern = 'DDMMYYYYHHmmss';               
-        
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
             return;
           }
-          var from = range.from.format(pattern);
-          var to = range.to.format(pattern);
+          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
           
           bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
             scope.bookings = bookings;          

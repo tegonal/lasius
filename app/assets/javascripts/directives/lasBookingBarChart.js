@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBookingBarChart', []);
-  mod.directive('lasBookingBarChart', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
+  mod.directive('lasBookingBarChart', ['MY_CONFIG', 'bookingStatisticsService', 'msgBus', 'moment', function(MY_CONFIG, bookingStatisticsService, msgBus, moment) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-booking-bar-chart-tmpl.html',
@@ -28,10 +28,9 @@ define(['angular'], function(angular) {
           };
         };  
     
-        var millisPerHour = 1000*60*60;
         scope.valueFormatFunction = function(){
           return function(d){
-            var time = (d / millisPerHour).toFixed(1); 
+            var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
               return time+' hours';
           };
         };
@@ -41,9 +40,8 @@ define(['angular'], function(angular) {
             return;
           }
           
-          var pattern = 'DDMMYYYYHHmmss';
-          var from = range.from.format(pattern);
-          var to = range.to.format(pattern);
+          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
                   
           bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
             scope.statistics = [{

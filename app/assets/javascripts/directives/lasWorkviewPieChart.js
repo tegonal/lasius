@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasWorkviewPieChart', []);
-  mod.directive('lasWorkviewPieChart', ['$window', 'currentTimeBookingService', 'msgBus', 'moment', function($window, currentTimeBookingService, msgBus, moment) {
+  mod.directive('lasWorkviewPieChart', ['$window', 'MY_CONFIG', 'currentTimeBookingService', 'msgBus', 'moment', function($window, MY_CONFIG, currentTimeBookingService, msgBus, moment) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-workview-pie-chart-tmpl.html',
@@ -27,11 +27,10 @@ define(['angular'], function(angular) {
           };
         };
         
-        var millisPerHour = 1000*60*60;
         scope.toolTipContentFunction = function(){
           return function(key, x, y, e, graph) {
               //transfer into a readable format
-              var time = (y.value / millisPerHour).toFixed(1); 
+              var time = (y.value / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
               return  '<h3>' + key + '</h3>' +
                     '<p>' + time + ' hours</p>';
           };

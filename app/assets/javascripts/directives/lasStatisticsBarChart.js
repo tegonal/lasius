@@ -3,7 +3,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasStatisticsBarChart', []);
-  mod.directive('lasStatisticsBarChart', ['bookingStatisticsService', 'msgBus', 'moment', function(bookingStatisticsService, msgBus, moment) {
+  mod.directive('lasStatisticsBarChart', ['MY_CONFIG', 'bookingStatisticsService', 'msgBus', 'moment', function(MY_CONFIG, bookingStatisticsService, msgBus, moment) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-statistics-bar-chart-tmpl.html',
@@ -27,10 +27,9 @@ define(['angular'], function(angular) {
           };
         };
         
-        var millisPerHour = 1000*60*60;
         scope.yAxisFunction = function() {
           return function(d) {
-            var time = (d / millisPerHour).toFixed(1); 
+            var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
             return time;
           };
         };
@@ -53,7 +52,7 @@ define(['angular'], function(angular) {
             return;
           }
           
-          var pattern = 'DDMMYYYY000000';
+          var pattern = 'DDMMYYYY0000';
           var from = range.from.format(pattern);
           var to = range.to.format(pattern);
                   
