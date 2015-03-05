@@ -61,6 +61,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
+      removeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
   }

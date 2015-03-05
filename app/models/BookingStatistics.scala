@@ -12,6 +12,7 @@ import org.joda.time.LocalDate
 
 trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   val duration: Duration
+  val day: DateTime
 
   def +(that: E): E
   def -(that: E): E
