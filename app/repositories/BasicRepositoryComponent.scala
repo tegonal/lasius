@@ -1,7 +1,6 @@
 package repositories
 
-trait BasicRepositoryComponent {
-  val userRepository: UserRepository
+trait BasicRepositoryComponent extends SecurityRepositoryComponent {
   val structureRepository: StructureRepository
 }
 

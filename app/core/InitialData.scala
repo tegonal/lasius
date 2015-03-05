@@ -1,10 +1,10 @@
 package core
 
 import play.api.Logger
-
 import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import repositories._
+import org.mindrot.jbcrypt.BCrypt
 
 object InitialData extends MongoBasicRepositoryComponent {
   def init() = {
@@ -24,7 +24,8 @@ object InitialData extends MongoBasicRepositoryComponent {
   }
 
   def initializeUsers() = {
-    userRepository.insert(User(UserId("noob"), "Demo", "User", true))
+    val passwordHash = BCrypt.hashpw("noob", BCrypt.gensalt())
+    userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser))
   }
 
   def initializeStructure() = {

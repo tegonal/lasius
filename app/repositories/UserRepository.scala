@@ -12,8 +12,15 @@ import models.UserId
 import play.api.libs.json.Json.JsValueWrapper
 
 trait UserRepository extends BaseRepository[User, UserId] {
+
+  def findByEmail(email: String): Future[Option[User]]
 }
 
 class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with UserRepository {
   def coll = db.collection[JSONCollection]("User")
+
+  def findByEmail(email: String): Future[Option[User]] = {
+    val sel = Json.obj("email" -> email)
+    findFirst(sel) map (_.map(_._1))
+  }
 }

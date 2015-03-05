@@ -18,6 +18,7 @@ libraryDependencies ++= Seq(
   "org.julienrf" %% "play-json-variants" % "1.0.0",
   "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
   "com.github.ironfish" %% "akka-persistence-mongo-casbah" % "0.7.5",
+  "org.mindrot" % "jbcrypt" % "0.3m",
   cache,
   ws,
   // WebJars (i.e. client-side) dependencies

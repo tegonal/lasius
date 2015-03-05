@@ -12,9 +12,12 @@ object UserId {
 
 case class User(
   id: UserId,
+  email: String,
+  password: String,
   firstName: String,
   lastName: String,
-  active: Boolean) extends BaseEntity[UserId]
+  active: Boolean,
+  role: Role) extends BaseEntity[UserId]
 
 object User {
   implicit val userFormat = Json.format[User]

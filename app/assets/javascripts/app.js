@@ -1,3 +1,8 @@
+var userRoles = {
+    Guest: "Guest",
+    FreeUser: "FreeUser"
+};
+
 define(['angular', 
         './routes',
         './filters',
@@ -18,7 +23,10 @@ define(['angular',
         './services/booking',
         './services/bookingHistory',
         './services/bookingStatistics',
-        './services/favorites'],
+        './services/favorites',
+        './services/user',
+        './services/auth',
+        './services/alert'],
     function(angular) {
   'use strict';
   
@@ -55,7 +63,10 @@ define(['angular',
                                          'services.booking',
                                          'services.bookingHistory',
                                          'services.bookingStatistics',
-                                         'services.favorites']);
+                                         'services.favorites',
+                                         'services.user',
+                                         'services.auth',
+                                         'services.alert']);
   
   //declare constants
   mod.constant("MY_CONFIG", {
@@ -74,6 +85,44 @@ define(['angular',
     };
     return msgBus;
   }]);
+  
+  mod.config(['$provide', function($provide) {
+    $provide.decorator('$exceptionHandler', ['$log', '$injector', 'alertService', function($log, $injector, alertService) {
+      return function(exception, cause) {
+        // using the injector to retrieve scope and timeout, otherwise circular dependency
+        var $rootScope = $injector.get('$rootScope');
+        var $timeout = $injector.get('$timeout');
+
+        $rootScope.$removeAlert = alertService.removeAlert($rootScope);
+        alertService.addAlert($rootScope, $timeout, 'error', exception.message);
+        
+        // log error default style
+        $log.error.apply($log, arguments);
+      };
+    }]);
+  }]);
+  
+  mod.factory('httpErrorInterceptor', ['$q', '$rootScope', '$timeout', 'alertService', function($q, $rootScope, $timeout, alertService) {
+    return {
+      response: function (response) {
+        return response || $q.when(response);
+      },
+      responseError: function (rejection) {
+        // internal server error
+        var status = rejection.status || {};
+        var data = rejection.data || {};
+        $rootScope.$removeAlert = alertService.removeAlert($rootScope);
+        alertService.addAlert($rootScope, $timeout, 'error', status + ': ' + data);
+
+        return $q.reject(rejection);
+      }
+    };
+  }]);
+
+  mod.config(['$httpProvider', function ($httpProvider) {
+    $httpProvider.interceptors.push('httpErrorInterceptor');
+  }]);
+
   
   mod.run(['clientMessageService', function (clientMessageService) {
     console.log("Start clientMessageService");

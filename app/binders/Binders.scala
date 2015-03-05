@@ -139,5 +139,4 @@ object Binders {
   implicit def BookingIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[BookingId](stringBinder, BookingId.apply _)
   implicit def TagIdPathBindable(implicit stringBinder: PathBindable[String]) = StringBaseIdPathBindable[TagId](stringBinder, TagId.apply _)
   implicit def TagIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = StringBaseIdQueryStringBinder[TagId](stringBinder, TagId.apply _)
-
 }
