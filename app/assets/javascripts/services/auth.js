@@ -15,6 +15,18 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      authorize: function(accessLevel) {
+        return userService.resolveUser().then(function(user) {
+          $log.debug('authorize:'+accessLevel+' => '+user.role);
+          return accessLevel === undefined || accessLevel === userRoles.Guest || accessLevel === user.role;
+        });            
+      },
+      isLoggedIn: function() {
+        return userService.resolveUser().then(function(user) {
+          $log.debug('isLoggedIn:'+user+' => '+user.role);
+          return user.role !== userRoles.Guest;
+        });           
       }
     };
   }]);

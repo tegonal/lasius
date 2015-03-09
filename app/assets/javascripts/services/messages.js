@@ -6,7 +6,7 @@ define(['angular'], function (angular) {
   
   
   var mod = angular.module('services.messages', ['ngCookies']);
-  mod.factory('clientMessageService', ['$http', '$location', '$q', 'playRoutes', '$rootScope', 'msgBus', function ($http, $location, $q, playRoutes, $rootScope, msgBus) {
+  mod.factory('clientMessageService', ['$http', '$location', '$q', 'playRoutes', '$rootScope', 'msgBus', 'userService', 'Auth', function ($http, $location, $q, playRoutes, $rootScope, msgBus, userService, Auth) {
     
     var send = function(eventType, eventData) {
       //append type to event data
@@ -25,15 +25,15 @@ define(['angular'], function (angular) {
        send: send,
         //start websocket based messaging
         start: function() {
-          //$rootScope.$watch(
-             // userService.getUser, 
-              //function() {
-                //Auth.isLoggedIn().then(function(loggedIn) {
-                  //if (loggedIn) {          
+          $rootScope.$watch(
+              userService.getUser, 
+              function() {
+                Auth.isLoggedIn().then(function(loggedIn) {
+                  if (loggedIn) {          
                     console.log('registering websocket');          
                     var wsUrl = playRoutes.controllers.ApplicationController.messagingSocket().webSocketUrl();
                     //append token to websocket url because normal http headers can't get controlled
-                    var securedUrl = wsUrl;//+ "?auth="+userService.getToken();
+                    var securedUrl = wsUrl+ "?auth="+userService.getToken();
                     if(!(angular.isDefined($rootScope.messagingSocket))) {
                       $rootScope.messagingSocket = new WebSocket(securedUrl);
                       $rootScope.messagingSocket.onmessage = function(msg) { 
@@ -46,9 +46,9 @@ define(['angular'], function (angular) {
                         send('HelloServer', {client: "someClientName"});
                       };
                     }                         
-                 // }
-                //});
-            //});
+                  }
+                });
+            });
         }
      };
    }]);

@@ -10,7 +10,7 @@ define(['angular'], function (angular) {
     
     return {
       login: function (email, password) {
-        return playRoutes.controllers.Application.login(email, password).post().then(function (response) {
+        return playRoutes.controllers.ApplicationController.login(email, password).post().then(function (response) {
           // return promise so we can chain easily
           token = response.data.token;
           return playRoutes.controllers.UsersController.authUser().get().then(function (response) {
