@@ -9,27 +9,36 @@ import play.api.libs.concurrent.Execution.Implicits._
 import actors.ClientMessagingWebsocketActor
 
 class UserFavoritesController {
-  self: Controller with UserDataRepositoryComponent =>
+  self: Controller with UserDataRepositoryComponent with Security =>
 
-  def getFavorites(userId: UserId) = Action.async {
-    userFavoritesRepository.getByUser(userId) map { favorites =>
-      Ok(Json.toJson(favorites))
-    }
+  def getFavorites() = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        userFavoritesRepository.getByUser(subject.userId) map { favorites =>
+          Ok(Json.toJson(favorites))
+        }
+      }
   }
 
-  def addFavorite(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = Action.async {
-    userFavoritesRepository.addFavorite(userId, categoryId, projectId, tags) map { favorites =>
-      ClientMessagingWebsocketActor ! (userId, FavoriteAdded(userId, BookingStub(categoryId, projectId, tags)), List(userId))
-      Ok(Json.toJson(favorites))
-    }
+  def addFavorite(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        userFavoritesRepository.addFavorite(subject.userId, categoryId, projectId, tags) map { favorites =>
+          ClientMessagingWebsocketActor ! (subject.userId, FavoriteAdded(subject.userId, BookingStub(categoryId, projectId, tags)), List(subject.userId))
+          Ok(Json.toJson(favorites))
+        }
+      }
   }
 
-  def removeFavorite(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = Action.async {
-    userFavoritesRepository.removeFavorite(userId, BookingStub(categoryId, projectId, tags)) map { favorites =>
-      ClientMessagingWebsocketActor ! (userId, FavoriteRemoved(userId, BookingStub(categoryId, projectId, tags)), List(userId))
-      Ok(Json.toJson(favorites))
-    }
+  def removeFavorite(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        userFavoritesRepository.removeFavorite(subject.userId, BookingStub(categoryId, projectId, tags)) map { favorites =>
+          ClientMessagingWebsocketActor ! (subject.userId, FavoriteRemoved(subject.userId, BookingStub(categoryId, projectId, tags)), List(subject.userId))
+          Ok(Json.toJson(favorites))
+        }
+      }
   }
 }
 
-object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent
+object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent with Security with DefaultSecurityComponent

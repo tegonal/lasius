@@ -8,24 +8,24 @@ define(['angular'], function (angular) {
   mod.factory('favoritesService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
     
     return {             
-      getFavorites: function (userId) {
-        return playRoutes.controllers.UserFavoritesController.getFavorites(userId).get().then(function (response) {
+      getFavorites: function () {
+        return playRoutes.controllers.UserFavoritesController.getFavorites().get().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
       },
-      addFavorite: function(userId, categoryId, projectId, tags) {
-        return playRoutes.controllers.UserFavoritesController.addFavorite(userId, categoryId, projectId, tags).post().then(function (response) {
+      addFavorite: function(categoryId, projectId, tags) {
+        return playRoutes.controllers.UserFavoritesController.addFavorite(categoryId, projectId, tags).post().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
       },
-      removeFavorite: function(userId, categoryId, projectId, tags) {
-        return playRoutes.controllers.UserFavoritesController.removeFavorite(userId, categoryId, projectId, tags).delete().then(function (response) {
+      removeFavorite: function(categoryId, projectId, tags) {
+        return playRoutes.controllers.UserFavoritesController.removeFavorite(categoryId, projectId, tags).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

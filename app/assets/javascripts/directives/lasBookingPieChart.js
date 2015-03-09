@@ -42,7 +42,7 @@ define(['angular'], function(angular) {
           var from = range.from.format(MY_CONFIG.DATE_PATTERN);
           var to = range.to.format(MY_CONFIG.DATE_PATTERN);
           
-          bookingStatisticsService.getAggregatedStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
+          bookingStatisticsService.getAggregatedStatistics(scope.source, from, to).then(function(statistics) {
             scope.statistics = statistics;
           });
         };

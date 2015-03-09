@@ -4,12 +4,12 @@
 			<a class="navbar-brand" href="#">Lasius</a>
 		</div>
 		<div class="navbar-right">
-			<las-booking  user-id="'noob'"/>
+			<las-booking  user-id="user.id"/>
 		</div>
 	</div>
 </div>
 <div class="container">	
-	<las-current-time-booking user-id="'noob'"></las-current-time-booking>
+	<las-current-time-booking user-id="user.id"></las-current-time-booking>
 	<div class="btn-toolbar" role="toolbar">
 	  <div class="btn-group">
 	    <button type="button" class="btn btn-default" ng-click="dayMinus()">
@@ -26,16 +26,16 @@
 			
 	<div>		
 		By Category<br />
-		<las-booking-pie-stats date="date" user-id="'noob'" source="'category'"></las-booking-tag-stats>
+		<las-booking-pie-stats date="date" user-id="user.id" source="'category'"></las-booking-tag-stats>
 	</div>
 	<div>
 		By Project<br />
-		<las-booking-pie-stats date="date" user-id="'noob'" source="'project'"></las-booking-tag-stats>
+		<las-booking-pie-stats date="date" user-id="user.id" source="'project'"></las-booking-tag-stats>
 	</div>
 	<div>
 		By Tag<br />
-		<las-booking-pie-stats date="date" user-id="'noob'" source="'tag'"></las-booking-tag-stats>
+		<las-booking-pie-stats date="date" user-id="user.id" source="'tag'"></las-booking-tag-stats>
 	</div>
 	
-	<las-booking-history user-id="'noob'" ></las-booking-history>
+	<las-booking-history user-id="user.id" ></las-booking-history>
 </div>

@@ -8,7 +8,6 @@ define(['angular'], function(angular) {
       restrict: 'E',
       templateUrl: '/assets/directives/las-workview-pie-chart-tmpl.html',
       scope:  {
-        userId:'='
       },
       link: function(scope, iElement, iAttrs) {
         
@@ -177,7 +176,7 @@ define(['angular'], function(angular) {
           cancelTimer();
         });
         
-        currentTimeBookingService.getCurrentTimeBooking(scope.userId);
+        currentTimeBookingService.getCurrentTimeBooking();
       }
     };
   }]);

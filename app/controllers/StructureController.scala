@@ -9,7 +9,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import models._
 
 class StructureController {
-  self: Controller with BasicRepositoryComponent =>
+  self: Controller with BasicRepositoryComponent with Security =>
 
   case class ProjectContainer(project: Project, categoryId: CategoryId, name: String)
 
@@ -17,19 +17,22 @@ class StructureController {
     implicit val projContFormat: Format[ProjectContainer] = Json.format[ProjectContainer]
   }
 
-  def getCategories(userId: UserId) = Action.async {
-    structureRepository.findAllCategories map { categories =>
-      //invert relationship from category to project
-      val projects = for {
-        cat <- categories
-        proj <- cat.projects
-      } yield {
-        //remove reference to projects
-        ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}")
+  def getCategories() = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        structureRepository.findAllCategories map { categories =>
+          //invert relationship from category to project
+          val projects = for {
+            cat <- categories
+            proj <- cat.projects
+          } yield {
+            //remove reference to projects
+            ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}")
+          }
+          Ok(Json.toJson(projects))
+        }
       }
-      Ok(Json.toJson(projects))
-    }
   }
 }
 
-object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller
+object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent

@@ -8,7 +8,6 @@ define(['angular'], function(angular) {
       restrict: 'E',
       templateUrl: '/assets/directives/las-booking-stacked-area-stats-tmpl.html',
       scope:  {
-        userId:'=',
         source:'=',
         range:'=',
         width: '=',
@@ -36,7 +35,7 @@ define(['angular'], function(angular) {
           var from = range.from.format(pattern);
           var to = range.to.format(pattern);
           
-          bookingStatisticsService.getStatistics(scope.source, scope.userId, from, to).then(function(statistics) {
+          bookingStatisticsService.getStatistics(scope.source, from, to).then(function(statistics) {
             scope.statistics = statistics;
           });
         };

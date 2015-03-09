@@ -53,9 +53,9 @@ define(
                         scope.duration = {};
                         scope.total_duration = {};
                         currentTimeBookingService
-                            .getCurrentTimeBooking(scope.userId);
+                            .getCurrentTimeBooking();
                         
-                        favoritesService.getFavorites(scope.userId).then(function(favorites) {
+                        favoritesService.getFavorites().then(function(favorites) {
                           scope.favorites = favorites;
                           if (scope.result && scope.result.booking) {
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
@@ -63,14 +63,14 @@ define(
                         });
                         
                         scope.addToFavorites = function() {
-                          favoritesService.addFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                          favoritesService.addFavorite(scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
                             scope.favorites = favorites;
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           });
                         };
                         
                         scope.removeFromFavorites = function() {
-                          favoritesService.removeFavorite(scope.userId, scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
+                          favoritesService.removeFavorite(scope.result.booking.categoryId, scope.result.booking.projectId, scope.result.booking.tags).then(function(favorites) {
                             scope.favorites = favorites;
                             scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
@@ -107,8 +107,7 @@ define(
                         });
 
                         scope.stopBooking = function(bookingId) {
-                          currentTimeBookingService.stopBooking(scope.userId,
-                              bookingId).then(function() {
+                          currentTimeBookingService.stopBooking(bookingId).then(function() {
                             scope.noBooking = true;
                           });
                         };

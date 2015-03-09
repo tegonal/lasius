@@ -20,28 +20,28 @@ GET           /authuser                                      controllers.UsersCo
 GET     /assets/*file              					controllers.Assets.at(path="/public", file)
 
 # TimeBooking
-POST /users/:userId/bookings/start					controllers.TimeBookingController.start(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
-POST /users/:userId/bookings/stop					controllers.TimeBookingController.stop(userId:models.UserId, bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
-DELETE /users/:userId/bookings/remove/:bookingId	controllers.TimeBookingController.remove(userId:models.UserId, bookingId:models.BookingId)
-POST /users/:userId/bookings/append					controllers.TimeBookingController.append(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
+POST /mylasius/bookings/start					controllers.TimeBookingController.start(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST /mylasius/bookings/stop					controllers.TimeBookingController.stop(bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+DELETE /mylasius/bookings/remove/:bookingId	controllers.TimeBookingController.remove(bookingId:models.BookingId)
+POST /mylasius/bookings/append					controllers.TimeBookingController.append(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 
 # TimeBookingHistory
-GET /users/:userId/history							controllers.TimeBookingHistoryController.getTimeBookingHistory(userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /mylasius/history							controllers.TimeBookingHistoryController.getTimeBookingHistory(from:org.joda.time.DateTime, to:org.joda.time.DateTime)
 
 # CurrentUserTimeBookings
-GET /users/:userId/current							controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking(userId: models.UserId)
+GET /mylasius/current							controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking()
 
 # StructureController
-GET /users/:userId/structure						controllers.StructureController.getCategories(userId:models.UserId)
+GET /mylasius/structure						controllers.StructureController.getCategories()
 
 # Statistics
-GET /users/:userId/stats/aggregated					controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
-GET /users/:userId/stats/range						controllers.TimeBookingStatisticsController.getStatistics(source: String, userId:models.UserId, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /mylasius/stats/aggregated					controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
+GET /mylasius/stats/range						controllers.TimeBookingStatisticsController.getStatistics(source: String, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
 
 # Favorites
-GET    /users/:userId/favorites/					controllers.UserFavoritesController.getFavorites(userId:models.UserId)
-POST   /users/:userId/favorites/add		   		 	controllers.UserFavoritesController.addFavorite(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
-DELETE /users/:userId/favorites/remove				controllers.UserFavoritesController.removeFavorite(userId:models.UserId, categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
+GET    /mylasius/favorites/					controllers.UserFavoritesController.getFavorites()
+POST   /mylasius/favorites/add		   		 	controllers.UserFavoritesController.addFavorite(categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
+DELETE /mylasius/favorites/remove				controllers.UserFavoritesController.removeFavorite(categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
 
 # Static
 # ~~~~

@@ -8,16 +8,16 @@ define(['angular'], function (angular) {
   mod.factory('bookingHistoryService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
     
     return {             
-      getTimeBookingHistory: function (userId, from, to) {
-        return playRoutes.controllers.TimeBookingHistoryController.getTimeBookingHistory(userId, from, to).get().then(function (response) {
+      getTimeBookingHistory: function (from, to) {
+        return playRoutes.controllers.TimeBookingHistoryController.getTimeBookingHistory(from, to).get().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
       },
-      removeTimeBooking: function (userId, bookingId) {
-        return playRoutes.controllers.TimeBookingController.remove(userId, bookingId).delete().then(function (response) {
+      removeTimeBooking: function (bookingId) {
+        return playRoutes.controllers.TimeBookingController.remove(bookingId).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

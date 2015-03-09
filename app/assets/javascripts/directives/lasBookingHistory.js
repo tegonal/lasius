@@ -9,7 +9,7 @@ define(['angular'], function(angular) {
       transclude: true,
       templateUrl: '/assets/directives/las-booking-history-tmpl.html',
       scope:  {
-        userId:'=',
+        userId: '=',
         range:'='
       },
       link: function(scope, iElement, iAttrs) {
@@ -21,7 +21,7 @@ define(['angular'], function(angular) {
           var from = range.from.format(MY_CONFIG.DATE_PATTERN);
           var to = range.to.format(MY_CONFIG.DATE_PATTERN);
           
-          bookingHistoryService.getTimeBookingHistory(scope.userId, from, to).then(function(bookings) {
+          bookingHistoryService.getTimeBookingHistory(from, to).then(function(bookings) {
             scope.bookings = bookings;          
           });
         };
@@ -54,13 +54,13 @@ define(['angular'], function(angular) {
         };
         
         scope.removeTimeBooking = function(bookingId) {
-          bookingHistoryService.removeTimeBooking(scope.userId, bookingId).then(function(result){
+          bookingHistoryService.removeTimeBooking(bookingId).then(function(result){
             removeBooking(bookingId);
           });
         };
         
         var startBooking = function(booking) {
-          bookingService.start(scope.userId, booking.categoryId, booking.projectId, booking.tags).then(function(result) {
+          bookingService.start(booking.categoryId, booking.projectId, booking.tags).then(function(result) {
             //assign dummy booking that row gets selected directly
             scope.booking = {
                 projectId: booking.projectId,
@@ -71,7 +71,7 @@ define(['angular'], function(angular) {
         };
         
         var stopBooking = function() {
-          bookingService.stop(scope.userId, scope.booking.id).then(function() {
+          bookingService.stop(scope.booking.id).then(function() {
             scope.booking = undefined;
           });
         };

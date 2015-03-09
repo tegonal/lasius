@@ -1,7 +1,6 @@
 package controllers
 
 import play.api.mvc.Controller
-
 import services.TimeBookingViewService
 import models._
 import org.joda.time.DateTime
@@ -10,32 +9,44 @@ import domain.UserTimeBookingAggregate._
 import akka.actor.ActorRef
 import core.Global._
 import play.api.Logger
+import play.api.libs.concurrent.Execution.Implicits._
+import scala.concurrent.Future
 
 class TimeBookingController {
-  self: Controller =>
+  self: Controller with Security =>
 
-  def start(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime = DateTime.now()) = Action {
-    Logger.debug(s"TimeBokingController -> start - userId:$userId, projectId: $projectId, tags:$tags, start:$start")
-    timeBookingManagerService ! StartBooking(userId, categoryId, projectId, tags, start)
-    Ok
+  def start(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        Logger.debug(s"TimeBokingController -> start - userId:${subject.userId}, projectId: $projectId, tags:$tags, start:$start")
+        timeBookingManagerService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
+        Future.successful(Ok)
+      }
   }
 
-  def stop(userId: UserId, bookingId: BookingId, end: DateTime = DateTime.now()) = Action {
-    timeBookingManagerService ! EndBooking(userId, bookingId, end)
-    Ok
+  def stop(bookingId: BookingId, end: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! EndBooking(subject.userId, bookingId, end)
+        Future.successful(Ok)
+      }
   }
 
-  def remove(userId: UserId, bookingId: BookingId) = Action {
-    timeBookingManagerService ! RemoveBooking(userId, bookingId)
-    Ok
+  def remove(bookingId: BookingId) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! RemoveBooking(subject.userId, bookingId)
+        Future.successful(Ok)
+      }
   }
 
-  def append(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) = Action {
-    timeBookingManagerService ! AppendBooking(userId, categoryId, projectId, tags, start, end)
-    Ok
+  def append(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! AppendBooking(subject.userId, categoryId, projectId, tags, start, end)
+        Future.successful(Ok)
+      }
   }
 }
 
-object TimeBookingController extends TimeBookingController with Controller {
-
-}
+object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent

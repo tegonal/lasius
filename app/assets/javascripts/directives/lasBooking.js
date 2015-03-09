@@ -9,7 +9,6 @@ define(['angular'], function(angular) {
       transclude: true,
       templateUrl: '/assets/directives/las-booking-tmpl.html',
       scope:  {
-        userId:'='
       },
       link: function(scope, iElement, iAttrs) {
         
@@ -19,7 +18,7 @@ define(['angular'], function(angular) {
         scope.tags = {};
         
         //noting to do here
-        bookingService.getCategories(scope.userId).then(function(projects) {
+        bookingService.getCategories().then(function(projects) {
           scope.projects = projects;          
         });
         
@@ -38,7 +37,7 @@ define(['angular'], function(angular) {
             this.push(value.id);
           }, tagStrings);
           
-          bookingService.start(scope.userId, scope.project.selected.categoryId, scope.project.selected.project.id, tagStrings).then(function(result) {
+          bookingService.start(scope.project.selected.categoryId, scope.project.selected.project.id, tagStrings).then(function(result) {
             //reset current selection
             scope.project = {};
             scope.tags = {};          

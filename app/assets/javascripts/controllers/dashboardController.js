@@ -4,11 +4,20 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment) {
+  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment, userService) {
         
     $scope.bookingRange = {};    
     $scope.statisticRange = {};    
     $scope.currentBookingOn = true;
+    
+    $scope.$watch(function() {
+      return userService.getUser();
+    }, function(user) {
+      if (angular.isDefined(user)) {
+        $log.debug('Got user:'+user);
+        $scope.user = user;
+      }
+    }, true);
     
     $scope.showCurrentBooking = function(on) {
       $scope.currentBookingOn = on;
@@ -35,7 +44,7 @@ define(['angular'], function(angular) {
     };
   };
   
-  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment'];  
+  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment', 'userService'];  
 
   return {
     DashboardCtrl: DashboardCtrl
