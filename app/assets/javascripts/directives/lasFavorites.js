@@ -23,18 +23,18 @@ define(['angular'], function(angular) {
             booking.tags.equals(favorite.tags);
         };
         
-        favoritesService.getFavorites(scope.userId).then(function(favorites) {
+        favoritesService.getFavorites().then(function(favorites) {
           scope.favorites = favorites;
         });
         
         scope.removeFavorite = function(categoryId, projectId, tags) {
-          favoritesService.removeFavorite(scope.userId, categoryId, projectId, tags).then(function(favorites) {
+          favoritesService.removeFavorite(categoryId, projectId, tags).then(function(favorites) {
             scope.favorites = favorites;
           });
         };
         
         var startBooking = function(favorite) {
-          bookingService.start(scope.userId, favorite.categoryId, favorite.projectId, favorite.tags).then(function(result) {
+          bookingService.start(favorite.categoryId, favorite.projectId, favorite.tags).then(function(result) {
             //assign dummy booking that row gets selected directly
             scope.booking = {
                 projectId: favorite.projectId,
@@ -45,7 +45,7 @@ define(['angular'], function(angular) {
         };
         
         var stopBooking = function() {
-          bookingService.stop(scope.userId, scope.booking.id).then(function() {
+          bookingService.stop(scope.booking.id).then(function() {
             scope.booking = undefined;
           });
         };
