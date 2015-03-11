@@ -7,7 +7,6 @@ import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
 import org.joda.time.DateTime
 import org.joda.time.Duration
-import org.bson.BSONObject
 import org.joda.time.LocalDate
 
 trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {

@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
   "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
-  "com.github.ironfish" %% "akka-persistence-mongo-casbah" % "0.7.5",
+  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2",
   "org.mindrot" % "jbcrypt" % "0.3m",
   cache,
   ws,
