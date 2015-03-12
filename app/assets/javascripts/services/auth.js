@@ -24,9 +24,14 @@ define(['angular'], function (angular) {
       },
       isLoggedIn: function() {
         return userService.resolveUser().then(function(user) {
-          $log.debug('isLoggedIn:'+user+' => '+user.role);
           return user.role !== userRoles.Guest;
         });           
+      },
+      isUserLoggedIn: function(user) {
+        if (user === undefined) {
+          return false;
+        }
+          return user.role !== userRoles.Guest;                  
       }
     };
   }]);

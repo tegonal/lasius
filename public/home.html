@@ -3,7 +3,7 @@
 		<div class="row">
 			<div class="col-md-4">
 				<div class="navbar-header">
-					<a class="navbar-brand" href="#">Lasius <span>- {{user.firstName}} {{user.lastName}}</span></a>
+					<a class="navbar-brand" href="#">Lasius</a>
 					
 				</div>
 			</div>
@@ -37,9 +37,7 @@
 	        		<li ng-class="contentType==='statistics'?'active':''"><a href="#/" ng-click="selectContentType('statistics', false)">Statistics</a></li>
 	        	</ul>
 	        	<ul class="nav navbar-nav navbar-right">        	
-	        		<li><a href="#">Preferences</a></li>
-	        		<li ng-if="isLoggedIn"><a ng-click="logout()" href="#">Logout</a></li>
-	        		<li ng-if="!isLoggedIn"><a href="/login">Login</a></li>
+	        		<li><las-login-dropdown></las-login-dropdown></li>
 	        	</ul>
 	        </div>
         </div>

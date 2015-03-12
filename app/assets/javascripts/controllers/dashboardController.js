@@ -31,18 +31,6 @@ define(['angular'], function(angular) {
       }
     };
     
-    $scope.isLoggedIn = function() {
-      return Auth.isLoggedIn();
-    };
-    
-    $scope.logout = function() {
-       userService.logout();
-    };
-    
-    $scope.user = function() {
-      return userService.getUser();
-    };
-        
     $scope.contentTypeMapping = {
         "workview": "assets/workview.html",
         "bookings": "assets/bookings.html",
