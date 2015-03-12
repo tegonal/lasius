@@ -91,6 +91,8 @@ define(['angular'], function (angular) {
       return deferred.promise;
     }]
   });
+
+  
   /**
    * If the current route does not resolve, go back to the start page.
    */

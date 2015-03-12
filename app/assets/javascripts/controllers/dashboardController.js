@@ -4,7 +4,7 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment, userService) {
+  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment, userService, Auth) {
         
     $scope.bookingRange = {};    
     $scope.statisticRange = {};    
@@ -30,6 +30,18 @@ define(['angular'], function(angular) {
         $animate.setClass(content, 'main_content_closed', 'main_content');
       }
     };
+    
+    $scope.isLoggedIn = function() {
+      return Auth.isLoggedIn();
+    };
+    
+    $scope.logout = function() {
+       userService.logout();
+    };
+    
+    $scope.user = function() {
+      return userService.getUser();
+    };
         
     $scope.contentTypeMapping = {
         "workview": "assets/workview.html",
@@ -44,7 +56,7 @@ define(['angular'], function(angular) {
     };
   };
   
-  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment', 'userService'];  
+  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment', 'userService', 'Auth'];  
 
   return {
     DashboardCtrl: DashboardCtrl

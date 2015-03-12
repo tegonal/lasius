@@ -38,18 +38,6 @@ object BaseFormat {
     def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
   }
 
-  implicit val localDateFormat: Format[LocalDate] = new Format[LocalDate] {
-    def reads(json: JsValue): JsResult[LocalDate] = json match {
-
-      case JsNumber(millis) => {
-        JsSuccess(DateTime.now().withMillis(millis.toLong).toLocalDate)
-      }
-      case _ => JsError(s"Unexpected JSON value $json")
-    }
-
-    def writes(duration: LocalDate): JsNumber = JsNumber(duration.toDate().getDate())
-  }
-
   implicit object BSONDateTimeHandler extends BSONHandler[BSONDateTime, DateTime] {
     def read(time: BSONDateTime) = new DateTime(time.value)
     def write(jdtime: DateTime) = BSONDateTime(jdtime.getMillis)

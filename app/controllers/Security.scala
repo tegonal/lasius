@@ -64,7 +64,7 @@ trait Security {
       maybeToken flatMap { token =>
         Logger.debug(s"Check security token in cache:$token, " + Cache.get(token))
         Cache.getAs[UserId](token) map { userId =>
-          Logger.debug(s"Found userId:docsafeUserId")
+          Logger.debug(s"Found userId: $userId")
           if (xsrfTokenCookie.value.equals(token)) {
             val subject = Subject(token, userId)
             Left(subject)

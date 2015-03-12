@@ -12,10 +12,13 @@ import org.joda.time.DateTime
 import akka.actor.Props
 
 object UserService {
+  case class StopUserView(userId:UserId)
+  
   case class StartUserTimeBookingView(userId: UserId)
 }
 
 abstract class UserService[C] extends Actor with ActorLogging {
+  import UserService._
 
   /**
    * Implicit convertion from userid object model to string based representation used in akka system
@@ -46,8 +49,24 @@ abstract class UserService[C] extends Actor with ActorLogging {
   }
 
   def processCommand: Receive
+  
+  def removeUserView(userId: UserId) = {
+     val maybeChild = context child userId
+     maybeChild match {
+      case Some(child) =>
+       context stop child
+      case _ =>
+     }
+  }
 
-  override def receive = processCommand
+  override def receive = {
+    case StopUserView(userId) =>
+      log.debug(s"StopUserView:$userId")
+      removeUserView(userId)
+    case c =>
+      log.debug(s"processCommand:$c")
+      processCommand(c)
+  }
 
   protected def create(id: UserId): ActorRef = {
     val agg = context.actorOf(aggregateProps(id), id)

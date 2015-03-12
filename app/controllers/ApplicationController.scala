@@ -17,6 +17,7 @@ import play.api.cache.Cache
 import java.util.UUID
 import play.api.libs.json._
 import repositories.MongoSecurityRepositoryComponent
+import domain.LoginStateAggregate
 
 class ApplicationController {
   self: Controller with SecurityRepositoryComponent with Security =>
@@ -57,6 +58,9 @@ class ApplicationController {
         Logger.debug(s"Store token for user: $user")
         val uuid = UUID.randomUUID.toString
         Cache.set(uuid, user.id)
+        
+        loginStateAggregate ! LoginStateAggregate.UserLoggedIn(user.id)
+        
         Ok(Json.obj("token" -> uuid))
           .withCookies(Cookie(AuthTokenCookieKey, uuid, None, httpOnly = false))
       }
@@ -91,6 +95,8 @@ class ApplicationController {
     Logger.debug(s"Remove token from cache: ${subject.token}")
     Cache.remove(subject.token)
 
+    loginStateAggregate ! LoginStateAggregate.UserLoggedOut(subject.userId)
+    
     //notify client
     ClientMessagingWebsocketActor ! (subject.userId, UserLoggedOut(subject.userId), List(subject.userId))
 
