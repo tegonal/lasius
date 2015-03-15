@@ -1,17 +1,14 @@
-<span class="dropdown navbar-brand navbar-avataradjust" ng-if="isLoggedIn">
-    <a href="" class="dropdown-toggle avatar-big">
-    		{{user.firstName}} {{user.lastName}}
-        <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-        <li><a href="#/settings"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
-        <li>
-            <a href="" data-ng-click="logout()">
-                <span class="glyphicon glyphicon-off"></span> Logout
-            </a>
-        </li>
-    </ul>
-  </span>
-<ul class="nav navbar-nav pull-right" ng-if="!isLoggedIn">
-    <li><a href="/#login">Login</a></li>
+<ul class="nav navbar-nav pull-right" dropdown>
+    <li ng-if="isLoggedIn" dropdown-toggle>
+    		<a href="#">{{user.firstName}} {{user.lastName}}<span class="caret"></span></a>        
+    </li>
+	    <ul class="dropdown-menu"role="menu" >
+	        <li><a href="#/settings" role="menuitem"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
+	        <li>
+	            <a href="" data-ng-click="logout()" role="menuitem" >
+	                <span class="glyphicon glyphicon-off"></span> Logout
+	            </a>
+	        </li>
+	    </ul>
+    <li ng-if="!isLoggedIn"><a href="/#login">Login</a></li>
 </ul>

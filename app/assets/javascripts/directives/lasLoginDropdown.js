@@ -31,12 +31,12 @@ define(['angular'], function(angular) {
         scope.loggedOut = function() {
           userService.loggedOut();
           scope.user = undefined;
-          $location.path('/');          
+          $location.path('/login');          
         };
         
         msgBus.onMsg('UserLoggedOut', scope, function(event, msg) {
           console.log('msg received' + msg.type);  
-            if(scope.isLoggedIn && userService.getUser().userId == msg.userId) {
+            if(scope.isLoggedIn && userService.getUser().id == msg.userId) {
               scope.loggedOut();
               scope.$apply();
             }

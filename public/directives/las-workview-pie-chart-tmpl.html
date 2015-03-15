@@ -3,7 +3,7 @@
 		<h3>{{progress | percentage:0 }}</h3>
 	</span>
 <div class="chart">	
-	<span ng-repeat="chart in charts" class="workview-chart" style="position:absolute;">
+	<span ng-repeat="chart in charts track by $index" class="workview-chart" style="position:absolute;">
 		<nvd3-pie-chart data="chart" x="xFunction()" y="yFunction()" 
 		   showLegend="false" noData="No Statistics found!" tooltips="true" 
 		   width="{{250+$index*30}}" height="{{250+$index*30}}" donut="true"
