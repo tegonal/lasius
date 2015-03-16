@@ -14,22 +14,21 @@ object InitialData extends MongoBasicRepositoryComponent {
     } recoverWith {
       case t => initializeUsers()
     }
-
-    Logger.debug("Initialize project data...")
-    structureRepository.coll.drop map { r =>
-      initializeStructure()
-    } recoverWith {
-      case t => initializeStructure()
-    }
   }
 
   def initializeUsers() = {
+    val team = Team(TeamId(), "Team1")
+    val structure = createStructure()
+
     val passwordHash = BCrypt.hashpw("noob", BCrypt.gensalt())
-    userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser))
+    userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser, Seq(team), structure))
+
+    val passwordHash2 = BCrypt.hashpw("demo", BCrypt.gensalt())
+    userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team), structure))
   }
 
-  def initializeStructure() = {
-    structureRepository.insert(Category(CategoryId("Projects"),
+  def createStructure() = {
+    Seq(Category(CategoryId("Projects"),
       Seq(Project(ProjectId("Lasius"),
         Seq(Tag(TagId("LS-1")),
           Tag(TagId("LS-2")))),
@@ -38,8 +37,7 @@ object InitialData extends MongoBasicRepositoryComponent {
             Tag(TagId("SI-2")))),
         Project(ProjectId("Apus"),
           Seq(Tag(TagId("AP-1")),
-            Tag(TagId("AP-2")))))))
-    structureRepository.insert(Category(CategoryId("Administration"),
+            Tag(TagId("AP-2")))))), Category(CategoryId("Administration"),
       Seq(Project(ProjectId("Marketing"),
         Seq(Tag(TagId("Sales")),
           Tag(TagId("Cold Aquisition")))),

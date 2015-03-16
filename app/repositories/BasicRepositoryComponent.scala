@@ -1,10 +1,9 @@
 package repositories
 
 trait BasicRepositoryComponent extends SecurityRepositoryComponent {
-  val structureRepository: StructureRepository
+  val userRepository: UserRepository
 }
 
 trait MongoBasicRepositoryComponent extends BasicRepositoryComponent {
   val userRepository = new UserMongoRepository
-  val structureRepository = new StructureMongoRepository
 }

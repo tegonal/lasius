@@ -68,11 +68,11 @@ define(['angular'], function(angular) {
           
           //push 100% workload charts
           for (var i = scope.charts.length; i < numberOfCharts-1; i++) { 
-            scope.charts.push(fullChartData);
+            scope.charts.push(fullChartData.slice(0));
           }
           //set chart-2 to 100%
           if (scope.charts.length > 1 && scope.charts[numberOfCharts-2][0].value != 100) {
-            scope.charts[numberOfCharts-2] = fullChartData;              
+            scope.charts[numberOfCharts-2] = fullChartData.slice(0);              
           }
           
           //push rest

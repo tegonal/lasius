@@ -1,6 +1,7 @@
 package domain.views
 
 import akka.persistence.PersistentView
+
 import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
@@ -9,8 +10,6 @@ import domain.UserTimeBookingAggregate.UserTimeBookingAdded
 import domain.UserTimeBookingAggregate.UserTimeBookingRemoved
 import domain.UserTimeBookingAggregate.UserTimeBookingStarted
 import domain.UserTimeBookingAggregate.UserTimeBookingStopped
-import repositories.StructureRepository
-import repositories.StructureMongoRepository
 import actors.ClientMessagingWebsocketActor
 import models.CurrentUserTimeBooking
 import org.joda.time.Duration

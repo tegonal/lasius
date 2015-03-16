@@ -7,8 +7,10 @@ import play.api.mvc.Action
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import models._
+import helpers.UserHelper
+import scala.concurrent.Future
 
-class StructureController {
+class StructureController extends UserHelper {
   self: Controller with BasicRepositoryComponent with Security =>
 
   case class ProjectContainer(project: Project, categoryId: CategoryId, name: String)
@@ -19,19 +21,18 @@ class StructureController {
 
   def getCategories() = HasRole(FreeUser, parse.empty) {
     implicit subject =>
-      implicit request => {
-        structureRepository.findAllCategories map { categories =>
+      implicit request =>
+        withUser(BadRequest("No user found for login")) { user =>
           //invert relationship from category to project
           val projects = for {
-            cat <- categories
+            cat <- user.categories
             proj <- cat.projects
           } yield {
             //remove reference to projects
             ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}")
           }
-          Ok(Json.toJson(projects))
+          Future.successful(Ok(Json.toJson(projects)))
         }
-      }
   }
 }
 

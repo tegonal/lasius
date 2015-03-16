@@ -17,7 +17,9 @@ case class User(
   firstName: String,
   lastName: String,
   active: Boolean,
-  role: Role) extends BaseEntity[UserId]
+  role: Role,
+  teams: Seq[Team],
+  categories: Seq[Category]) extends BaseEntity[UserId]
 
 object User {
   implicit val userFormat = Json.format[User]
