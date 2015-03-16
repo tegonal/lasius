@@ -19,12 +19,13 @@ object InitialData extends MongoBasicRepositoryComponent {
   def initializeUsers() = {
     val team = Team(TeamId(), "Team1")
     val structure = createStructure()
+    val structure2 = createStructure2()
 
     val passwordHash = BCrypt.hashpw("noob", BCrypt.gensalt())
     userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser, Seq(team), structure))
 
     val passwordHash2 = BCrypt.hashpw("demo", BCrypt.gensalt())
-    userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team), structure))
+    userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team), structure2))
   }
 
   def createStructure() = {
@@ -43,5 +44,18 @@ object InitialData extends MongoBasicRepositoryComponent {
           Tag(TagId("Cold Aquisition")))),
         Project(ProjectId("KnowHow"), Nil),
         Project(ProjectId("Others"), Nil))))
+  }
+
+  def createStructure2() = {
+    Seq(Category(CategoryId("Projects"),
+      Seq(Project(ProjectId("Lasius"),
+        Seq(Tag(TagId("LS-1")),
+          Tag(TagId("LS-2")))),
+        Project(ProjectId("MPI"),
+          Seq(Tag(TagId("MPI-1")),
+            Tag(TagId("MPI-2")))))),
+      Category(CategoryId("Sales"),
+        Seq(Project(ProjectId("Aquisition"),
+          Seq(Tag(TagId("Div")))))))
   }
 }
