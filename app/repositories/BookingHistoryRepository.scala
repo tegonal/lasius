@@ -7,10 +7,10 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 import play.modules.reactivemongo.json.BSONFormats._
 import play.api.libs.json._
 import models._
-import reactivemongo.core.commands.LastError
 import play.api.Logger
 import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
+import reactivemongo.core.commands.LastError
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] {
   def deleteHistory(userId: UserId): Future[Boolean]
@@ -23,12 +23,10 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
 
   def deleteHistory(userId: UserId): Future[Boolean] = {
     val sel = Json.obj("userId" -> userId)
-    find(sel) flatMap { bookings =>
-      Future.sequence(bookings map {
-        case (booking, id) =>
-          coll.remove(booking)
-      }) map { results =>
-        results.filter(!_.ok).size == 0
+    coll.remove(sel) map {
+      _ match {
+        case LastError(ok, _, _, _, _, _, _) => ok
+        case e => false
       }
     }
   }

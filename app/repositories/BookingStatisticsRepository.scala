@@ -35,12 +35,10 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
 
   def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean] = {
     val sel = Json.obj("userId" -> userId)
-    find(sel) flatMap { res =>
-      Future.sequence(res map {
-        case (model, id) =>
-          coll.remove(model)
-      }) map { results =>
-        results.filter(!_.ok).size == 0
+    coll.remove(sel) map {
+      _ match {
+        case LastError(ok, _, _, _, _, _, _) => ok
+        case e => false
       }
     }
   }
@@ -54,8 +52,8 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
   }
 
   def add(model: M)(implicit writes: Writes[I]): Future[M] = {
-     val sel = getUniqueContraint(model)
-     Logger.debug(s"add [$sel]:$model")
+    val sel = getUniqueContraint(model)
+    Logger.debug(s"add [$sel]:$model")
     findFirst(sel) flatMap {
       _.map { o =>
         o match {
@@ -77,7 +75,7 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
     }
   }
 
-  def subtract(model: M)(implicit writes: Writes[I]): Future[Option[M]] = {     
+  def subtract(model: M)(implicit writes: Writes[I]): Future[Option[M]] = {
     val sel = getUniqueContraint(model)
     Logger.debug(s"subtract [$sel]:$model")
     findFirst(sel) flatMap {
@@ -85,9 +83,9 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
         o match {
           case (current, id) =>
             val newModel = current - model
-            val duration =  if(newModel.duration.getMillis < 0){0}else{newModel.duration.getMillis}
-            Logger.debug(s"subtract [$sel]:duration=$duration")            
-            val modifier = Json.obj(Set -> Json.obj("duration" ->duration))
+            val duration = if (newModel.duration.getMillis < 0) { 0 } else { newModel.duration.getMillis }
+            Logger.debug(s"subtract [$sel]:duration=$duration")
+            val modifier = Json.obj(Set -> Json.obj("duration" -> duration))
             update(sel, modifier, false) map {
               case true =>
                 Some(newModel)
@@ -103,30 +101,30 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
       }
     }
   }
-  
-  def getUniqueContraint(model: M):JsObject
+
+  def getUniqueContraint(model: M): JsObject
 }
 
 class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[BookingByProject, BookingByProjectId] with BookingByProjectRepository {
   def coll = db.collection[JSONCollection]("BookingByProject")
-  
-  def getUniqueContraint(model: BookingByProject):JsObject = {
+
+  def getUniqueContraint(model: BookingByProject): JsObject = {
     Json.obj("day" -> model.day, "projectId" -> model.projectId)
   }
 }
 
 class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[BookingByCategory, BookingByCategoryId] with BookingByCategoryRepository {
   def coll = db.collection[JSONCollection]("BookingByCategory")
-  
-   def getUniqueContraint(model: BookingByCategory):JsObject = {
+
+  def getUniqueContraint(model: BookingByCategory): JsObject = {
     Json.obj("day" -> model.day, "categoryId" -> model.categoryId)
   }
 }
 
 class BookingByTagMongoRepository extends BookingStatisticMongoRepository[BookingByTag, BookingByTagId] with BookingByTagRepository {
   def coll = db.collection[JSONCollection]("BookingByTag")
-  
-   def getUniqueContraint(model: BookingByTag):JsObject = {
+
+  def getUniqueContraint(model: BookingByTag): JsObject = {
     Json.obj("day" -> model.day, "tagId" -> model.tagId)
   }
 }

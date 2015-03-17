@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
   "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2",
   "org.mindrot" % "jbcrypt" % "0.3m",
+  "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
   cache,
   ws,
   // WebJars (i.e. client-side) dependencies
