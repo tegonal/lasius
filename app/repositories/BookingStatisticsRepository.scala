@@ -12,10 +12,8 @@ import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
 import models.BaseFormat._
 
-trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I] {
-  def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean]
-
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
+trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I]
+  with PersistentUserViewRepository[M, I] {
 
   def add(model: M)(implicit writes: Writes[I]): Future[M]
 
@@ -31,25 +29,8 @@ trait BookingByCategoryRepository extends BookingStatisticRepository[BookingByCa
 trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, BookingByTagId] {
 }
 
-abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I] {
-
-  def deleteStatistics(userId: UserId)(implicit format: play.api.libs.json.Format[M]): Future[Boolean] = {
-    val sel = Json.obj("userId" -> userId)
-    coll.remove(sel) map {
-      _ match {
-        case LastError(ok, _, _, _, _, _, _) => ok
-        case e => false
-      }
-    }
-  }
-
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]] = {
-    val sel = Json.obj("userId" -> userId,
-      And -> Json.arr(Json.obj("day" -> Json.obj(GreaterOrEqualsThan -> from)),
-        Json.obj("day" -> Json.obj(LowerOrEqualsThan -> to))))
-    Logger.debug(s"findByUserAndRange:$this:$sel")
-    find(sel) map (_.map(_._1))
-  }
+abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I]
+  with MongoPeristentUserViewRepository[M, I] {
 
   def add(model: M)(implicit writes: Writes[I]): Future[M] = {
     val sel = getUniqueContraint(model)

@@ -43,7 +43,7 @@ class UserTimeBookingHistoryView(userId: UserId) extends PersistentView with Act
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>
       log.debug(s"UserTimeBookingHistoryView -> initialize")
-      bookingHistoryRepository.deleteHistory(userId)
+      bookingHistoryRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingHistoryEntryCleaned(userId))
     case UserTimeBookingStopped(booking) =>
       log.debug(s"UserTimeBookingHistoryView -> stopped booking, add:$booking")

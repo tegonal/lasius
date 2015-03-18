@@ -50,7 +50,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   //def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
-abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) extends BaseRepository[T, ID] {
+abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
+  self: BaseRepository[T, ID] =>
 
   lazy val db = ReactiveMongoPlugin.db
 
@@ -133,10 +134,4 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
     val sel = Json.obj("id" -> fact(id))
     find(sel) map (_.headOption.map(_._1))
   }
-
-  /*def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError] = {
-    val selector = Json.obj("id" -> fact(obj.id))
-    val modifier = Json.obj("$set" -> obj)
-    coll.update(selector, modifier)
-  }*/
 }

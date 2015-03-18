@@ -35,13 +35,13 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>
       log.debug(s"UserTimeBookingStatisticsView -> initialize")
-      bookingByProjectRepository.deleteStatistics(userId)
+      bookingByProjectRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByProjectEntryCleaned(userId))
 
-      bookingByCategoryRepository.deleteStatistics(userId)
+      bookingByCategoryRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByCategoryEntryCleaned(userId))
 
-      bookingByTagRepository.deleteStatistics(userId)
+      bookingByTagRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
     case UserTimeBookingStopped(booking) =>
       log.debug(s"UserTimeBookingStatisticsView -> stopped booking, add:$booking")
@@ -75,7 +75,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
           bookingByProjectRepository.add(b)
         case b: BookingByTag =>
           bookingByTagRepository.add(b)
-        case b@_ =>
+        case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }
     }
@@ -90,7 +90,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
           bookingByProjectRepository.subtract(b)
         case b: BookingByTag =>
           bookingByTagRepository.subtract(b)
-        case b@_ =>
+        case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }
     }

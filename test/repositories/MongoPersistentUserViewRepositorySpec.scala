@@ -14,8 +14,8 @@ import scala.concurrent.Future
 import org.joda.time.format.DateTimeFormat
 
 @RunWith(classOf[JUnitRunner])
-class BookingHistoryMongoRepositorySpec extends Specification with MongoSetup {
-  sequential
+class MongoPeristentUserViewRepositorySpec extends Specification with MongoSetup {
+  isolated
   "Booking history delete" should {
     "delete all history entries per user" in {
       withMongo {
@@ -37,7 +37,7 @@ class BookingHistoryMongoRepositorySpec extends Specification with MongoSetup {
         val findAll = Await.result(find1, DurationInt(15).seconds)
         findAll must have size (3)
 
-        val del = repository.deleteHistory(user1)
+        val del = repository.deleteByUser(user1)
         val afterDelete = Await.result(del, DurationInt(15).seconds)
         afterDelete must equalTo(true)
 
