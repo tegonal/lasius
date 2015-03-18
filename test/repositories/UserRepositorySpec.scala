@@ -15,10 +15,10 @@ import scala.concurrent.duration._
 @RunWith(classOf[JUnitRunner])
 class UserRepositorySpec extends Specification with EmbedConnection with MongoSetup {
   isolated
+  val repository = new UserMongoRepository
   "UserRepository findByEmail" should {
     "find user by email" in {
       withMongo {
-        val repository = new UserMongoRepository
         val email = "email"
         val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
 
@@ -37,7 +37,6 @@ class UserRepositorySpec extends Specification with EmbedConnection with MongoSe
     }
     "find none" in {
       withMongo {
-        val repository = new UserMongoRepository
         val email = "email"
         val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
 

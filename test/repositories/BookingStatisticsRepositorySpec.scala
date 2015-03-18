@@ -14,15 +14,13 @@ import play.api.libs.json._
 @RunWith(classOf[JUnitRunner])
 class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
   isolated
+  val repository = new BookingByProjectMongoRepository
+  val user = UserId("user")
+  val day = DateTime.now.withTimeAtStartOfDay
+  val projectId = ProjectId("p1")
   "BookingStatistic add" should {
     "insert new record for new unique constraint" in {
       withMongo {
-        val repository = new BookingByProjectMongoRepository
-
-        val user = UserId("user")
-        val day = DateTime.now.withTimeAtStartOfDay
-        val projectId = ProjectId("p1")
-
         //initialize
         val newDuration = Duration.standardHours(1)
         val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, newDuration)
@@ -40,11 +38,6 @@ class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
     }
     "add to correct previous unique constraint" in {
       withMongo {
-        val repository = new BookingByProjectMongoRepository
-
-        val user = UserId("user")
-        val day = DateTime.now.withTimeAtStartOfDay
-        val projectId = ProjectId("p1")
         val existingDuration = Duration.standardHours(2)
 
         //initialize various statistics
@@ -76,12 +69,6 @@ class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
   "BookingStatistic subtract" should {
     "Remove nothing if no previous entry was found" in {
       withMongo {
-        val repository = new BookingByProjectMongoRepository
-
-        val user = UserId("user")
-        val day = DateTime.now.withTimeAtStartOfDay
-        val projectId = ProjectId("p1")
-
         //initialize
         val newDuration = Duration.standardHours(1)
         val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, newDuration)
@@ -96,11 +83,6 @@ class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
     }
     "Remove from correct previous constraint" in {
       withMongo {
-        val repository = new BookingByProjectMongoRepository
-
-        val user = UserId("user")
-        val day = DateTime.now.withTimeAtStartOfDay
-        val projectId = ProjectId("p1")
         val existingDuration = Duration.standardHours(2)
 
         //initialize various statistics
@@ -131,11 +113,6 @@ class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
     }
     "Set to 0 if existing duration is lower than new" in {
       withMongo {
-        val repository = new BookingByProjectMongoRepository
-
-        val user = UserId("user")
-        val day = DateTime.now.withTimeAtStartOfDay
-        val projectId = ProjectId("p1")
         val existingDuration = Duration.standardHours(2)
 
         //initialize various statistics

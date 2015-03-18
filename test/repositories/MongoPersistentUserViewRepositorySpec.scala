@@ -16,10 +16,10 @@ import org.joda.time.format.DateTimeFormat
 @RunWith(classOf[JUnitRunner])
 class MongoPeristentUserViewRepositorySpec extends Specification with MongoSetup {
   isolated
+  val repository = new BookingHistoryMongoRepository
   "Booking history delete" should {
     "delete all history entries per user" in {
       withMongo {
-        val repository = new BookingHistoryMongoRepository
         val user1 = UserId("user1")
         val user2 = UserId("user2")
 
@@ -55,7 +55,6 @@ class MongoPeristentUserViewRepositorySpec extends Specification with MongoSetup
   }
 
   def testFindByUserIdAndRange[T](from: DateTime, to: DateTime, start: DateTime, end: DateTime)(test: Traversable[Booking] => T)(implicit evidence$1: org.specs2.execute.AsResult[T]) = {
-    val repository = new BookingHistoryMongoRepository
     val user = UserId("user1")
 
     //initialize
