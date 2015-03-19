@@ -16,10 +16,17 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
-  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
-  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2",
+  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",  
+  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2", 
+  //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
+  //Akka monitoring  
+  "org.aspectj" % "aspectjweaver" % "1.8.1",
+  "io.kamon" %% "kamon-core" % "0.3.5",  
+  "io.kamon" %% "kamon-statsd" % "0.3.5",
+  "io.kamon" %% "kamon-play" % "0.3.5",
+  "io.kamon" %% "kamon-system-metrics" % "0.3.5",
   cache,
   ws,
   // WebJars (i.e. client-side) dependencies
@@ -46,3 +53,9 @@ routesImport ++= Seq(
 	"binders.Binders._",
 	"play.api.i18n.Lang"
 )
+
+aspectjSettings
+
+fork in run := true
+
+javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
