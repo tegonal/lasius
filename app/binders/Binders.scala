@@ -92,7 +92,7 @@ object Binders {
             val formatter = new SimpleDateFormat(format);
             try {
               val someDate = formatter.parse(dateStr);
-              Right(new DateTime(someDate.getTime(), DateTimeZone.UTC))
+              Right(new DateTime(someDate.getTime(), DateTimeZone.getDefault()))
             } catch {
               case e: NumberFormatException => Left("Cannot parse parameter " + key + " as DateTime: " + e.getMessage)
             }

@@ -13,8 +13,6 @@ import play.api.Logger
 
 trait PersistentUserViewRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def deleteByUser(userId: UserId)(implicit ctx: ExecutionContext, format: Format[T]): Future[Boolean]
-
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit ctx: ExecutionContext, format: Format[T]): Future[Traversable[T]]
 }
 
 trait MongoPeristentUserViewRepository[T <: BaseEntity[ID], ID <: BaseId[_]] extends PersistentUserViewRepository[T, ID] {
@@ -28,15 +26,6 @@ trait MongoPeristentUserViewRepository[T <: BaseEntity[ID], ID <: BaseId[_]] ext
         case e => false
       }
     }
-  }
-
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit ctx: ExecutionContext, format: Format[T]): Future[Traversable[T]] = {
-    val sel = Json.obj("userId" -> userId,
-      And -> Json.arr(
-        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
-        Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
-    Logger.debug(s"findByUserAndRange:$sel")
-    find(sel) map (_.map(_._1))
   }
 
 }

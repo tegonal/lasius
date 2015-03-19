@@ -10,6 +10,7 @@ import org.joda.time.Duration
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import play.api.libs.json._
+import org.joda.time.format.DateTimeFormat
 
 @RunWith(classOf[JUnitRunner])
 class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
@@ -136,6 +137,62 @@ class BookingStatisticsRepositorySpec extends Specification with MongoSetup {
         result.get.projectId === projectId
         result.get.userId === user
         result.get.duration === new Duration(0)
+      }
+    }
+  }
+
+  val dateTimeFormat = DateTimeFormat.forPattern("dd.MM.yyyy");
+  def date(date: String): DateTime = {
+    DateTime.parse(date, dateTimeFormat)
+  }
+
+  def testFindByUserIdAndRange[T](from: DateTime, to: DateTime, day: DateTime)(test: Traversable[BookingByProject] => T)(implicit evidence$1: org.specs2.execute.AsResult[T]) = {
+    val user = UserId("user1")
+
+    //initialize
+    val b = BookingByProject(BookingByProjectId(), user, day, ProjectId("p1"), Duration.standardHours(1))
+
+    val f = for {
+      id <- repository.insert(b)
+    } yield {
+      id
+    }
+
+    Await.result(f, DurationInt(15).seconds)
+
+    val find = repository.findByUserIdAndRange(user, from, to)
+    val findSync = Await.result(find, DurationInt(15).seconds)
+
+    test(findSync)
+  }
+
+  "findByUserIdAndRange" should {
+
+    "find BookingHistory Within range" in {
+      withMongo {
+
+        //initialize
+        val from = date("01.01.2000")
+        val to = date("01.01.2001")
+        val day = date("01.02.2000")
+
+        testFindByUserIdAndRange(from, to, day) { result =>
+          result must have size (1)
+          result.head.day must equalTo(day)
+        }
+      }
+    }
+  }
+
+  "Not find Booking outside of range" in {
+    withMongo {
+      //initialize
+      val from = date("01.01.2000")
+      val to = date("01.01.2001")
+      val day = date("01.02.2002")
+
+      testFindByUserIdAndRange(from, to, day) { result =>
+        result must have size (0)
       }
     }
   }

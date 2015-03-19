@@ -15,6 +15,8 @@ import models.BaseFormat._
 trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I]
   with PersistentUserViewRepository[M, I] {
 
+  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
+
   def add(model: M)(implicit writes: Writes[I]): Future[M]
 
   def subtract(model: M)(implicit writes: Writes[I]): Future[Option[M]]
@@ -31,6 +33,14 @@ trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, Bo
 
 abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I]
   with MongoPeristentUserViewRepository[M, I] {
+
+  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]] = {
+    val sel = Json.obj("userId" -> userId,
+      And -> Json.arr(Json.obj("day" -> Json.obj(GreaterOrEqualsThan -> from)),
+        Json.obj("day" -> Json.obj(LowerOrEqualsThan -> to))))
+    Logger.debug(s"findByUserAndRange:$this:$sel")
+    find(sel) map (_.map(_._1))
+  }
 
   def add(model: M)(implicit writes: Writes[I]): Future[M] = {
     val sel = getUniqueContraint(model)
