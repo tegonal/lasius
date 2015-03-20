@@ -22,11 +22,12 @@ libraryDependencies ++= Seq(
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
   //Akka monitoring  
-  "org.aspectj" % "aspectjweaver" % "1.8.1",
+  "org.aspectj" % "aspectjweaver" % "1.8.4",
   "io.kamon" %% "kamon-core" % "0.3.5",  
   "io.kamon" %% "kamon-statsd" % "0.3.5",
   "io.kamon" %% "kamon-play" % "0.3.5",
   "io.kamon" %% "kamon-system-metrics" % "0.3.5",
+  "io.kamon" %% "kamon-log-reporter"   % "0.3.5",
   cache,
   ws,
   // WebJars (i.e. client-side) dependencies
@@ -54,8 +55,17 @@ routesImport ++= Seq(
 	"play.api.i18n.Lang"
 )
 
-aspectjSettings
+//aspectjSettings
 
 fork in run := true
 
-javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
+//javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
+//javaOptions in run <++= ""-javaagent:aspectjweaver-1.8.4.jar
+
+javaOptions in run += "-javaagent:aspectjweaver-1.8.4.jar"
+
+javaOptions in run += "-J-javaagent:aspectjweaver-1.8.4.jar"
+
+javaOptions += "-agentpath:"+ System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.4.jar"
+
+javaOptions += "-J-agentpath:"+ System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.4.jar"
