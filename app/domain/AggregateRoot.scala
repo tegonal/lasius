@@ -8,6 +8,8 @@ object AggregateRoot {
   trait Command
   trait Event
 
+  case object GetState extends Command
+
   case object Removed extends State
   case object Created extends State
   case object Uninitialized extends State
@@ -28,11 +30,6 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
 
   private def publish(event: Event) =
     context.system.eventStream.publish(event)
-
-  //val receiveCommand: Receive = {
-  //case _ =>
-  //log.debug("received command")
-  //}
 
   override val receiveRecover: Receive = {
     case evt: Event =>

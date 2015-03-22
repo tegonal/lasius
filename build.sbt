@@ -16,7 +16,8 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
-  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",  
+  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.8" % "test",  
   "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2", 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
@@ -55,17 +56,3 @@ routesImport ++= Seq(
 	"play.api.i18n.Lang"
 )
 
-//aspectjSettings
-
-fork in run := true
-
-//javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj
-//javaOptions in run <++= ""-javaagent:aspectjweaver-1.8.4.jar
-
-javaOptions in run += "-javaagent:aspectjweaver-1.8.4.jar"
-
-javaOptions in run += "-J-javaagent:aspectjweaver-1.8.4.jar"
-
-javaOptions += "-agentpath:"+ System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.4.jar"
-
-javaOptions += "-J-agentpath:"+ System.getProperty("user.home") + "/.ivy2/cache/org.aspectj/aspectjweaver/jars/aspectjweaver-1.8.4.jar"
