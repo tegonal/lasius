@@ -26,6 +26,8 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
   protected def afterEventPersisted(evt: Event): Unit = {
     updateState(evt)
     publish(evt)
+    log.debug(s"afterEventPersisted:send back state:$state")
+    sender ! state
   }
 
   private def publish(event: Event) =

@@ -3,6 +3,7 @@ package domain
 import models.UserId
 import akka.persistence._
 import akka.actor._
+import akka.event.LoggingReceive
 
 object LoginStateAggregate {
   import AggregateRoot._
@@ -56,13 +57,13 @@ class LoginStateAggregate extends AggregateRoot {
     state.copy(loggedInUsers = users)
   }
 
-  override val receiveCommand: Receive = {
+  override val receiveCommand: Receive = LoggingReceive({
     //simple persist all event
     case e: UserLoggedIn =>
       persist(e)(afterEventPersisted)
     case e: UserLoggedOut =>
       persist(e)(afterEventPersisted)
     case GetState =>
-      sender() ! state
-  }
+      sender ! state
+  })
 }
