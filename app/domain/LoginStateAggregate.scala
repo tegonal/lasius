@@ -65,5 +65,7 @@ class LoginStateAggregate extends AggregateRoot {
       persist(e)(afterEventPersisted)
     case GetState =>
       sender ! state
+    case Initialize(state) =>
+      this.state = state
   })
 }

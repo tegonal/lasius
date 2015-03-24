@@ -9,6 +9,7 @@ object AggregateRoot {
   trait Event
 
   case object GetState extends Command
+  case class Initialize(state: State) extends Command
 
   case object Removed extends State
   case object Created extends State

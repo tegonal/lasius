@@ -116,8 +116,11 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   val uninitialized: Receive = {
+
     case GetState =>
-      sender() ! state
+      sender ! state
+    case Initialize(state) =>
+      this.state = state
     case e =>
       log.debug(s"InitBooking -> userId: $userId")
       persist(UserTimeBookingInitialized(userId))(afterEventPersisted)
@@ -162,7 +165,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     case KillAggregate =>
       context.stop(self)
     case GetState =>
-      sender() ! state
+      sender ! state
     case other =>
       log.debug(s"Received unknown command")
   }
