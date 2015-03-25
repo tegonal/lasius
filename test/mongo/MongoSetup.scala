@@ -1,17 +1,10 @@
-package util
+package mongo
 
-import de.flapdoodle.embed.mongo.distribution.Version
 import play.api.test.Helpers._
 import play.api.test.FakeApplication
 import reactivemongo.bson.BSONObjectID
 import com.github.athieriot.EmbedConnection
-import org.specs2.matcher.ThrownMessages
 import org.specs2.mutable.Specification
-import org.specs2.mutable.Around
-import org.specs2.execute.AsResult
-import org.specs2.execute.Result
-import play.modules.reactivemongo.ReactiveMongoPlugin
-import org.specs2.specification.Scope
 
 trait MongoSetup extends EmbedConnection {
   self: Specification =>

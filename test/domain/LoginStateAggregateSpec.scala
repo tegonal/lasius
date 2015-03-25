@@ -21,14 +21,15 @@ import akka.actor.Actor
 import akka.event.LoggingReceive
 import akka.testkit.TestActorRef
 import org.specs2.matcher.Scope
+import akka.PersistentActorTestScope
+import akka.PersistentActorSpecification
 
-class LoginStateAggregateSpec extends Specification {
-
-  class Actors extends TestKit(ActorSystem("test")) with Scope
-
+class LoginStateAggregateSpec extends PersistentActorSpecification {
+  
   "LoginStateggregate" should {
-    "user login" in new Actors {
-      val probe = TestProbe()
+    "user login" in new PersistentActorTestScope  {
+        
+           val probe = TestProbe()
       val actorRef = system.actorOf(LoginStateAggregate.props)
 
       val userId = UserId("user1")
@@ -39,7 +40,7 @@ class LoginStateAggregateSpec extends Specification {
       probe.expectMsg(LoggedInState(Seq(userId)))
     }
 
-    "user logout" in new Actors {
+    "user logout" in new PersistentActorTestScope {
       val probe = TestProbe()
       val actorRef = system.actorOf(LoginStateAggregate.props)
 

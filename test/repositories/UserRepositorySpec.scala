@@ -2,7 +2,7 @@ package repositories
 
 import org.specs2.mutable._
 import com.github.athieriot.EmbedConnection
-import util.MongoSetup
+import mongo.MongoSetup
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import models.User

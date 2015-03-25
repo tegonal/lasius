@@ -3,7 +3,7 @@ package repositories
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable._
-import util.MongoSetup
+import mongo.MongoSetup
 import models._
 import org.joda.time.DateTime
 import org.joda.time.Duration

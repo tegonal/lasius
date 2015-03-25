@@ -6,7 +6,7 @@ import com.github.athieriot._
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
 import models._
-import util.MongoSetup
+import mongo.MongoSetup
 import play.api.libs.json._
 import scala.concurrent.Await
 import scala.concurrent.duration._

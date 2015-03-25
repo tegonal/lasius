@@ -24,13 +24,14 @@ import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
 import domain.AggregateRoot.Initialize
+import akka.ActorTestScope
+import akka.PersistentActorSpecification
+import akka.PersistentActorTestScope
 
-class UserTimeBookingAggregateSpec extends Specification {
-
-  class Actors extends TestKit(ActorSystem("test")) with Scope
+class UserTimeBookingAggregateSpec extends PersistentActorSpecification {
 
   "UserTimeBookingAggregate RemoveBooking" should {
-    "remove existing booking" in new Actors {
+    "remove existing booking" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
@@ -45,7 +46,7 @@ class UserTimeBookingAggregateSpec extends Specification {
       stream.expectMsg(UserTimeBookingRemoved(booking))
     }
 
-    "not publish event if booking does not exist" in new Actors {
+    "not publish event if booking does not exist" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
