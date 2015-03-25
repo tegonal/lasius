@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
+  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.47.0" % "test",
   //Akka monitoring  
   "org.aspectj" % "aspectjweaver" % "1.8.4",
   "io.kamon" %% "kamon-core" % "0.3.5",  
