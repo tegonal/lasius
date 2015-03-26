@@ -14,6 +14,7 @@ import mongo.WithMongo
 
 @RunWith(classOf[JUnitRunner])
 class UserFavoritesRepositorySpec extends Specification {
+
   val repository = new UserFavoritesMongoRepository
   "UserFavoritesRepository getById" should {
     "return empty favorites if no favorites where found" in new WithMongo {

@@ -23,6 +23,11 @@ import java.util.logging.Level
 import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder
 import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder
 import de.flapdoodle.embed.process.io.progress.LoggingProgressListener
+import org.specs2.mutable.BeforeAfter
+import play.modules.reactivemongo.ReactiveMongoPlugin
+import play.api.test.PlayRunners
+import play.api.Play
+import de.flapdoodle.embed.mongo.config.processlistener.IMongoProcessListener
 
 trait MongoSetup extends EmbedConnection {
   self: Specification =>
@@ -42,9 +47,9 @@ trait MongoSetup extends EmbedConnection {
 
 class WithMongo extends Around with Scope {
 
-  lazy val rnd = new scala.util.Random
-  lazy val range = 12000 to 12999
-  lazy val port = range(rnd.nextInt(range length))
+  private lazy val rnd = new scala.util.Random
+  private lazy val range = 12000 to 12999
+  private lazy val port = range(rnd.nextInt(range length))
 
   implicit val executionContext = ExecutionContext.Implicits.global
 
@@ -54,11 +59,12 @@ class WithMongo extends Around with Scope {
 
   private lazy val connection = driver.connection(nodes)
 
-  lazy val db = connection("test")
+  lazy val dbName = BSONObjectID.generate.stringify
+  lazy val db = connection(dbName)
 
   lazy val mongodConfig = new MongodConfigBuilder()
-    .version(Version.Main.V2_6)
-    .net(new Net(port, Network.localhostIsIPv6))
+    .version(Version.V2_6_1)
+    .net(new Net(port, Network.localhostIsIPv6()))
     .build
 
   lazy val logger = Logger.getLogger(getClass().getName());
@@ -70,10 +76,7 @@ class WithMongo extends Around with Scope {
     .defaultsWithLogger(Command.MongoD, logger)
     .processOutput(processOutput)
     .artifactStore(new ArtifactStoreBuilder()
-      .defaults(Command.MongoD)
-      .download(new DownloadConfigBuilder()
-        .defaultsForCommand(Command.MongoD)
-        .progressListener(new LoggingProgressListener(logger, Level.FINEST))))
+      .defaults(Command.MongoD))
     .build;
 
   lazy val runtime = MongodStarter.getInstance(runtimeConfig)
@@ -88,10 +91,16 @@ class WithMongo extends Around with Scope {
     start
     try {
       logger.info(s"Execute test with mongodb on port:$port")
-      running(FakeApplication(additionalConfiguration =
+      implicit val app = FakeApplication(additionalConfiguration =
         Map(
-          ("mongodb.uri", "mongodb://localhost:" + port.toString + "/" + BSONObjectID.generate.stringify),
-          ("mongodb.channels", "1"))))(AsResult(t))
+          ("mongodb.uri", s"mongodb://localhost:${port.toString}/${dbName}"),
+          ("mongodb.channels", "1"),
+          ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port.toString}")),
+          ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
+
+      logger.info("Run with application:" + app)
+      AsResult(running(app)(t))
+
     } finally {
       logger.info(s"Stop MongoDB on port:$port")
       stop

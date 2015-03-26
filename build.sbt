@@ -57,3 +57,5 @@ routesImport ++= Seq(
 	"play.api.i18n.Lang"
 )
 
+javaOptions in Test += "-Dconfig.file=conf/test.conf"
+

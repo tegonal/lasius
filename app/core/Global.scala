@@ -19,7 +19,7 @@ object Global extends GlobalSettings {
   val system = ActorSystem("lasius-actor-system")
   val executionContext = system.dispatcher
   val timeBookingManagerService = system.actorOf(TimeBookingViewService.props)
-  
+
   val loginStateAggregate = system.actorOf(LoginStateAggregate.props)
   val loginHandler = system.actorOf(LoginHandler.props)
 
@@ -28,11 +28,14 @@ object Global extends GlobalSettings {
   val timeBookingStatisticsViewService = system.actorOf(TimeBookingStatisticsViewService.props)
 
   override def onStart(app: Application) {
-    InitialData.init()
+    val initData = Play.current.configuration.getBoolean("db.initialize_data")
+    if (initData.isDefined && initData.get) {
+      InitialData.init()
+    }
 
     //initialite login handler
     LoginHandler.subscribe(loginHandler, system.eventStream)
-    
+
     ()
   }
 
