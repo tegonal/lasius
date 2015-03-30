@@ -53,7 +53,7 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
   self: BaseRepository[T, ID] =>
 
-  lazy val db = ReactiveMongoPlugin.db
+  def db = ReactiveMongoPlugin.db
 
   def findIds(sel: JsObject): Future[Seq[BSONObjectID]] = {
     val cursor = coll.find(sel, Json.obj()).cursor[JsObject]

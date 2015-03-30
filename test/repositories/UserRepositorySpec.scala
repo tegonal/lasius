@@ -2,7 +2,6 @@ package repositories
 
 import org.specs2.mutable._
 import com.github.athieriot.EmbedConnection
-import mongo.MongoSetup
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import models.User
@@ -11,47 +10,44 @@ import models.Role
 import models.FreeUser
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import mongo.EmbedMongo
+import mongo.EmbedMongo.WithMongo
 
 @RunWith(classOf[JUnitRunner])
-class UserRepositorySpec extends Specification with EmbedConnection with MongoSetup {
-  isolated
+class UserRepositorySpec extends EmbedMongo {
   val repository = new UserMongoRepository
   "UserRepository findByEmail" should {
-    "find user by email" in {
-      withMongo {
-        val email = "email"
-        val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
+    "find user by email" in new WithMongo {
+      val email = "email"
+      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
 
-        //initialize
-        val f = for {
-          id <- repository.insert(user)
-        } yield {
-          id
-        }
-        Await.result(f, DurationInt(15).seconds)
-
-        val find = repository.findByEmail(email)
-        val result = Await.result(find, DurationInt(15).seconds)
-        result === Some(user)
+      //initialize
+      val f = for {
+        id <- repository.insert(user)
+      } yield {
+        id
       }
+      Await.result(f, DurationInt(15).seconds)
+
+      val find = repository.findByEmail(email)
+      val result = Await.result(find, DurationInt(15).seconds)
+      result === Some(user)
     }
-    "find none" in {
-      withMongo {
-        val email = "email"
-        val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
+    "find none" in new WithMongo {
+      val email = "email"
+      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
 
-        //initialize
-        val f = for {
-          id <- repository.insert(user)
-        } yield {
-          id
-        }
-        Await.result(f, DurationInt(15).seconds)
-
-        val find = repository.findByEmail("email2")
-        val result = Await.result(find, DurationInt(15).seconds)
-        result === None
+      //initialize
+      val f = for {
+        id <- repository.insert(user)
+      } yield {
+        id
       }
+      Await.result(f, DurationInt(15).seconds)
+
+      val find = repository.findByEmail("email2")
+      val result = Await.result(find, DurationInt(15).seconds)
+      result === None
     }
   }
 }

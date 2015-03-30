@@ -28,24 +28,12 @@ import play.modules.reactivemongo.ReactiveMongoPlugin
 import play.api.test.PlayRunners
 import play.api.Play
 import de.flapdoodle.embed.mongo.config.processlistener.IMongoProcessListener
+import org.specs2.specification.Fragments
+import org.specs2.specification.Step
+import org.specs2.mutable.script.SpecificationLike
+import mongo.EmbedMongo.MongoConfig
 
-trait MongoSetup extends EmbedConnection {
-  self: Specification =>
-  val rnd = new scala.util.Random
-  val range = 12000 to 12999
-  val portNum = range(rnd.nextInt(range length))
-
-  override def embedConnectionPort() = { portNum }
-
-  def withMongo[T](code: => T) = {
-    running(FakeApplication(additionalConfiguration =
-      Map(
-        ("mongodb.uri", "mongodb://localhost:" + embedConnectionPort().toString + "/" + BSONObjectID.generate.stringify),
-        ("mongodb.channels", "1"))))(code)
-  }
-}
-
-class WithMongo extends Around with Scope {
+trait EmbedMongo extends Specification {
 
   private lazy val rnd = new scala.util.Random
   private lazy val range = 12000 to 12999
@@ -53,14 +41,7 @@ class WithMongo extends Around with Scope {
 
   implicit val executionContext = ExecutionContext.Implicits.global
 
-  private val driver = new MongoDriver
-
-  val nodes = List(s"localhost:$port")
-
-  private lazy val connection = driver.connection(nodes)
-
-  lazy val dbName = BSONObjectID.generate.stringify
-  lazy val db = connection(dbName)
+  lazy val nodes = List(s"localhost:$port")
 
   lazy val mongodConfig = new MongodConfigBuilder()
     .version(Version.V2_6_1)
@@ -82,28 +63,54 @@ class WithMongo extends Around with Scope {
   lazy val runtime = MongodStarter.getInstance(runtimeConfig)
   lazy val mongodExecutable = runtime.prepare(mongodConfig)
 
-  def start = mongodExecutable.start
+  def start = {
+    logger.info(s"Start mongo on port:${port}")
+    val proc = mongodExecutable.start
+    logger.info(s"Started mongo on port:${port}:${proc.isProcessRunning()}")
+  }
 
-  def stop = mongodExecutable.stop
+  def stop = {
+    logger.info(s"Stop mongo on port:${port}")
+    mongodExecutable.stop
+    logger.info(s"Stopped mongo on port:${port}")
+  }
 
-  override def around[T: AsResult](t: => T): Result = {
-    logger.info(s"Start MongoDB on port:$port")
-    start
-    try {
-      logger.info(s"Execute test with mongodb on port:$port")
-      implicit val app = FakeApplication(additionalConfiguration =
+  implicit val config = MongoConfig(port)
+
+  //  implicit lazy val app = FakeApplication(additionalConfiguration =
+  //    Map(
+  //      ("mongodb.uri", s"mongodb://localhost:${port.toString}/${dbName}"),
+  //      ("mongodb.channels", "1"),
+  //      ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port.toString}")),
+  //      ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
+
+  override def map(fragments: => Fragments) = {
+    Step(start) ^ fragments ^ Step(stop)
+  }
+}
+
+object EmbedMongo {
+  case class MongoConfig(port: Int)
+
+  class WithMongo(implicit val config: MongoConfig) extends Around with Scope {
+
+    lazy val dbName = BSONObjectID.generate.stringify
+
+    lazy val logger = Logger.getLogger(getClass().getName());
+
+    override def around[T: AsResult](t: => T): Result = {
+      val port = config.port;
+      logger.info(s"Execute test with mongodb on port:${port}")
+      implicit lazy val app = FakeApplication(additionalConfiguration =
         Map(
-          ("mongodb.uri", s"mongodb://localhost:${port.toString}/${dbName}"),
+          ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
           ("mongodb.channels", "1"),
-          ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port.toString}")),
+          ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port}")),
           ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
 
       logger.info("Run with application:" + app)
       AsResult(running(app)(t))
-
-    } finally {
-      logger.info(s"Stop MongoDB on port:$port")
-      stop
     }
   }
 }
+
