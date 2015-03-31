@@ -6,16 +6,18 @@ import com.github.athieriot._
 import org.specs2.mutable.Specification
 import org.joda.time.DateTime
 import models._
-import mongo.MongoSetup
 import play.api.libs.json._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import org.joda.time.format.DateTimeFormat
-import mongo.WithMongo
+import play.api.test.FakeApplication
+import mongo.EmbedMongo
+import mongo.EmbedMongo.WithMongo
 
 @RunWith(classOf[JUnitRunner])
-class MongoPeristentUserViewRepositorySpec extends Specification {
+class MongoPeristentUserViewRepositorySpec extends EmbedMongo {
+
   val repository = new BookingHistoryMongoRepository
   "Booking history delete" should {
     "delete all history entries per user" in new WithMongo {

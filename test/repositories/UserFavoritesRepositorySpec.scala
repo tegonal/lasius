@@ -4,16 +4,17 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable._
 import com.github.athieriot.EmbedConnection
-import mongo.MongoSetup
 import models.UserId
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import models._
 import com.github.athieriot.CleanAfterExample
-import mongo.WithMongo
+import play.api.test.FakeApplication
+import mongo.EmbedMongo
+import mongo.EmbedMongo.WithMongo
 
 @RunWith(classOf[JUnitRunner])
-class UserFavoritesRepositorySpec extends Specification {
+class UserFavoritesRepositorySpec extends EmbedMongo {
 
   val repository = new UserFavoritesMongoRepository
   "UserFavoritesRepository getById" should {
