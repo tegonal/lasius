@@ -1,7 +1,6 @@
 package domain
 
 import scala.concurrent.duration._
-
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
@@ -28,8 +27,9 @@ import domain.AggregateRoot.Initialize
 import akka.ActorTestScope
 import akka.PersistentActorTestScope
 import mongo.EmbedMongo
+import scala.concurrent.Await
 
-class UserTimeBookingAggregateSpec extends EmbedMongo {
+class UserTimeBookingAggregateSpec extends Specification {
 
   "UserTimeBookingAggregate RemoveBooking" should {
     "remove existing booking" in new PersistentActorTestScope {

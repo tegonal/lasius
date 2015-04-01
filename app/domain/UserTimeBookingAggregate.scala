@@ -120,9 +120,11 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     case GetState =>
       sender ! state
     case Initialize(state) =>
+      log.debug(s"Initialize: $state")
       this.state = state
+      context become created
     case e =>
-      log.debug(s"InitBooking -> userId: $userId")
+      log.debug(s"InitBooking -> userId: $userId:$e")
       persist(UserTimeBookingInitialized(userId))(afterEventPersisted)
       context become created
       created(e)
@@ -154,9 +156,11 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           }
       }
     case RemoveBooking(_, bookingId) =>
+      log.debug(s"RemoveBooking, current state:$state")
       state match {
         case b: UserTimeBooking =>
           b.bookings.find(_.id == bookingId) map { removedB =>
+            log.debug(s"RemoveBooking, found existing booking:$removedB")
             persist(UserTimeBookingRemoved(removedB))(afterEventPersisted)
           }
       }
