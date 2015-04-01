@@ -15,6 +15,8 @@ trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
 
   def +(that: E): E
   def -(that: E): E
+
+  def duration(duration: Duration): E
 }
 
 case class BookingByProjectId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
@@ -43,6 +45,10 @@ case class BookingByProject(id: BookingByProjectId, userId: UserId, day: DateTim
   def -(that: BookingByProject): BookingByProject = {
     BookingByProject(id, userId, day, projectId, duration.minus(that.duration))
   }
+
+  def duration(duration: Duration): BookingByProject = {
+    copy(duration = duration)
+  }
 }
 
 object BookingByProject {
@@ -57,6 +63,10 @@ case class BookingByCategory(id: BookingByCategoryId, userId: UserId, day: DateT
   def -(that: BookingByCategory): BookingByCategory = {
     BookingByCategory(id, userId, day, categoryId, duration.minus(that.duration))
   }
+
+  def duration(duration: Duration): BookingByCategory = {
+    copy(duration = duration)
+  }
 }
 
 object BookingByCategory {
@@ -70,6 +80,10 @@ case class BookingByTag(id: BookingByTagId, userId: UserId, day: DateTime, tagId
 
   def -(that: BookingByTag): BookingByTag = {
     BookingByTag(id, userId, day, tagId, duration.minus(that.duration))
+  }
+
+  def duration(duration: Duration): BookingByTag = {
+    copy(duration = duration)
   }
 }
 

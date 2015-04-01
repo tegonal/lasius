@@ -18,9 +18,11 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
   val repository = new BookingByProjectMongoRepository
   val user = UserId("user")
   val day = DateTime.now.withTimeAtStartOfDay
-  val projectId = ProjectId("p1")
+
   "BookingStatistic add" should {
     "insert new record for new unique constraint" in new WithMongo {
+      val projectId = ProjectId("p1")
+
       //initialize
       val newDuration = Duration.standardHours(1)
       val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, newDuration)
@@ -37,6 +39,7 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
     }
     "add to correct previous unique constraint" in new WithMongo {
       val existingDuration = Duration.standardHours(2)
+      val projectId = ProjectId("p2")
 
       //initialize various statistics
       val f = for {
@@ -67,6 +70,7 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
     "Remove nothing if no previous entry was found" in new WithMongo {
       //initialize
       val newDuration = Duration.standardHours(1)
+      val projectId = ProjectId("p3")
       val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, newDuration)
 
       //test
@@ -78,6 +82,7 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
     }
     "Remove from correct previous constraint" in new WithMongo {
       val existingDuration = Duration.standardHours(2)
+      val projectId = ProjectId("p4")
 
       //initialize various statistics
       val f = for {
@@ -105,18 +110,13 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
       result.get.duration === existingDuration.minus(newDuration)
     }
     "Set to 0 if existing duration is lower than new" in new WithMongo {
-      val existingDuration = Duration.standardHours(2)
 
       //initialize various statistics
-      val f = for {
-        id <- repository.insert(BookingByProject(BookingByProjectId(), user, day, projectId, existingDuration))
-      } yield {
-        id
-      }
+      val projectId = ProjectId("p5")
+      val f = repository.insert(BookingByProject(BookingByProjectId(), user, day, projectId, Duration.standardHours(2)))
       Await.result(f, DurationInt(15).seconds)
 
-      val newDuration = Duration.standardHours(3)
-      val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, newDuration)
+      val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, Duration.standardHours(4))
 
       //test
       val resultFuture = repository.subtract(newValue)
@@ -142,12 +142,7 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
     //initialize
     val b = BookingByProject(BookingByProjectId(), user, day, ProjectId("p1"), Duration.standardHours(1))
 
-    val f = for {
-      id <- repository.insert(b)
-    } yield {
-      id
-    }
-
+    val f = repository.insert(b)
     Await.result(f, DurationInt(15).seconds)
 
     val find = repository.findByUserIdAndRange(user, from, to)
