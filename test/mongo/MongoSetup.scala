@@ -77,13 +77,6 @@ trait EmbedMongo extends Specification {
 
   implicit val config = MongoConfig(port)
 
-  //  implicit lazy val app = FakeApplication(additionalConfiguration =
-  //    Map(
-  //      ("mongodb.uri", s"mongodb://localhost:${port.toString}/${dbName}"),
-  //      ("mongodb.channels", "1"),
-  //      ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port.toString}")),
-  //      ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
-
   override def map(fragments: => Fragments) = {
     Step(start) ^ fragments ^ Step(stop)
   }

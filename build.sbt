@@ -12,6 +12,8 @@ resolvers += "Tegonal releases" at "https://github.com/tegonal/tegonal-mvn/raw/m
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases"
 
+resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+
 libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
@@ -23,6 +25,7 @@ libraryDependencies ++= Seq(
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
   "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.47.0" % "test",
+  "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.0.0" % "test",
   //Akka monitoring  
   "org.aspectj" % "aspectjweaver" % "1.8.4",
   "io.kamon" %% "kamon-core" % "0.3.5",  

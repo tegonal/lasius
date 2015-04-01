@@ -13,7 +13,10 @@ import mongo.EmbedMongo.WithMongo
 
 class ActorTestScope extends TestKit(ActorSystem("test")) with Scope
 
-abstract class PersistentActorTestScope(implicit val config: MongoConfig) extends ActorTestScope with Around {
+abstract class PersistentActorTestScope extends ActorTestScope {
+}
+
+abstract class PersistentMongoActorTestScope(implicit val config: MongoConfig) extends ActorTestScope with Around {
   lazy val withMongo = new WithMongo
 
   override def around[T: AsResult](t: => T): Result = {

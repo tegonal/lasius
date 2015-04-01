@@ -25,7 +25,7 @@ import org.specs2.matcher.Scope
 import akka.PersistentActorTestScope
 import mongo.EmbedMongo
 
-class LoginStateAggregateSpec extends EmbedMongo {
+class LoginStateAggregateSpec extends Specification {
 
   "LoginStateggregate" should {
     "user login" in new PersistentActorTestScope {
