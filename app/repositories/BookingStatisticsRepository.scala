@@ -11,6 +11,7 @@ import play.api.Logger
 import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
 import models.BaseFormat._
+import org.joda.time.Duration
 
 trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I]
   with PersistentUserViewRepository[M, I] {
@@ -73,14 +74,14 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
       _.map { o =>
         o match {
           case (current, id) =>
-            val newModel = current - model
-            val duration = if (newModel.duration.getMillis < 0) { 0 } else { newModel.duration.getMillis }
-            Logger.debug(s"subtract [$sel]:duration=$duration")
-            val modifier = Json.obj(Set -> Json.obj("duration" -> duration))
-            update(sel, modifier, false) map {
+            Logger.debug(s"subtract [$sel]:$current - $model")
+            val duration = if (current.duration.getMillis < model.duration.getMillis) { 0 } else { current.duration.getMillis - model.duration.getMillis }
+            val newModel = current.duration(Duration.millis(duration))
+            Logger.debug(s"subtract [$sel]:result=$newModel")
+            update(newModel) map {
               case true =>
                 Some(newModel)
-              case _ => Some(current)
+              case _ => None
             }
           case e =>
             Logger.warn(s"subtract [$sel]: no model found to subtract from: ${model}:$sel - $e")
