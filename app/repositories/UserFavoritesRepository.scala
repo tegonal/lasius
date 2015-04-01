@@ -42,7 +42,7 @@ class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavor
 
   def removeFavorite(userId: UserId, bookingStub: BookingStub): Future[UserFavorites] = {
     val modifier = Json.obj(Pull -> Json.obj("favorites" -> bookingStub))
-    update(Json.obj("id" -> userId), modifier, true) flatMap {
+    update(Json.obj("id" -> userId), modifier, false) flatMap {
       case true => getByUser(userId)
       case _ => throw new RuntimeException("Couldn't remove favorites") //correct error handling?
     }
