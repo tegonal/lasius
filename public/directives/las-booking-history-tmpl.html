@@ -26,7 +26,7 @@
         <td>{{booking.start | date: dateFormat(booking)}}</td>
         <td>{{booking.end | date: dateFormat(booking)}}</td>
         <td>{{diff(booking)| number : 1}}</td>
-        <td><span class="glyphicon glyphicon-remove" ng-click="removeTimeBooking(booking.id)" las-stop-event></span></td>
+        <td><button type="button" class="btn btn-xs btn-danger pull-right" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button></td>
     </tr>
 </table>
 </div>
