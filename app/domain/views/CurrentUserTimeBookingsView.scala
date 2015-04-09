@@ -2,6 +2,7 @@ package domain.views
 
 import akka.persistence.PersistentView
 
+
 import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
@@ -15,6 +16,7 @@ import models.CurrentUserTimeBooking
 import org.joda.time.Duration
 import org.joda.time.DateTime
 import org.joda.time.Interval
+import scala.concurrent.duration._
 
 object CurrentUserTimeBookingsView {
 
@@ -34,6 +36,8 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
   case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
 
   var state: CurrentTimeBookings = CurrentTimeBookings(None, DateTime.now, Map())
+  
+  override def autoUpdateInterval = 100 millis
 
   val receive: Receive = {
     case e: UserTimeBookingStarted =>
