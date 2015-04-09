@@ -1,7 +1,6 @@
 package domain.views
 
 import akka.persistence.PersistentView
-
 import akka.actor._
 import domain.UserTimeBookingAggregate._
 import repositories._
@@ -15,17 +14,21 @@ import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import org.joda.time.Interval
 import utils.DateTimeUtils._
+import actors.ClientReceiverComponent
+import actors.DefaultClientReceiverComponent
 
 object UserTimeBookingStatisticsView {
 
-  def props(userId: UserId): Props = Props(new MongoUserTimeBookingStatisticsView(userId))
+  def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingStatisticsView], userId)
+
+  case object Ack
 }
 
 class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBookingStatisticsView(userId)
-  with MongoUserBookingStatisticsRepositoryComponent
+  with MongoUserBookingStatisticsRepositoryComponent with DefaultClientReceiverComponent
 
 class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with ActorLogging {
-  self: UserBookingStatisticsRepositoryComponent =>
+  self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.CurrentUserTimeBookingsView._
 
@@ -43,6 +46,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
       bookingByTagRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
+      sender ! UserTimeBookingStatisticsView.Ack
     case UserTimeBookingStopped(booking) =>
       log.debug(s"UserTimeBookingStatisticsView -> stopped booking, add:$booking")
 
@@ -50,6 +54,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       storeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
+      sender ! UserTimeBookingStatisticsView.Ack
     case UserTimeBookingAdded(booking) =>
       if (booking.end.isDefined) {
         log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
@@ -57,6 +62,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
         storeDurations(durations)
         val events = getEventsDurations(durations, true)
         notifyClient(events)
+        sender ! UserTimeBookingStatisticsView.Ack
       }
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
@@ -64,6 +70,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       removeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
+      sender ! UserTimeBookingStatisticsView.Ack
   }
 
   protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {
@@ -178,6 +185,6 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   }
 
   private def notifyClient(event: OutEvent) = {
-    ClientMessagingWebsocketActor ! (userId, event, List(userId))
+    clientReceiver ! (userId, event, List(userId))
   }
 }

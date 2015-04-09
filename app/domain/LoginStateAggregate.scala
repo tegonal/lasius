@@ -13,7 +13,7 @@ object LoginStateAggregate {
   case class UserLoggedIn(userId: UserId) extends Event
   case class UserLoggedOut(userId: UserId) extends Event
 
-  def props: Props = Props(new LoginStateAggregate())
+  def props: Props = Props(classOf[LoginStateAggregate])
 
   val persistenceId: String = "login-state"
 }

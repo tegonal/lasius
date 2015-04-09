@@ -10,7 +10,26 @@ object ControlCommands {
   case class SendToClient(senderUserId: UserId, event: OutEvent, receivers: List[UserId] = Nil)
 }
 
-object ClientMessagingWebsocketActor {
+trait ClientReceiverComponent {
+  val clientReceiver: ClientReceiver
+}
+
+trait ClientReceiver {
+  def broadcast(senderUserId: UserId, event: OutEvent)
+
+  /**
+   * Send OutEvent to a list of receiving clients exclusing sender itself
+   */
+  def send(senderUserId: UserId, event: OutEvent, receivers: List[UserId])
+
+  def !(senderUserId: UserId, event: OutEvent, receivers: List[UserId])
+}
+
+trait DefaultClientReceiverComponent extends ClientReceiverComponent {
+  val clientReceiver: ClientReceiver = ClientMessagingWebsocketActor
+}
+
+object ClientMessagingWebsocketActor extends ClientReceiver {
   def props(out: ActorRef, userId: UserId) = Props(new ClientMessagingWebsocketActor(out, userId))
   var actors: Map[String, ActorRef] = Map()
 

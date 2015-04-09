@@ -1,8 +1,6 @@
 package domain.views
 
 import akka.persistence.PersistentView
-
-
 import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
@@ -17,16 +15,22 @@ import org.joda.time.Duration
 import org.joda.time.DateTime
 import org.joda.time.Interval
 import scala.concurrent.duration._
+import actors.ClientReceiverComponent
+import actors.DefaultClientReceiverComponent
 
 object CurrentUserTimeBookingsView {
 
   case class GetCurrentTimeBooking(userId: UserId)
 
-  def props(userId: UserId): Props = Props(new CurrentUserTimeBookingsView(userId))
+  def props(userId: UserId): Props = Props(classOf[DefaultCurrentUserTimeBookingsView], userId)
+}
+
+class DefaultCurrentUserTimeBookingsView(userId: UserId)
+  extends CurrentUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
 class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
-
+  self: ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.CurrentUserTimeBookingsView._
 
@@ -34,9 +38,10 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
   override val viewId = userId.value + "-current-time-bookings"
 
   case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
+  import domain.UserTimeBookingAggregate._
 
   var state: CurrentTimeBookings = CurrentTimeBookings(None, DateTime.now, Map())
-  
+
   override def autoUpdateInterval = 100 millis
 
   val receive: Receive = {
@@ -101,7 +106,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
     }.getOrElse(None)
     val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
     log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
-    ClientMessagingWebsocketActor ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
+    clientReceiver ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
   }
 
   protected def addDailyDuration(booking: Booking, date: DateTime) = {

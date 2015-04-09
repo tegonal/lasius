@@ -1,7 +1,6 @@
 package domain.views
 
 import akka.persistence.PersistentView
-
 import models.UserId
 import models.Booking
 import akka.actor.Props
@@ -21,17 +20,19 @@ import models.UserTimeBookingHistoryEntryRemoved
 import models.OutEvent
 import models.UserTimeBookingHistoryEntryAdded
 import repositories.MongoUserBookingHistoryRepositoryComponent
+import actors.ClientReceiverComponent
+import actors.DefaultClientReceiverComponent
 
 object UserTimeBookingHistoryView {
 
-  def props(userId: UserId): Props = Props(new MongoUserTimeBookingHistoryView(userId))
+  def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingHistoryView], userId)
 }
 
 class MongoUserTimeBookingHistoryView(userId: UserId) extends UserTimeBookingHistoryView(userId)
-  with MongoUserBookingHistoryRepositoryComponent
+  with MongoUserBookingHistoryRepositoryComponent with DefaultClientReceiverComponent
 
 class UserTimeBookingHistoryView(userId: UserId) extends PersistentView with ActorLogging {
-  self: UserBookingHistoryRepositoryComponent =>
+  self: UserBookingHistoryRepositoryComponent with ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.CurrentUserTimeBookingsView._
 
@@ -62,6 +63,6 @@ class UserTimeBookingHistoryView(userId: UserId) extends PersistentView with Act
   }
 
   private def notifyClient(event: OutEvent) = {
-    ClientMessagingWebsocketActor ! (userId, event, List(userId))
+    clientReceiver ! (userId, event, List(userId))
   }
 }

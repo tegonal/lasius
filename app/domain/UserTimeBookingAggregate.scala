@@ -32,10 +32,7 @@ object UserTimeBookingAggregate {
   case class RemoveBooking(userId: UserId, bookingId: BookingId) extends UserTimeBookingCommand
   case class AppendBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
-  def props(userId: UserId): Props = {
-    Logger.debug(s"Create actor:$userId")
-    Props(new UserTimeBookingAggregate(userId))
-  }
+  def props(userId: UserId): Props = Props(classOf[UserTimeBookingAggregate], userId)
 
 }
 

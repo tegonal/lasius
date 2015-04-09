@@ -1,7 +1,6 @@
 package repositories
 
 import play.api.libs.concurrent.Execution.Implicits._
-
 import scala.concurrent._
 import play.modules.reactivemongo.json.collection.JSONCollection
 import play.modules.reactivemongo.json.BSONFormats._
@@ -11,6 +10,7 @@ import play.api.Logger
 import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
 import reactivemongo.core.commands.LastError
+import akka.actor.Actor
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
