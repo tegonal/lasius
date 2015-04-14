@@ -7,7 +7,6 @@ import akka.PersistentActorTestScope
 import akka.testkit._
 import models.UserId
 import actor.ClientReceiverComponentMock
-import repositories.UserBookingStatisticsRepositoryComponentMock
 import akka.actor.Props
 import akka.pattern.ask
 import domain._
@@ -22,6 +21,13 @@ import org.joda.time.Duration
 import org.specs2.matcher._
 import org.joda.time.LocalTime
 import play.api.libs.json._
+import repositories.BookingByTagRepository
+import repositories.BookingByProjectRepository
+import repositories.BookingByCategoryRepository
+import repositories.BookingByCategoryRepository
+import repositories.BookingByProjectRepository
+import repositories.BookingByTagMongoRepository
+import repositories.UserBookingStatisticsRepositoryComponent
 
 class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
@@ -30,14 +36,18 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
       val userId = UserId("noob")
       val probe = TestProbe()
-      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId))
+      val bookingByCategoryRepository = mock[BookingByCategoryRepository]
+      val bookingByProjectRepository = mock[BookingByProjectRepository]
+      val bookingByTagRepository = mock[BookingByTagMongoRepository]
+      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
+        bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
 
       probe.send(actorRef, UserTimeBookingInitialized(userId))
       probe.expectMsg(UserTimeBookingStatisticsView.Ack)
 
-      there was one(UserBookingStatisticsRepositoryComponentMock.bookingByCategoryRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByCategory]])
-      there was one(UserBookingStatisticsRepositoryComponentMock.bookingByProjectRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByProject]])
-      there was one(UserBookingStatisticsRepositoryComponentMock.bookingByTagRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByTag]])
+      there was one(bookingByCategoryRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByCategory]])
+      there was one(bookingByProjectRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByProject]])
+      there was one(bookingByTagRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByTag]])
     }
   }
 
@@ -46,7 +56,11 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
       val userId = UserId("noob")
       val probe = TestProbe()
-      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId))
+      val bookingByCategoryRepository = mock[BookingByCategoryRepository]
+      val bookingByProjectRepository = mock[BookingByProjectRepository]
+      val bookingByTagRepository = mock[BookingByTagMongoRepository]
+      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
+        bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
       val day = DateTime.parse("2000-01-01")
       val stop = day.plusHours(10)
       val start = stop.minusHours(2)
@@ -61,22 +75,21 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
       probe.send(actorRef, UserTimeBookingStopped(booking))
       probe.expectMsg(UserTimeBookingStatisticsView.Ack)
 
-      there was one(UserBookingStatisticsRepositoryComponentMock.bookingByCategoryRepository).add {
+      there was one(bookingByCategoryRepository).add {
         beLike[BookingByCategory] {
           case BookingByCategory(_, userId, day, categoryId, duration) => ok
         }
       }(any[Writes[BookingByCategoryId]])
 
-      there was one(UserBookingStatisticsRepositoryComponentMock.bookingByProjectRepository).add {
+      there was one(bookingByProjectRepository).add {
         beLike[BookingByProject] {
           case BookingByProject(_, userId, day, projectId, duration) => ok
         }
       }(any[Writes[BookingByProjectId]])
 
-      there was two(UserBookingStatisticsRepositoryComponentMock.bookingByTagRepository).add {
+      there was two(bookingByTagRepository).add {
         beLike[BookingByTag] {
-          case BookingByTag(_, userId, day, tagId1, duration) => ok
-          case BookingByTag(_, userId, day, tagId2, duration) => ok
+          case BookingByTag(_, userId, day, tagId, duration) => tagId must beOneOf(tagId1, tagId2)
         }
       }(any[Writes[BookingByTagId]])
     }
@@ -84,8 +97,10 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 }
 
 object UserTimeBookingStatisticsViewMock {
-  def props(userId: UserId) = Props(classOf[UserTimeBookingStatisticsViewMock], userId)
+  def props(userId: UserId, bookingByCategoryRepository: BookingByCategoryRepository,
+    bookingByProjectRepository: BookingByProjectRepository, bookingByTagRepository: BookingByTagRepository) = Props(classOf[UserTimeBookingStatisticsViewMock], userId, bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository)
 }
 
-class UserTimeBookingStatisticsViewMock(userId: UserId) extends UserTimeBookingStatisticsView(userId)
-  with UserBookingStatisticsRepositoryComponentMock with ClientReceiverComponentMock
+class UserTimeBookingStatisticsViewMock(userId: UserId, val bookingByCategoryRepository: BookingByCategoryRepository,
+  val bookingByProjectRepository: BookingByProjectRepository, val bookingByTagRepository: BookingByTagRepository) extends UserTimeBookingStatisticsView(userId)
+  with UserBookingStatisticsRepositoryComponent with ClientReceiverComponentMock
