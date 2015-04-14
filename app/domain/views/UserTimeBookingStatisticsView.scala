@@ -16,6 +16,7 @@ import org.joda.time.Interval
 import utils.DateTimeUtils._
 import actors.ClientReceiverComponent
 import actors.DefaultClientReceiverComponent
+import play.api.Logger
 
 object UserTimeBookingStatisticsView {
 
@@ -144,15 +145,14 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       getDurations(booking, startDateStartOfDay, duration)
     } else {
       //extract duration at start date
-      val endOfStart = startDate.withTimeAtEndOfDay
-      val startDuration = new Interval(startDate, endOfStart).toDuration()
+      val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
 
       val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
 
       //extract whole day for duration inbetween start and end date
       val inBetweenDurations = if (daysBetween > 1) {
         for {
-          dayDiff <- 0 to daysBetween - 1
+          dayDiff <- 1 to daysBetween - 1
         } yield {
           val date = startDateStartOfDay.plusDays(dayDiff)
 
