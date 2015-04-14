@@ -28,6 +28,8 @@ import repositories.BookingByCategoryRepository
 import repositories.BookingByProjectRepository
 import repositories.BookingByTagMongoRepository
 import repositories.UserBookingStatisticsRepositoryComponent
+import domain.AggregateRoot.Event
+import akka.actor.ActorSystem
 
 class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
@@ -54,45 +56,55 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
   "UserTimeBookingStatisticsView UserTimeBookingStopped" should {
     "add new duration to stats" in new PersistentActorTestScope {
 
-      val userId = UserId("noob")
-      val probe = TestProbe()
-      val bookingByCategoryRepository = mock[BookingByCategoryRepository]
-      val bookingByProjectRepository = mock[BookingByProjectRepository]
-      val bookingByTagRepository = mock[BookingByTagMongoRepository]
-      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
-        bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
-      val day = DateTime.parse("2000-01-01")
-      val stop = day.plusHours(10)
-      val start = stop.minusHours(2)
-      val categoryId = CategoryId("cat")
-      val projectId = ProjectId("proj")
-      val tagId1 = TagId("tag1")
-      val tagId2 = TagId("tag2")
-      val duration = Duration.standardHours(2)
-
-      val booking = Booking(BookingId("b1"), start, Some(stop), userId, categoryId, projectId, Seq(tagId1, tagId2))
-
-      probe.send(actorRef, UserTimeBookingStopped(booking))
-      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
-
-      there was one(bookingByCategoryRepository).add {
-        beLike[BookingByCategory] {
-          case BookingByCategory(_, userId, day, categoryId, duration) => ok
-        }
-      }(any[Writes[BookingByCategoryId]])
-
-      there was one(bookingByProjectRepository).add {
-        beLike[BookingByProject] {
-          case BookingByProject(_, userId, day, projectId, duration) => ok
-        }
-      }(any[Writes[BookingByProjectId]])
-
-      there was two(bookingByTagRepository).add {
-        beLike[BookingByTag] {
-          case BookingByTag(_, userId, day, tagId, duration) => tagId must beOneOf(tagId1, tagId2)
-        }
-      }(any[Writes[BookingByTagId]])
+      testDuration(booking => UserTimeBookingStopped(booking))
     }
+  }
+
+  "UserTimeBookingStatisticsView UserTimeBookingAdded" should {
+    "add new duration to stats if end of booking is defined" in new PersistentActorTestScope {
+      testDuration(booking => UserTimeBookingAdded(booking))
+    }
+  }
+
+  def testDuration(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+    val userId = UserId("noob")
+    val probe = TestProbe()
+    val bookingByCategoryRepository = mock[BookingByCategoryRepository]
+    val bookingByProjectRepository = mock[BookingByProjectRepository]
+    val bookingByTagRepository = mock[BookingByTagMongoRepository]
+    val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
+      bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
+    val day = DateTime.parse("2000-01-01")
+    val stop = day.plusHours(10)
+    val start = stop.minusHours(2)
+    val categoryId = CategoryId("cat")
+    val projectId = ProjectId("proj")
+    val tagId1 = TagId("tag1")
+    val tagId2 = TagId("tag2")
+    val duration = Duration.standardHours(2)
+
+    val booking = Booking(BookingId("b1"), start, Some(stop), userId, categoryId, projectId, Seq(tagId1, tagId2))
+
+    probe.send(actorRef, eventFactory(booking))
+    probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+
+    there was one(bookingByCategoryRepository).add {
+      beLike[BookingByCategory] {
+        case BookingByCategory(_, userId, day, categoryId, duration) => ok
+      }
+    }(any[Writes[BookingByCategoryId]])
+
+    there was one(bookingByProjectRepository).add {
+      beLike[BookingByProject] {
+        case BookingByProject(_, userId, day, projectId, duration) => ok
+      }
+    }(any[Writes[BookingByProjectId]])
+
+    there was two(bookingByTagRepository).add {
+      beLike[BookingByTag] {
+        case BookingByTag(_, userId, day, tagId, duration) => tagId must beOneOf(tagId1, tagId2)
+      }
+    }(any[Writes[BookingByTagId]])
   }
 }
 

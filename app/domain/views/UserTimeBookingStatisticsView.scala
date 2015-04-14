@@ -30,7 +30,7 @@ class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBooking
 class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with ActorLogging {
   self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
-  import domain.views.CurrentUserTimeBookingsView._
+  import domain.views.UserTimeBookingStatisticsView._
 
   override val persistenceId = userId.value
   override val viewId = userId.value + "-time-booking-statistics"
@@ -46,7 +46,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
       bookingByTagRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
-      sender ! UserTimeBookingStatisticsView.Ack
+      sender ! Ack
     case UserTimeBookingStopped(booking) =>
       log.debug(s"UserTimeBookingStatisticsView -> stopped booking, add:$booking")
 
@@ -54,7 +54,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       storeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
-      sender ! UserTimeBookingStatisticsView.Ack
+      sender ! Ack
     case UserTimeBookingAdded(booking) =>
       if (booking.end.isDefined) {
         log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
@@ -62,15 +62,15 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
         storeDurations(durations)
         val events = getEventsDurations(durations, true)
         notifyClient(events)
-        sender ! UserTimeBookingStatisticsView.Ack
       }
+      sender ! Ack
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
       removeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
-      sender ! UserTimeBookingStatisticsView.Ack
+      sender ! Ack
   }
 
   protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {
