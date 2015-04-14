@@ -48,22 +48,9 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
       sender ! Ack
     case UserTimeBookingStopped(booking) =>
-      log.debug(s"UserTimeBookingStatisticsView -> stopped booking, add:$booking")
-
-      val durations = calculatDurations(booking)
-      storeDurations(durations)
-      val events = getEventsDurations(durations, false)
-      notifyClient(events)
-      sender ! Ack
+      handleBookingAddedOrStopped(booking)
     case UserTimeBookingAdded(booking) =>
-      if (booking.end.isDefined) {
-        log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
-        val durations = calculatDurations(booking)
-        storeDurations(durations)
-        val events = getEventsDurations(durations, true)
-        notifyClient(events)
-      }
-      sender ! Ack
+      handleBookingAddedOrStopped(booking)
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
@@ -71,6 +58,17 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       val events = getEventsDurations(durations, false)
       notifyClient(events)
       sender ! Ack
+  }
+
+  protected def handleBookingAddedOrStopped(booking: Booking) = {
+    if (booking.end.isDefined) {
+      log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
+      val durations = calculatDurations(booking)
+      storeDurations(durations)
+      val events = getEventsDurations(durations, true)
+      notifyClient(events)
+    }
+    sender ! Ack
   }
 
   protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {

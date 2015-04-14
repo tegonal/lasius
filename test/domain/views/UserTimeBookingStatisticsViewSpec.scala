@@ -55,14 +55,21 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
   "UserTimeBookingStatisticsView UserTimeBookingStopped" should {
     "add new duration to stats" in new PersistentActorTestScope {
-
       testDuration(booking => UserTimeBookingStopped(booking))
+    }
+
+    "don't add stats if no enddate is specified" in new PersistentActorTestScope {
+      testDurationWithoutEnd(booking => UserTimeBookingStopped(booking))
     }
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingAdded" should {
     "add new duration to stats if end of booking is defined" in new PersistentActorTestScope {
       testDuration(booking => UserTimeBookingAdded(booking))
+    }
+
+    "don't add stats if no enddate is specified" in new PersistentActorTestScope {
+      testDurationWithoutEnd(booking => UserTimeBookingAdded(booking))
     }
   }
 
@@ -105,6 +112,32 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
         case BookingByTag(_, userId, day, tagId, duration) => tagId must beOneOf(tagId1, tagId2)
       }
     }(any[Writes[BookingByTagId]])
+  }
+
+  def testDurationWithoutEnd(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+    val userId = UserId("noob")
+    val probe = TestProbe()
+    val bookingByCategoryRepository = mock[BookingByCategoryRepository]
+    val bookingByProjectRepository = mock[BookingByProjectRepository]
+    val bookingByTagRepository = mock[BookingByTagMongoRepository]
+    val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
+      bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
+    val day = DateTime.parse("2000-01-01")
+    val start = DateTime.now().minusHours(2)
+    val categoryId = CategoryId("cat")
+    val projectId = ProjectId("proj")
+    val tagId1 = TagId("tag1")
+    val tagId2 = TagId("tag2")
+    val duration = Duration.standardHours(2)
+
+    val booking = Booking(BookingId("b1"), start, None, userId, categoryId, projectId, Seq(tagId1, tagId2))
+
+    probe.send(actorRef, eventFactory(booking))
+    probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+
+    there was no(bookingByCategoryRepository).add(any[BookingByCategory])(any[Writes[BookingByCategoryId]])
+    there was no(bookingByProjectRepository).add(any[BookingByProject])(any[Writes[BookingByProjectId]])
+    there was no(bookingByTagRepository).add(any[BookingByTag])(any[Writes[BookingByTagId]])
   }
 }
 
