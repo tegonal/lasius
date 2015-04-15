@@ -15,6 +15,7 @@ object UserTimeBookingAggregate {
   case class UserTimeBookingStopped(booking: Booking) extends Event
   case class UserTimeBookingRemoved(booking: Booking) extends Event
   case class UserTimeBookingAdded(booking: Booking) extends Event
+  case class UserTimeBookingEdited(booking: Booking) extends Event
 
   case class UserTimeBooking(userId: UserId, bookings: Seq[Booking]) extends State {
     def bookingInProgress = {
@@ -31,6 +32,7 @@ object UserTimeBookingAggregate {
   case class EndBooking(userId: UserId, bookingId: BookingId, end: DateTime) extends UserTimeBookingCommand
   case class RemoveBooking(userId: UserId, bookingId: BookingId) extends UserTimeBookingCommand
   case class AppendBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
+  case class EditBooking(userId: UserId, bookingId: BookingId, start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
   def props(userId: UserId): Props = {
     Logger.debug(s"Create actor:$userId")
@@ -86,6 +88,12 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
           case _ => state
         }
+      case UserTimeBookingEdited(booking) =>
+        log.debug(s"UserBookingEdited- $booking")
+        state = state match {
+          case ub: UserTimeBooking => editUserBooking(ub, booking)
+          case _ => state
+        }
     }
   }
 
@@ -103,6 +111,14 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   def removeUserBooking(ub: UserTimeBooking, booking: Booking) = {
     val newBookings = ub.bookings.filter(_.id != booking.id)
+    ub.copy(bookings = newBookings)
+  }
+
+  def editUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    val newBookings = ub.bookings.map { b =>
+      if (b.id == booking.id) b.copy(start = booking.start, end = booking.end)
+      else b
+    }
     ub.copy(bookings = newBookings)
   }
 
@@ -162,6 +178,15 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           b.bookings.find(_.id == bookingId) map { removedB =>
             log.debug(s"RemoveBooking, found existing booking:$removedB")
             persist(UserTimeBookingRemoved(removedB))(afterEventPersisted)
+          }
+      }
+    case EditBooking(_, bookingId, start, end) =>
+      log.debug(s"EditBooking, current state:$state")
+      state match {
+        case b: UserTimeBooking =>
+          b.bookings.find(_.id == bookingId) map { edited =>
+            log.debug(s"EditBooking, found existing booking:$edited")
+            persist(UserTimeBookingEdited(edited))(afterEventPersisted)
           }
       }
     case AppendBooking(userId, categoryId, projectId, tags, start, end) =>

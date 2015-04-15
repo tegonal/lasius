@@ -54,13 +54,13 @@ define(['angular'], function(angular) {
         };
         
         scope.removeTimeBooking = function(bookingId) {
-          bookingHistoryService.removeTimeBooking(bookingId).then(function(result){
+          bookingHistoryService.removeTimeBooking(bookingId).then(function(){
             removeBooking(bookingId);
           });
         };
         
         var startBooking = function(booking) {
-          bookingService.start(booking.categoryId, booking.projectId, booking.tags).then(function(result) {
+          bookingService.start(booking.categoryId, booking.projectId, booking.tags).then(function() {
             //assign dummy booking that row gets selected directly
             scope.booking = {
                 projectId: booking.projectId,
@@ -83,6 +83,18 @@ define(['angular'], function(angular) {
           else {
             startBooking(favorite);
           }
+        };
+        
+        scope.editBooking = function(booking) {
+          scope.editedBooking = booking;
+        };
+        
+        scope.doneEditingBooking = function(booking) {
+          scope.editedBooking = null;
+          bookingHistoryService.editTimeBooking(booking).then(function() {
+            // maybe notify change
+            scope.booking = booking;
+          });
         };
         
         var isEquals = function(booking, favorite) {

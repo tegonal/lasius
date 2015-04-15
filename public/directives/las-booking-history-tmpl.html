@@ -23,12 +23,19 @@
 		        </span>
             </span>
         </td>
-        <td>{{booking.start | date: dateFormat(booking)}}</td>
-        <td>{{booking.end | date: dateFormat(booking)}}</td>
+        <td ng-if="booking === editedBooking" colspan="2">
+          <form name="formEdit" class="form-inline" role="form" novalidate ng-submit="formEdit.$valid && doneEditing(booking)" ng-show="booking == editedBooking">
+            <input type="datetime-local" required ng-model="booking.start" placeholder="dd.MM.yyyyTHH:mm:ss" auto-focus>
+            <input type="datetime-local" required ng-model="booking.end" placeholder="dd.MM.yyyyTHH:mm:ss">
+            <button type="button" class="btn btn-small" ng-click="doneEditingBooking(booking)">Submit</button>
+          </form>
+        </td>
+        <td ng-if="booking !== editedBooking">{{booking.start | date: dateFormat(booking)}}</td>
+        <td ng-if="booking !== editedBooking">{{booking.end | date: dateFormat(booking)}}</td>
         <td>{{diff(booking)| number : 1}}</td>
         <td>
           <button type="button" class="btn btn-xs" ng-hide="isActive(booking)" ng-click="startStop(booking)"><span class="glyphicon glyphicon-play-circle"></span></button>
-          <button type="button" class="btn btn-xs" ng-click="editTimeBooking(booking.id)" las-edit-event><span class="glyphicon glyphicon-edit"></span></button>
+          <button type="button" class="btn btn-xs" ng-click="editBooking(booking)" las-edit-event><span class="glyphicon glyphicon-edit"></span></button>
           <button type="button" class="btn btn-xs btn-danger" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button>
         </td>
     </tr>

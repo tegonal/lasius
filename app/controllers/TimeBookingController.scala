@@ -40,6 +40,14 @@ class TimeBookingController {
         Future.successful(Ok)
       }
   }
+  
+  def edit(bookingId: BookingId, start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
+	  implicit subject =>
+	  implicit request => {
+		  timeBookingManagerService ! EditBooking(subject.userId, bookingId, start, end)
+		  Future.successful(Ok)
+	  }
+  }
 
   def append(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>

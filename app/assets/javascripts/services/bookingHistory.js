@@ -23,6 +23,14 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      editTimeBooking: function (booking) {
+        return playRoutes.controllers.TimeBookingController.edit(booking.id, booking.start, booking.end).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);
