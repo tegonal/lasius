@@ -14,7 +14,7 @@
 		<th>{{bookings | sumFilter:diff| number : 1}}</th>
 		<td></td>
 	</tr>
-    <tr ng-repeat="booking in bookings" ng-class="isActive(booking)?'info':''" ng-click="startStop(booking)">
+    <tr ng-repeat="booking in bookings" ng-class="isActive(booking)?'info':''">
         <td>{{booking.projectId}}@{{booking.categoryId}}</td>
         <td>
             <span ng-repeat="tag in booking.tags" >
@@ -26,7 +26,11 @@
         <td>{{booking.start | date: dateFormat(booking)}}</td>
         <td>{{booking.end | date: dateFormat(booking)}}</td>
         <td>{{diff(booking)| number : 1}}</td>
-        <td><button type="button" class="btn btn-xs btn-danger pull-right" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button></td>
+        <td>
+          <button type="button" class="btn btn-xs" ng-hide="isActive(booking)" ng-click="startStop(booking)"><span class="glyphicon glyphicon-play-circle"></span></button>
+          <button type="button" class="btn btn-xs" ng-click="editTimeBooking(booking.id)" las-edit-event><span class="glyphicon glyphicon-edit"></span></button>
+          <button type="button" class="btn btn-xs btn-danger" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button>
+        </td>
     </tr>
 </table>
 </div>
