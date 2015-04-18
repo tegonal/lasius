@@ -31,6 +31,12 @@ import repositories.UserBookingStatisticsRepositoryComponent
 import domain.AggregateRoot.Event
 import akka.actor.ActorSystem
 import repositories.BookingByProjectRepository
+import org.mockito.verification.VerificationMode
+import repositories.BookingByCategoryRepository
+import scala.concurrent.Future
+import repositories.BookingByCategoryRepository
+import repositories.BookingByProjectRepository
+import repositories.BookingByTagRepository
 
 class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
@@ -79,50 +85,80 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingRemoved" should {
-    "remove duration from total o same day" in new PersistentActorTestScope {
-      val userId = UserId("noob")
-      val probe = TestProbe()
-      val bookingByCategoryRepository = mock[BookingByCategoryRepository]
-      val bookingByProjectRepository = mock[BookingByProjectRepository]
-      val bookingByTagRepository = mock[BookingByTagMongoRepository]
-      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
-        bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
-      val day = DateTime.parse("2000-01-01")
-      val stop = day.plusHours(10)
-      val start = stop.minusHours(2)
-      val categoryId = CategoryId("cat")
-      val projectId = ProjectId("proj")
-      val tagId1 = TagId("tag1")
-      val tagId2 = TagId("tag2")
-      val duration = Duration.standardHours(2)
+    "remove duration from total of same day" in new PersistentActorTestScope {
+      testRemoveDuration
+    }
 
-      val booking = Booking(BookingId("b1"), start, Some(stop), userId, categoryId, projectId, Seq(tagId1, tagId2))
-
-      probe.send(actorRef, UserTimeBookingRemoved(booking))
-      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
-
-      there was one(bookingByCategoryRepository).subtract {
-        beLike[BookingByCategory] {
-          case BookingByCategory(_, `userId`, `day`, `categoryId`, `duration`) => ok
-        }
-      }(any[Writes[BookingByCategoryId]])
-
-      there was one(bookingByProjectRepository).subtract {
-        beLike[BookingByProject] {
-          case BookingByProject(_, `userId`, `day`, `projectId`, `duration`) => ok
-        }
-      }(any[Writes[BookingByProjectId]])
-
-      there was two(bookingByTagRepository).subtract {
-        beLike[BookingByTag] {
-          case BookingByTag(_, `userId`, `day`, `tagId1`, `duration`) => ok
-          case BookingByTag(_, `userId`, `day`, `tagId2`, `duration`) => ok
-        }
-      }(any[Writes[BookingByTagId]])
+    "remove duration over multiple days" in new PersistentActorTestScope {
+      testRemoveDurationOverSeveralDays
     }
   }
 
   def testAddDurationOverSeveralDays(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+    testHandleDurationOverSeveralDays(eventFactory) {
+      (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day1, day2, day3, duration1, duration2, duration3) =>
+        there was 3.times(bookingByCategoryRepository).add {
+          beLike[BookingByCategory] {
+            case BookingByCategory(_, `userId`, `day1`, `categoryId`, `duration1`) => ok
+            case BookingByCategory(_, `userId`, `day2`, `categoryId`, `duration2`) => ok
+            case BookingByCategory(_, `userId`, `day3`, `categoryId`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByCategoryId]])
+
+        there was 3.times(bookingByProjectRepository).add {
+          beLike[BookingByProject] {
+            case BookingByProject(_, `userId`, `day1`, `projectId`, `duration1`) => ok
+            case BookingByProject(_, `userId`, `day2`, `projectId`, `duration2`) => ok
+            case BookingByProject(_, `userId`, `day3`, `projectId`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByProjectId]])
+
+        there was 6.times(bookingByTagRepository).add {
+          beLike[BookingByTag] {
+            case BookingByTag(_, `userId`, `day1`, `tagId1`, `duration1`) => ok
+            case BookingByTag(_, `userId`, `day1`, `tagId2`, `duration1`) => ok
+            case BookingByTag(_, `userId`, `day2`, `tagId1`, `duration2`) => ok
+            case BookingByTag(_, `userId`, `day2`, `tagId2`, `duration2`) => ok
+            case BookingByTag(_, `userId`, `day3`, `tagId1`, `duration3`) => ok
+            case BookingByTag(_, `userId`, `day3`, `tagId2`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByTagId]])
+    }
+  }
+
+  def testRemoveDurationOverSeveralDays(implicit system: ActorSystem) = {
+    testHandleDurationOverSeveralDays(booking => UserTimeBookingRemoved(booking)) {
+      (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day1, day2, day3, duration1, duration2, duration3) =>
+        there was 3.times(bookingByCategoryRepository).subtract {
+          beLike[BookingByCategory] {
+            case BookingByCategory(_, `userId`, `day1`, `categoryId`, `duration1`) => ok
+            case BookingByCategory(_, `userId`, `day2`, `categoryId`, `duration2`) => ok
+            case BookingByCategory(_, `userId`, `day3`, `categoryId`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByCategoryId]])
+
+        there was 3.times(bookingByProjectRepository).subtract {
+          beLike[BookingByProject] {
+            case BookingByProject(_, `userId`, `day1`, `projectId`, `duration1`) => ok
+            case BookingByProject(_, `userId`, `day2`, `projectId`, `duration2`) => ok
+            case BookingByProject(_, `userId`, `day3`, `projectId`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByProjectId]])
+
+        there was 6.times(bookingByTagRepository).subtract {
+          beLike[BookingByTag] {
+            case BookingByTag(_, `userId`, `day1`, `tagId1`, `duration1`) => ok
+            case BookingByTag(_, `userId`, `day1`, `tagId2`, `duration1`) => ok
+            case BookingByTag(_, `userId`, `day2`, `tagId1`, `duration2`) => ok
+            case BookingByTag(_, `userId`, `day2`, `tagId2`, `duration2`) => ok
+            case BookingByTag(_, `userId`, `day3`, `tagId1`, `duration3`) => ok
+            case BookingByTag(_, `userId`, `day3`, `tagId2`, `duration3`) => ok
+          }
+        }(any[Writes[BookingByTagId]])
+    }
+  }
+
+  def testHandleDurationOverSeveralDays(eventFactory: Booking => Event)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, DateTime, DateTime, Duration, Duration, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
     val userId = UserId("noob")
     val probe = TestProbe()
     val bookingByCategoryRepository = mock[BookingByCategoryRepository]
@@ -149,35 +185,58 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     probe.send(actorRef, eventFactory(booking))
     probe.expectMsg(UserTimeBookingStatisticsView.Ack)
 
-    there was 3.times(bookingByCategoryRepository).add {
-      beLike[BookingByCategory] {
-        case BookingByCategory(_, `userId`, `day1`, `categoryId`, `duration1`) => ok
-        case BookingByCategory(_, `userId`, `day2`, `categoryId`, `duration2`) => ok
-        case BookingByCategory(_, `userId`, `day3`, `categoryId`, `duration3`) => ok
-      }
-    }(any[Writes[BookingByCategoryId]])
-
-    there was 3.times(bookingByProjectRepository).add {
-      beLike[BookingByProject] {
-        case BookingByProject(_, `userId`, `day1`, `projectId`, `duration1`) => ok
-        case BookingByProject(_, `userId`, `day2`, `projectId`, `duration2`) => ok
-        case BookingByProject(_, `userId`, `day3`, `projectId`, `duration3`) => ok
-      }
-    }(any[Writes[BookingByProjectId]])
-
-    there was 6.times(bookingByTagRepository).add {
-      beLike[BookingByTag] {
-        case BookingByTag(_, `userId`, `day1`, `tagId1`, `duration1`) => ok
-        case BookingByTag(_, `userId`, `day1`, `tagId2`, `duration1`) => ok
-        case BookingByTag(_, `userId`, `day2`, `tagId1`, `duration2`) => ok
-        case BookingByTag(_, `userId`, `day2`, `tagId2`, `duration2`) => ok
-        case BookingByTag(_, `userId`, `day3`, `tagId1`, `duration3`) => ok
-        case BookingByTag(_, `userId`, `day3`, `tagId2`, `duration3`) => ok
-      }
-    }(any[Writes[BookingByTagId]])
+    verify
   }
 
   def testAddDuration(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+    testHandleDurationOfOneDay(eventFactory) {
+      (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day, duration) =>
+        there was one(bookingByCategoryRepository).add {
+          beLike[BookingByCategory] {
+            case BookingByCategory(_, `userId`, `day`, `categoryId`, `duration`) => ok
+          }
+        }(any[Writes[BookingByCategoryId]])
+
+        there was one(bookingByProjectRepository).add {
+          beLike[BookingByProject] {
+            case BookingByProject(_, `userId`, `day`, `projectId`, `duration`) => ok
+          }
+        }(any[Writes[BookingByProjectId]])
+
+        there was two(bookingByTagRepository).add {
+          beLike[BookingByTag] {
+            case BookingByTag(_, `userId`, `day`, `tagId1`, `duration`) => ok
+            case BookingByTag(_, `userId`, `day`, `tagId2`, `duration`) => ok
+          }
+        }(any[Writes[BookingByTagId]])
+    }
+  }
+
+  def testRemoveDuration(implicit system: ActorSystem) = {
+    testHandleDurationOfOneDay(booking => UserTimeBookingRemoved(booking)) {
+      (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day, duration) =>
+        there was one(bookingByCategoryRepository).subtract {
+          beLike[BookingByCategory] {
+            case BookingByCategory(_, `userId`, `day`, `categoryId`, `duration`) => ok
+          }
+        }(any[Writes[BookingByCategoryId]])
+
+        there was one(bookingByProjectRepository).subtract {
+          beLike[BookingByProject] {
+            case BookingByProject(_, `userId`, `day`, `projectId`, `duration`) => ok
+          }
+        }(any[Writes[BookingByProjectId]])
+
+        there was two(bookingByTagRepository).subtract {
+          beLike[BookingByTag] {
+            case BookingByTag(_, `userId`, `day`, `tagId1`, `duration`) => ok
+            case BookingByTag(_, `userId`, `day`, `tagId2`, `duration`) => ok
+          }
+        }(any[Writes[BookingByTagId]])
+    }
+  }
+
+  def testHandleDurationOfOneDay(eventFactory: Booking => Event)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
     val userId = UserId("noob")
     val probe = TestProbe()
     val bookingByCategoryRepository = mock[BookingByCategoryRepository]
@@ -199,24 +258,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     probe.send(actorRef, eventFactory(booking))
     probe.expectMsg(UserTimeBookingStatisticsView.Ack)
 
-    there was one(bookingByCategoryRepository).add {
-      beLike[BookingByCategory] {
-        case BookingByCategory(_, `userId`, `day`, `categoryId`, `duration`) => ok
-      }
-    }(any[Writes[BookingByCategoryId]])
-
-    there was one(bookingByProjectRepository).add {
-      beLike[BookingByProject] {
-        case BookingByProject(_, `userId`, `day`, `projectId`, `duration`) => ok
-      }
-    }(any[Writes[BookingByProjectId]])
-
-    there was two(bookingByTagRepository).add {
-      beLike[BookingByTag] {
-        case BookingByTag(_, `userId`, `day`, `tagId1`, `duration`) => ok
-        case BookingByTag(_, `userId`, `day`, `tagId2`, `duration`) => ok
-      }
-    }(any[Writes[BookingByTagId]])
+    verify
   }
 
   def testAddDurationWithoutEnd(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
