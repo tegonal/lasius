@@ -23,37 +23,18 @@ trait TimeBookingStatisticsController {
       implicit request => {
         Logger.debug(s"getAggregatedStatistics, source:$source, userId:${subject.userId}, from:$from, to:$to")
         source match {
-          case "tag" => getAggregatedStatisticsByTag(from, to)
-          case "category" => getAggregatedStatisticsByCategory(from, to)
-          case "project" => getAggregatedStatisticsByProject(from, to)
+          case "tag" => getAggregatedStatisticsBySource[BookingByTag, BookingByTagId, TagId](bookingByTagRepository, b => b.tagId, from, to)
+          case "category" => getAggregatedStatisticsBySource[BookingByCategory, BookingByCategoryId, CategoryId](bookingByCategoryRepository, b => b.categoryId, from, to)
+          case "project" => getAggregatedStatisticsBySource[BookingByProject, BookingByProjectId, ProjectId](bookingByProjectRepository, b => b.projectId, from, to)
           case _ => Future.successful(BadRequest)
         }
       }
   }
 
-  def getAggregatedStatisticsByTag(from: DateTime, to: DateTime)(implicit subject: Subject) = {
-    bookingByTagRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.tagId) map { entry =>
-        (entry._1, entry._2.map(_.duration.getMillis).foldLeft(0l)((a, b) => a + b))
-      }
-      val sortedList = aggregatedMap.toList.sortBy(-_._2)
-      Ok(Json.toJson(sortedList.map(entry => Json.obj("label" -> entry._1, "value" -> entry._2))))
-    }
-  }
-
-  def getAggregatedStatisticsByProject(from: DateTime, to: DateTime)(implicit subject: Subject) = {
-    bookingByProjectRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.projectId) map { entry =>
-        (entry._1, entry._2.map(_.duration.getMillis).foldLeft(0l)((a, b) => a + b))
-      }
-      val sortedList = aggregatedMap.toList.sortBy(-_._2)
-      Ok(Json.toJson(sortedList.map(entry => Json.obj("label" -> entry._1, "value" -> entry._2))))
-    }
-  }
-
-  def getAggregatedStatisticsByCategory(from: DateTime, to: DateTime)(implicit subject: Subject) = {
-    bookingByCategoryRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val aggregatedMap = bookings.groupBy(_.categoryId) map { entry =>
+  def getAggregatedStatisticsBySource[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_], V](repository: BookingStatisticRepository[M, I], f: M => V,
+    from: DateTime, to: DateTime)(implicit subject: Subject, format: Format[M], formatV: Format[V]) = {
+    repository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
+      val aggregatedMap = bookings.groupBy(f) map { entry =>
         (entry._1, entry._2.map(_.duration.getMillis).foldLeft(0l)((a, b) => a + b))
       }
       val sortedList = aggregatedMap.toList.sortBy(-_._2)
@@ -72,9 +53,9 @@ trait TimeBookingStatisticsController {
           from.plusDays(diff)
         }
         source match {
-          case "tag" => getStatisticsByTag(from, to, range)
-          case "category" => getStatisticsByCategory(from, to, range)
-          case "project" => getStatisticsByProject(from, to, range)
+          case "tag" => getStatisticsBySource[BookingByTag, BookingByTagId, TagId](bookingByTagRepository, b => b.tagId, from, to, range)
+          case "category" => getStatisticsBySource[BookingByCategory, BookingByCategoryId, CategoryId](bookingByCategoryRepository, b => b.categoryId, from, to, range)
+          case "project" => getStatisticsBySource[BookingByProject, BookingByProjectId, ProjectId](bookingByProjectRepository, b => b.projectId, from, to, range)
           case _ => Future.successful(BadRequest)
         }
       }
@@ -84,35 +65,9 @@ trait TimeBookingStatisticsController {
     Json.obj("day" -> Json.toJson(day), "duration" -> Json.toJson(millis))
   }
 
-  def getStatisticsByTag(from: DateTime, to: DateTime, range: Seq[DateTime])(implicit subject: Subject) = {
-    bookingByTagRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val combinedMap = bookings.groupBy(_.tagId) map { entry =>
-        (entry._1, range.map { r =>
-          entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
-            toJson(r, b.duration.getMillis)
-          }.getOrElse(toJson(r, 0))
-        })
-      }
-      Ok(Json.toJson(combinedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
-    }
-  }
-
-  def getStatisticsByCategory(from: DateTime, to: DateTime, range: Seq[DateTime])(implicit subject: Subject) = {
-    bookingByCategoryRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val combinedMap = bookings.groupBy(_.categoryId) map { entry =>
-        (entry._1, range.map { r =>
-          entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
-            toJson(r, b.duration.getMillis)
-          }.getOrElse(toJson(r, 0))
-        })
-      }
-      Ok(Json.toJson(combinedMap.map(entry => Json.obj("key" -> entry._1, "values" -> entry._2))))
-    }
-  }
-
-  def getStatisticsByProject(from: DateTime, to: DateTime, range: Seq[DateTime])(implicit subject: Subject) = {
-    bookingByProjectRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-      val combinedMap = bookings.groupBy(_.projectId) map { entry =>
+  def getStatisticsBySource[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_], V](repository: BookingStatisticRepository[M, I], f: M => V, from: DateTime, to: DateTime, range: Seq[DateTime])(implicit subject: Subject, format: Format[M], formatV: Format[V]) = {
+    repository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
+      val combinedMap = bookings.groupBy(f) map { entry =>
         (entry._1, range.map { r =>
           entry._2.filter(_.day.withTimeAtStartOfDay.toLocalDate.isEqual(r.withTimeAtStartOfDay.toLocalDate)).headOption.map { b =>
             toJson(r, b.duration.getMillis)
