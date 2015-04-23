@@ -1,7 +1,6 @@
 package controllers
 
 import play.api.mvc.Controller
-
 import repositories.UserBookingStatisticsRepositoryComponent
 import models._
 import play.api.mvc.Action
@@ -14,8 +13,9 @@ import repositories.BookingStatisticRepository
 import scala.concurrent.Future
 import repositories.BookingByCategoryRepository
 import utils.DateTimeUtils._
+import play.api.mvc.Result
 
-class TimeBookingStatisticsController {
+trait TimeBookingStatisticsController {
   self: Controller with UserBookingStatisticsRepositoryComponent with Security =>
 
   def getAggregatedStatistics(source: String, from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
