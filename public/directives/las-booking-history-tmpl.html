@@ -11,7 +11,7 @@
 	<tr>
 		<!-- Total row -->
 		<th colspan="4">Total</th9>
-		<th>{{bookings | sumFilter:diff| number : 1}}</th>
+		<th>{{bookings | sumFilter:dayDiff| number : 1}}</th>
 		<td></td>
 	</tr>
     <tr ng-repeat="booking in bookings" ng-class="isActive(booking)?'info':''" ng-click="startStop(booking)">
@@ -25,7 +25,7 @@
         </td>
         <td>{{booking.start | date: dateFormat(booking)}}</td>
         <td>{{booking.end | date: dateFormat(booking)}}</td>
-        <td>{{diff(booking)| number : 1}}</td>
+        <td>{{dayDiff(booking)| number : 1}} <span ng-if="!sameDay(booking)">({{totalDiff(booking)| number : 1}})</span></td>
         <td><span class="glyphicon glyphicon-remove" ng-click="removeTimeBooking(booking.id)" las-stop-event></span></td>
     </tr>
 </table>

@@ -45,8 +45,14 @@ define(['angular'], function(angular) {
           });
         };
         
-        scope.diff = function(booking) {
+        scope.totalDiff = function(booking) {
           return moment.duration(booking.end).subtract(booking.start).asHours();
+        };
+        
+        scope.dayDiff = function(booking) {
+          var start = moment.max(scope.range.from.startOf('day'), moment(booking.start));
+          var end = moment.min(scope.range.to.endOf('day'), moment(booking.end));
+          return moment.duration(end).subtract(start).asHours();
         };
         
         scope.sameDay = function(booking) {
