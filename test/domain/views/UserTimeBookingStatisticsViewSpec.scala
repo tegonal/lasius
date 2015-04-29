@@ -57,6 +57,12 @@ import scala.concurrent.Future
 import repositories.BookingByCategoryRepository
 import repositories.BookingByProjectRepository
 import repositories.BookingByTagRepository
+import repositories.UserBookingStatisticsRepositoryComponentMock
+import repositories.UserBookingStatisticsRepositoryComponentMock
+import repositories.UserBookingStatisticsRepositoryComponentMock
+import org.joda.time.Interval
+import repositories.UserBookingStatisticsRepositoryComponentMockClass
+import play.api.Logger
 
 class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
@@ -111,6 +117,84 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
     "remove duration over multiple days" in new PersistentActorTestScope {
       testRemoveDurationOverSeveralDays
+    }
+  }
+
+  "UserTimeBookingStatisticsView various cases" should {
+    "LAS-24" in new PersistentActorTestScope {
+      val userId = UserId("noob")
+      val probe = TestProbe()
+      val component = new UserBookingStatisticsRepositoryComponentMockClass
+      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId, component))
+
+      //days from 23. to 28.
+      val day1 = DateTime.parse("2015-04-23")
+      val day2 = day1.plusDays(1)
+      val day3 = day2.plusDays(1)
+      val day4 = day3.plusDays(1)
+      val day5 = day4.plusDays(1)
+      val day6 = day5.plusDays(1)
+
+      val categoryId = CategoryId("Cat1")
+      val projectId1 = ProjectId("Proj1")
+      val projectId2 = ProjectId("Proj2")
+      val tagId1 = TagId("LAS-22")
+      val tagId2 = TagId("Testsystem")
+
+      //booking 1
+      val start1 = day1.withHourOfDay(13).withMinuteOfHour(42)
+      val end1 = day6.withHourOfDay(9).withMinuteOfHour(17)
+      val booking1 = Booking(BookingId("b1"), start1, Some(end1), userId, categoryId, projectId1, Seq(tagId1))
+
+      //booking 2
+      val start2 = end1
+      val end2 = start2.withHourOfDay(12).withMinuteOfHour(2)
+      val booking2 = Booking(BookingId("b2"), start2, Some(end2), userId, categoryId, projectId2, Seq(tagId2))
+
+      //booking 3
+      val start3 = start2.withHourOfDay(12).withMinuteOfHour(50)
+      val end3 = start2.withHourOfDay(15).withMinuteOfHour(30)
+      val booking3 = Booking(BookingId("b3"), start3, Some(end3), userId, categoryId, projectId2, Seq(tagId2))
+
+      //booking 4
+      val start4 = start2.withHourOfDay(16).withMinuteOfHour(28)
+      val end4 = start2.withHourOfDay(21).withMinuteOfHour(41)
+      val booking4 = Booking(BookingId("b4"), start4, Some(end4), userId, categoryId, projectId2, Seq(tagId2))
+
+      //durations
+      //whole day
+      val dayDuration = Duration.standardHours(24)
+      //category durations
+      //start of booking 1
+      val startCatDuration = Duration.standardHours(24 - 14).plus(Duration.standardMinutes(60 - 42))
+      val endCatDuration1 = Duration.standardHours(9).plus(Duration.standardMinutes(17))
+      val endCatDuration2 = new Interval(start2, end2).toDuration()
+      val endCatDuration3 = new Interval(start3, end3).toDuration()
+      val endCatDuration4 = new Interval(start4, end4).toDuration()
+
+      probe.send(actorRef, UserTimeBookingAdded(booking1))
+      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+      probe.send(actorRef, UserTimeBookingAdded(booking2))
+      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+      probe.send(actorRef, UserTimeBookingAdded(booking3))
+      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+      probe.send(actorRef, UserTimeBookingAdded(booking4))
+      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+
+      there was 9.times(component.bookingByCategoryRepository).add {
+        beLike[BookingByCategory] {
+          case BookingByCategory(_, `userId`, `day1`, `categoryId`, `startCatDuration`) => ok
+          case BookingByCategory(_, `userId`, `day2`, `categoryId`, `dayDuration`) => ok
+          case BookingByCategory(_, `userId`, `day3`, `categoryId`, `dayDuration`) => ok
+          case BookingByCategory(_, `userId`, `day4`, `categoryId`, `dayDuration`) => ok
+          case BookingByCategory(_, `userId`, `day5`, `categoryId`, `dayDuration`) => ok
+          case BookingByCategory(_, `userId`, `day6`, `categoryId`, `endCatDuration1`) => ok
+          case BookingByCategory(_, `userId`, `day6`, `categoryId`, `endCatDuration2`) => ok
+          case BookingByCategory(_, `userId`, `day6`, `categoryId`, `endCatDuration3`) => ok
+          case BookingByCategory(_, `userId`, `day6`, `categoryId`, `endCatDuration4`) => ok
+        }
+      }(any[Writes[BookingByCategoryId]])
+
     }
   }
 
@@ -311,6 +395,11 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 object UserTimeBookingStatisticsViewMock {
   def props(userId: UserId, bookingByCategoryRepository: BookingByCategoryRepository,
     bookingByProjectRepository: BookingByProjectRepository, bookingByTagRepository: BookingByTagRepository) = Props(classOf[UserTimeBookingStatisticsViewMock], userId, bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository)
+
+  def props(userId: UserId, comp: UserBookingStatisticsRepositoryComponentMock) = Props(classOf[UserTimeBookingStatisticsViewMock], userId,
+    comp.bookingByCategoryRepository,
+    comp.bookingByProjectRepository,
+    comp.bookingByTagRepository)
 }
 
 class UserTimeBookingStatisticsViewMock(userId: UserId, val bookingByCategoryRepository: BookingByCategoryRepository,
