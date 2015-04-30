@@ -83,7 +83,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
   protected def handleBookingAddedOrStopped(booking: Booking) = {
     if (booking.end.isDefined) {
-      log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
+      log.debug(s"UserTimeBookingStatisticsView -> handleBookingAddedOrStopped:$booking")
       val durations = calculatDurations(booking)
       storeDurations(durations)
       val events = getEventsDurations(durations, true)

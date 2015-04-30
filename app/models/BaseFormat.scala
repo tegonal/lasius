@@ -32,6 +32,7 @@ import org.joda.time.LocalDate
 import reactivemongo.bson.BSONDateTime
 import reactivemongo.bson.BSONHandler
 import org.joda.time.DateTimeFieldType
+import scala.util.Try
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
@@ -65,8 +66,12 @@ object BaseFormat {
 }
 
 class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factory[BSONObjectID, I]) extends Format[I] {
-  def reads(json: JsValue): JsResult[I] = json match {
 
+  def writes(objectId: I): JsValue = {
+    Json.obj("$oid" -> JsString(objectId.value.stringify))
+  }
+
+  def reads(json: JsValue): JsResult[I] = json match {
     case JsString(value) => {
       BSONObjectID.parse(value) match {
         case Success(id) =>
@@ -75,10 +80,10 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
           JsError(s"Unexpected JSON value $json")
       }
     }
+    case JsObject(Seq((_, oid))) =>
+      reads(oid)
     case _ => JsError(s"Unexpected JSON value $json")
   }
-
-  def writes(id: I): JsValue = JsString(id.value.stringify)
 }
 
 class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f1: Format[I1], f2: Format[I2]) extends Format[I] {

@@ -93,7 +93,7 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
     findFirst(sel) flatMap {
       _.map { o =>
         o match {
-          case (current, id) =>
+          case (current, _) =>
             Logger.debug(s"subtract [$sel]:$current - $model")
             val duration = if (current.duration.getMillis < model.duration.getMillis) { 0 } else { current.duration.getMillis - model.duration.getMillis }
             val newModel = current.duration(Duration.millis(duration))
