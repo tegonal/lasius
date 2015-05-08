@@ -61,6 +61,30 @@ class TimeBookingController {
       }
   }
 
+  def pause(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! PauseBooking(subject.userId, bookingId, time)
+        Future.successful(Ok)
+      }
+  }
+
+  def resume(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! ResumeBooking(subject.userId, bookingId, time)
+        Future.successful(Ok)
+      }
+  }
+
+  def changeStart(bookingId: BookingId, newStart: DateTime) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        timeBookingManagerService ! ChangeStartTimeOfBooking(subject.userId, bookingId, newStart)
+        Future.successful(Ok)
+      }
+  }
+
   def append(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {

@@ -27,8 +27,21 @@
 	  		<span ><b>{{total_duration.moment.seconds()}}</b> <small>seconds</small></span>)
 	  	</div>
   	</div>
-  	<div class="panel-footer">
-  		<button class="btn btn-warning btn-lg btn-block" ng-click="stopBooking(result.booking.id)">Stop</button>
+  	<div class="panel-footer container-fluid">
+  		<div class="btn-group row-fluid full-width" role="toolbar">
+	  		<div class="btn-group col-md-2 no-padding" role="toolbar">
+			  <button type="button" class="btn btn-default btn-lg dropdown-toggle full-width" data-toggle="dropdown" aria-expanded="false">
+			    <span class="glyphicon glyphicon-time"></span>		    
+			    <span class="caret"></span>
+			  </button>
+			  <ul class="dropdown-menu" role="menu">
+      			<li><a href="#">Change Start</a></li>
+      		  </ul>
+			</div>
+	  		<button ng-if="bookingRunning" class="btn btn-info btn-lg col-md-2" ng-click="pauseBooking(result.booking.id)"><span class="glyphicon glyphicon-pause"></span></button>
+	  		<button ng-if="bookingPaused" class="btn btn-info btn-lg col-md-2" ng-click="resumeBooking(result.booking.id)"><span class="glyphicon glyphicon-play"></span></button>
+  			<button class="btn btn-warning btn-lg col-md-8" ng-click="stopBooking(result.booking.id)"><span class="glyphicon glyphicon-stop"></span>&nbsp;Stop</button>
+	  	</div>
   	</div> 	
  </div>
  <div class="panel panel-warning" ng-if="!compact && noBooking">

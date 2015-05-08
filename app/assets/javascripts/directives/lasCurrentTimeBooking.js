@@ -29,11 +29,12 @@ define(
               'lasCurrentTimeBooking',
               [
                   '$window',
+                  'MY_CONFIG',
                   'currentTimeBookingService',
                   'favoritesService', 
                   'msgBus',
                   'moment',
-                  function($window, currentTimeBookingService, favoritesService, msgBus, moment) {
+                  function($window, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -95,8 +96,6 @@ define(
                             scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
                         };
-                        
-                       
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
@@ -104,10 +103,14 @@ define(
                           scope.total_duration = {};
 
                           scope.noBooking = scope.result.booking === undefined;
+                          scope.bookingPaused = scope.result.booking && scope.result.booking.end;
+                          scope.bookingRunning = !scope.noBooking && !scope.bookingPaused;
                           if (scope.result.booking) {
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           }
 
+                          checkBooking(scope.result.booking.start);
+                          
                           console.log(msg);
                           scope.$apply();
                         });
@@ -132,6 +135,22 @@ define(
                           });
                         };
 
+                        scope.pauseBooking = function(bookingId) {
+                          currentTimeBookingService.pauseBooking(bookingId, moment().format(MY_CONFIG.DATE_PATTERN)).then(function() {
+                          });
+                        };
+
+                        scope.resumeBooking = function(bookingId) {
+                          currentTimeBookingService.resumeBooking(bookingId, moment().format(MY_CONFIG.DATE_PATTERN)).then(function() {
+                            scope.noBooking = false;
+                          });
+                        };
+                        
+                        scope.changeStartTime = function(bookingId, time) {
+                          currentTimeBookingService.changeStartTime(bookingId, time).then(function() {
+                          });
+                        };
+                        
                         function cancelTimer() {
                           if (activeTimeout) {
                             $window.clearTimeout(activeTimeout);
@@ -150,9 +169,11 @@ define(
                           }
 
                           // update every second
-                          activeTimeout = $window.setTimeout(function() {
-                            updateTime(momentInstance, true);
-                          }, 1000);
+                          if (scope.result.booking.end === undefined) {
+                            activeTimeout = $window.setTimeout(function() {
+                              updateTime(momentInstance, true);
+                            }, 1000);
+                          }
                         }
 
                         function updateMoment(apply) {
@@ -163,20 +184,24 @@ define(
                             updateTime(momentValue, false);
                           }
                         }
+                        
+                        function checkBooking(value) {
+                          if ((typeof value === 'undefined') || (value === null) || (value === '')) {
+                            cancelTimer();
+                            if (currentValue) {
+                              scope.duraction = null;
+                              currentValue = null;
+                            }
+                            return;
+                          }
+
+                          currentValue = value;
+                          updateMoment();
+                        }
 
                         unwatchChanges = scope.$watch('result.booking.start',
                             function(value) {
-                              if ((typeof value === 'undefined') || (value === null) || (value === '')) {
-                                cancelTimer();
-                                if (currentValue) {
-                                  scope.duraction = null;
-                                  currentValue = null;
-                                }
-                                return;
-                              }
-
-                              currentValue = value;
-                              updateMoment();                              
+                              checkBooking(value);                              
                             });
 
                         scope.$on('$destroy', function() {

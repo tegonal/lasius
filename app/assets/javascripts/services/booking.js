@@ -48,7 +48,7 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
-      }
+      }      
     };
   }]);
  

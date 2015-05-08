@@ -40,6 +40,30 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      pauseBooking: function(bookingId, time) {
+        return playRoutes.controllers.TimeBookingController.pause(bookingId, time).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
+      },
+      resumeBooking: function(bookingId, time) {
+        return playRoutes.controllers.TimeBookingController.resume(bookingId, time).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
+      },
+      changeStartTime: function(bookingId, start) {
+        return playRoutes.controllers.TimeBookingController.changeStart(bookingId, start).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);
