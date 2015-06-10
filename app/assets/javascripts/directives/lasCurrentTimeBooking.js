@@ -136,12 +136,12 @@ define(
                         };
 
                         scope.pauseBooking = function(bookingId) {
-                          currentTimeBookingService.pauseBooking(bookingId, moment().format(MY_CONFIG.DATE_PATTERN)).then(function() {
+                          currentTimeBookingService.pauseBooking(bookingId).then(function() {
                           });
                         };
 
                         scope.resumeBooking = function(bookingId) {
-                          currentTimeBookingService.resumeBooking(bookingId, moment().format(MY_CONFIG.DATE_PATTERN)).then(function() {
+                          currentTimeBookingService.resumeBooking(bookingId).then(function() {
                             scope.noBooking = false;
                           });
                         };
@@ -159,7 +159,10 @@ define(
                         }
 
                         function updateTime(momentInstance, apply) {
-                          scope.duration.moment = moment().subtract(momentInstance);
+                          scope.duration.moment = (scope.result.booking.end === undefined)?
+                              moment().subtract(momentInstance):
+                              moment(scope.result.booking.end).subtract(momentInstance);
+                              
                           if (scope.result.totalBySameBooking) {
                             scope.total_duration.moment = moment(scope.duration.moment).add(moment.duration(scope.result.totalBySameBooking));
                           }

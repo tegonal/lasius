@@ -68,7 +68,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       val day = e.booking.start.withTimeAtStartOfDay
-      val durations = getMapForDay(day)
+      val durations = state.booking.map(b => addDailyDuration(b, day)).getOrElse(getMapForDay(day))
       state = updateBooking(userId, Some(e.booking), day, durations)
       notifyClient()
     case e: UserTimeBookingStopped =>
@@ -82,7 +82,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       state.booking.filter(_.id == e.bookingId) map { b =>
         val newB = b.copy(end = Some(e.time))
         val day = e.time.withTimeAtStartOfDay
-        val durations = addDailyDuration(newB, day)
+        val durations = getMapForDay(day)
         state = updateBooking(userId, Some(newB), day, durations)
         notifyClient()
       }
@@ -114,11 +114,18 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       e.booking.end.map { end =>
         //check if on same day        
         if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
-          //remove from totals
-          val day = e.booking.end.get.withTimeAtStartOfDay
-          val durations = removeDailyDuration(e.booking, day)
-          state = updateBooking(e.booking.userId, state.booking, day, durations)
-          notifyClient()
+          if (state.booking.filter(_.id == e.booking.id).isEmpty) {
+            //remove from totals
+            val day = e.booking.end.get.withTimeAtStartOfDay
+            val durations = removeDailyDuration(e.booking, day)
+            state = updateBooking(e.booking.userId, state.booking, day, durations)
+            notifyClient()
+          } else if (state.booking.filter(_.id == e.booking.id).isDefined) {
+            val day = e.booking.end.get.withTimeAtStartOfDay
+            val durations = addDailyDuration(e.booking, day)
+            state = updateBooking(e.booking.userId, None, day, durations)
+            notifyClient()
+          }
         }
       }.getOrElse {
         val day = DateTime.now.withTimeAtStartOfDay
@@ -178,8 +185,13 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
     val endDateTimeAtStartOfDay = endDate.withTimeAtStartOfDay
     val start = if (startDate.isBefore(endDateTimeAtStartOfDay)) endDateTimeAtStartOfDay else startDate
 
-    //extract duration on end date      
-    new Interval(start, endDate).toDuration()
+    //extract duration on end date    
+    if (start.isAfter(endDate)) {
+      log.warning(s"calculateDuration: start after enddate: $start - $endDate")
+      Duration.millis(0)
+    } else {
+      new Interval(start, endDate).toDuration()
+    }
   }
 
   protected def updateBooking(userId: UserId, booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration]) = {

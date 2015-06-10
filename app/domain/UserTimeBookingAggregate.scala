@@ -49,6 +49,7 @@ object UserTimeBookingAggregate {
     val userId: UserId
   }
 
+  case class StartAggregate(userId: UserId) extends UserTimeBookingCommand
   case class ChangeStartTimeOfBooking(userId: UserId, bookingId: BookingId, newStart: DateTime) extends UserTimeBookingCommand
   case class StartBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime) extends UserTimeBookingCommand
   case class EndBooking(userId: UserId, bookingId: BookingId, end: DateTime) extends UserTimeBookingCommand
@@ -216,13 +217,16 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     case ResumeBooking(userId, bookingId, time) =>
       state match {
         case b: UserTimeBooking =>
-          b.bookings.find(_.id == bookingId).filter(_.end.isDefined) map { pausedB =>
+          b.bookings.find(b => b.id == bookingId && b.end.isDefined).map { pausedB =>
+            log.debug(s"ResumeBooking, found existing booking:$bookingId")
             //first stop booking in progress
             stopBookingInProgress(b, time)
 
             val resumedB = Booking(newBookingId, time, None, userId, pausedB.categoryId, pausedB.projectId, pausedB.tags)
             log.debug(s"ResumedBooking, found existing booking:$resumedB")
             persist(UserTimeBookingStarted(resumedB))(afterEventPersisted)
+          }.getOrElse {
+            log.debug(s"ResumeBooking: didn't find paused booking with id:$bookingId")
           }
       }
     case ChangeStartTimeOfBooking(userId, bookingId, newStart) =>

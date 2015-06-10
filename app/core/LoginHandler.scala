@@ -58,6 +58,7 @@ class LoginHandler extends Actor with ActorLogging {
     timeBookingHistoryViewService ! StartUserTimeBookingView(userId)
     currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
     timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
+    timeBookingManagerService ! StartAggregate(userId)
   }
 
   def handleLoggedOut(userId: UserId) = {
