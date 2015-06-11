@@ -34,7 +34,7 @@ import domain.views.CurrentUserTimeBookingsView
 import services._
 import domain.LoginStateAggregate
 
-object Global extends GlobalSettings {
+object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings  {
 
   val system = ActorSystem("lasius-actor-system")
   val executionContext = system.dispatcher
