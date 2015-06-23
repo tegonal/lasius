@@ -109,7 +109,9 @@ define(
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           }
 
-                          checkBooking(scope.result.booking.start);
+                          if (scope.result.booking) {
+                            checkBooking(scope.result.booking.start);
+                          }
                           
                           console.log(msg);
                           scope.$apply();
