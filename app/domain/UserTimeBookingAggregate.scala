@@ -26,6 +26,7 @@ import akka.actor._
 import akka.persistence._
 import java.util.UUID
 import play.api.Logger
+import play.api.libs.json._
 
 object UserTimeBookingAggregate {
   import AggregateRoot._
@@ -37,6 +38,15 @@ object UserTimeBookingAggregate {
   case class UserTimeBookingRemoved(booking: Booking) extends Event
   case class UserTimeBookingAdded(booking: Booking) extends Event
   case class UserTimeBookingStartTimeChanged(bookingId: BookingId, fromStart: DateTime, toStart: DateTime) extends Event
+  
+  implicit val initializedFormat: Format[UserTimeBookingInitialized] = Json.format[UserTimeBookingInitialized]
+  implicit val startedFormat: Format[UserTimeBookingStarted] = Json.format[UserTimeBookingStarted]
+  implicit val stoppedFormat: Format[UserTimeBookingStopped] = Json.format[UserTimeBookingStopped]
+  implicit val pausedFormat: Format[UserTimeBookingPaused] = Json.format[UserTimeBookingPaused]
+  implicit val removedFormat: Format[UserTimeBookingRemoved] = Json.format[UserTimeBookingRemoved]
+  implicit val addedFormat: Format[UserTimeBookingAdded] = Json.format[UserTimeBookingAdded]
+  implicit val timeChangedFormat: Format[UserTimeBookingStartTimeChanged] = Json.format[UserTimeBookingStartTimeChanged]
+  
 
   case class UserTimeBooking(userId: UserId, bookings: Seq[Booking]) extends State {
     def bookingInProgress = {
@@ -73,6 +83,40 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   override var state: State = UserTimeBooking(userId, Seq())
 
   def newBookingId = BookingId(UUID.randomUUID().toString())
+  
+  override def fromJson(typeString:String, obj:JsValue):Option[Event] =
+    typeString match {
+     case "UserTimeBookingInitialized" => Some(obj.as[UserTimeBookingInitialized])
+     case "UserTimeBookingStarted" => Some(obj.as[UserTimeBookingStarted])
+     case "UserTimeBookingStopped" => Some(obj.as[UserTimeBookingStopped])
+     case "UserTimeBookingPaused" => Some(obj.as[UserTimeBookingPaused])
+     case "UserTimeBookingRemoved" => Some(obj.as[UserTimeBookingRemoved])
+     case "UserTimeBookingAdded" => Some(obj.as[UserTimeBookingAdded])
+     case "UserTimeBookingStartTimeChanged" => Some(obj.as[UserTimeBookingStartTimeChanged])
+     case _ => None
+    }  
+  
+  override def toJson(evt:Event) = {
+    evt match {
+      case e:UserTimeBookingInitialized => Json.toJson(e)
+      case e:UserTimeBookingStarted => Json.toJson(e)
+      case e:UserTimeBookingStopped => Json.toJson(e)
+      case e:UserTimeBookingPaused => Json.toJson(e)
+      case e:UserTimeBookingRemoved => Json.toJson(e)
+      case e:UserTimeBookingAdded => Json.toJson(e)
+      case e:UserTimeBookingStartTimeChanged => Json.toJson(e)
+    }
+  }
+  
+  override val typeFactory = (evt:Event) => evt match {
+    case e:UserTimeBookingInitialized => "UserTimeBookingInitialized"
+    case e:UserTimeBookingStarted => "UserTimeBookingStarted"
+    case e:UserTimeBookingStopped => "UserTimeBookingStopped"
+    case e:UserTimeBookingPaused => "UserTimeBookingPaused"
+    case e:UserTimeBookingRemoved => "UserTimeBookingRemoved"
+    case e:UserTimeBookingAdded => "UserTimeBookingAdded"
+    case e:UserTimeBookingStartTimeChanged => "UserTimeBookingStartTimeChanged"
+  }
 
   /**
    * Updates internal processor state according to event that is to be applied.
@@ -80,7 +124,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
    * @param evt Event to apply
    */
   override def updateState(evt: Event): Unit = {
-    log.debug(s"updateStart:$evt")
+    log.debug(s"updateState:$evt")
     evt match {
       case e: UserTimeBookingInitialized =>
         log.debug(s"UserTimeBookingInitialized")

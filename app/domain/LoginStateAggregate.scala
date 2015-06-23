@@ -24,6 +24,7 @@ import models.UserId
 import akka.persistence._
 import akka.actor._
 import akka.event.LoggingReceive
+import play.api.libs.json._
 
 object LoginStateAggregate {
   import AggregateRoot._
@@ -32,6 +33,9 @@ object LoginStateAggregate {
 
   case class UserLoggedIn(userId: UserId) extends Event
   case class UserLoggedOut(userId: UserId) extends Event
+  
+  implicit val userLoggedInFormat: Format[UserLoggedIn] = Json.format[UserLoggedIn]
+  implicit val userLoggedOutFormat: Format[UserLoggedOut] = Json.format[UserLoggedOut]
 
   def props: Props = Props(classOf[LoginStateAggregate])
 
@@ -45,6 +49,25 @@ class LoginStateAggregate extends AggregateRoot {
   override def persistenceId: String = LoginStateAggregate.persistenceId
 
   override var state: State = LoggedInState(Seq())
+  
+  override def fromJson(typeString:String, obj:JsValue):Option[Event] =
+    typeString match {
+     case "UserLoggedIn" => Some(obj.as[UserLoggedIn])
+     case "UserLoggedOut" => Some(obj.as[UserLoggedOut])
+     case _ => None
+    }  
+  
+  override def toJson(evt:Event) = {
+    evt match {
+      case e:UserLoggedIn => Json.toJson(e)
+      case e:UserLoggedOut => Json.toJson(e)
+    }
+  }
+  
+  override val typeFactory = (evt:Event) => evt match {
+    case e:UserLoggedIn => "UserLoggedIn"
+    case e:UserLoggedOut => "UserLoggedOut"
+  }
 
   override def updateState(evt: Event): Unit = {
     evt match {

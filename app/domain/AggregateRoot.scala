@@ -22,12 +22,19 @@ package domain
 
 import akka.persistence._
 import akka.actor._
+import julienrf.variants.Variants
+import play.api.libs.json._
+import reactivemongo.bson._
+import play.modules.reactivemongo.json.BSONFormats._
+import play.api.libs.json.JsValue
 
 object AggregateRoot {
   trait State
   trait Command
   trait Event
-
+  
+  case class EventMsg(`type`:String, evt:Event)
+  
   case object GetState extends Command
   case class Initialize(state: State) extends Command
 
@@ -43,22 +50,64 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
 
   def updateState(evt: Event): Unit
   def restoreFromSnapshot(metadata: SnapshotMetadata, state: State)
+  
+  val typeFactory: Event => String
 
-  protected def afterEventPersisted(evt: Event): Unit = {
+  protected def afterEventPersisted(evt:Event): Unit = {
     updateState(evt)
     publish(evt)
     log.debug(s"afterEventPersisted:send back state:$state")
     sender ! state
   }
-
+  
+  protected def toJson(evt:Event): JsValue
+  
+  def fromJson(typeString:String, evt:JsValue):Option[Event]
+  
+  def fromBson(bson:BSONDocument):Option[Event] = 
+    fromJson(BSONDocumentFormat.writes(bson).as[JsValue])
+  
+  def fromJson(json:JsValue):Option[Event] = {
+    json \ "type" match {
+     case JsString(typeString) => 
+       json \ "event" match {
+         case evt:JsValue => fromJson(typeString, evt)
+         case _ => None
+       }
+     case _ => None
+    }
+  }
+  
+  protected def withEvent[R](bson:BSONDocument)(handler: Event => R): Unit = {
+    fromBson(bson) map {evt =>
+    	handler(evt)
+    }
+  }  
+  
+  protected def withEvent[R](json:JsValue)(handler: Event => R): Unit = {
+    fromJson(json) map {evt =>
+    	handler(evt)
+    }
+  }  
+  
+  protected def persist(evt: Event)(handler: Event=> Unit):Unit = {    
+    BSONDocumentFormat.reads(toJson(evt)).map(doc => persist(doc)(withEvent(_)(handler)))    
+  }
+  
   private def publish(event: Event) =
-    context.system.eventStream.publish(event)
+    context.system.eventStream.publish(event)    
 
   override val receiveRecover: Receive = {
+    case bson:BSONDocument => 
+      withEvent(bson)(updateState)
+    case json:JsValue => 
+      withEvent(json)(updateState)
     case evt: Event =>
       updateState(evt)
     case SnapshotOffer(metadata, state: State) =>
       restoreFromSnapshot(metadata, state)
       log.debug("recovering aggregate from snapshot")
+    case e => 
+      log.warning(s"Received recover of unknown command:$e")
   }
 }

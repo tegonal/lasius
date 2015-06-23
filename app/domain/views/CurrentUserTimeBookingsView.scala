@@ -141,6 +141,8 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       state = updateBooking(userId, state.booking, day, durations)
 
       notifyClient()
+    case e => 
+      log.debug(s"CurrentUserTimeBookingsView -> received unknown command:$e")
   }
 
   private def notifyClient() = {
