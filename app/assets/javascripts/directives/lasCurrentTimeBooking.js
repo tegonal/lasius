@@ -1,3 +1,23 @@
+/*   __                          __                                          *\
+*   / /____ ___ ____  ___  ___ _/ /       lasius                      *
+*  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        contributed by tegonal              *
+*  \__/\__/\_, /\___/_//_/\_,_/_/         http://tegonal.com/                 *
+*         /___/                                                               *
+*                                                                             *
+* This program is free software: you can redistribute it and/or modify it     *
+* under the terms of the GNU General Public License as published by    *
+* the Free Software Foundation, either version 3 of the License,              *
+* or (at your option) any later version.                                      *
+*                                                                             *
+* This program is distributed in the hope that it will be useful, but         *
+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  *
+* or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for *
+* more details.                                                               *
+*                                                                             *
+* You should have received a copy of the GNU General Public License along     *
+* with this program. If not, see http://www.gnu.org/licenses/                 *
+*                                                                             *
+\*                                                                           */
 define(
     [ 'angular' ],
     function(angular) {
@@ -9,11 +29,12 @@ define(
               'lasCurrentTimeBooking',
               [
                   '$window',
+                  'MY_CONFIG',
                   'currentTimeBookingService',
                   'favoritesService', 
                   'msgBus',
                   'moment',
-                  function($window, currentTimeBookingService, favoritesService, msgBus, moment) {
+                  function($window, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -75,8 +96,6 @@ define(
                             scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
                         };
-                        
-                       
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
@@ -84,10 +103,14 @@ define(
                           scope.total_duration = {};
 
                           scope.noBooking = scope.result.booking === undefined;
+                          scope.bookingPaused = scope.result.booking && scope.result.booking.end;
+                          scope.bookingRunning = !scope.noBooking && !scope.bookingPaused;
                           if (scope.result.booking) {
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           }
 
+                          checkBooking(scope.result.booking.start);
+                          
                           console.log(msg);
                           scope.$apply();
                         });
@@ -112,6 +135,22 @@ define(
                           });
                         };
 
+                        scope.pauseBooking = function(bookingId) {
+                          currentTimeBookingService.pauseBooking(bookingId).then(function() {
+                          });
+                        };
+
+                        scope.resumeBooking = function(bookingId) {
+                          currentTimeBookingService.resumeBooking(bookingId).then(function() {
+                            scope.noBooking = false;
+                          });
+                        };
+                        
+                        scope.changeStartTime = function(bookingId, time) {
+                          currentTimeBookingService.changeStartTime(bookingId, time).then(function() {
+                          });
+                        };
+                        
                         function cancelTimer() {
                           if (activeTimeout) {
                             $window.clearTimeout(activeTimeout);
@@ -120,7 +159,10 @@ define(
                         }
 
                         function updateTime(momentInstance, apply) {
-                          scope.duration.moment = moment().subtract(momentInstance);
+                          scope.duration.moment = (scope.result.booking.end === undefined)?
+                              moment().subtract(momentInstance):
+                              moment(scope.result.booking.end).subtract(momentInstance);
+                              
                           if (scope.result.totalBySameBooking) {
                             scope.total_duration.moment = moment(scope.duration.moment).add(moment.duration(scope.result.totalBySameBooking));
                           }
@@ -130,9 +172,11 @@ define(
                           }
 
                           // update every second
-                          activeTimeout = $window.setTimeout(function() {
-                            updateTime(momentInstance, true);
-                          }, 1000);
+                          if (scope.result.booking.end === undefined) {
+                            activeTimeout = $window.setTimeout(function() {
+                              updateTime(momentInstance, true);
+                            }, 1000);
+                          }
                         }
 
                         function updateMoment(apply) {
@@ -143,20 +187,24 @@ define(
                             updateTime(momentValue, false);
                           }
                         }
+                        
+                        function checkBooking(value) {
+                          if ((typeof value === 'undefined') || (value === null) || (value === '')) {
+                            cancelTimer();
+                            if (currentValue) {
+                              scope.duraction = null;
+                              currentValue = null;
+                            }
+                            return;
+                          }
+
+                          currentValue = value;
+                          updateMoment();
+                        }
 
                         unwatchChanges = scope.$watch('result.booking.start',
                             function(value) {
-                              if ((typeof value === 'undefined') || (value === null) || (value === '')) {
-                                cancelTimer();
-                                if (currentValue) {
-                                  scope.duraction = null;
-                                  currentValue = null;
-                                }
-                                return;
-                              }
-
-                              currentValue = value;
-                              updateMoment();                              
+                              checkBooking(value);                              
                             });
 
                         scope.$on('$destroy', function() {

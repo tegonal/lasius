@@ -1,7 +1,26 @@
+/*   __                          __                                          *\
+*   / /____ ___ ____  ___  ___ _/ /       lasius                      *
+*  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        contributed by tegonal              *
+*  \__/\__/\_, /\___/_//_/\_,_/_/         http://tegonal.com/                 *
+*         /___/                                                               *
+*                                                                             *
+* This program is free software: you can redistribute it and/or modify it     *
+* under the terms of the GNU General Public License as published by    *
+* the Free Software Foundation, either version 3 of the License,              *
+* or (at your option) any later version.                                      *
+*                                                                             *
+* This program is distributed in the hope that it will be useful, but         *
+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  *
+* or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for *
+* more details.                                                               *
+*                                                                             *
+* You should have received a copy of the GNU General Public License along     *
+* with this program. If not, see http://www.gnu.org/licenses/                 *
+*                                                                             *
+\*                                                                           */
 package domain.views
 
 import akka.persistence.PersistentView
-
 import akka.actor._
 import domain.UserTimeBookingAggregate._
 import repositories._
@@ -15,19 +34,24 @@ import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import org.joda.time.Interval
 import utils.DateTimeUtils._
+import actors.ClientReceiverComponent
+import actors.DefaultClientReceiverComponent
+import play.api.Logger
 
 object UserTimeBookingStatisticsView {
 
-  def props(userId: UserId): Props = Props(new MongoUserTimeBookingStatisticsView(userId))
+  def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingStatisticsView], userId)
+
+  case object Ack
 }
 
 class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBookingStatisticsView(userId)
-  with MongoUserBookingStatisticsRepositoryComponent
+  with MongoUserBookingStatisticsRepositoryComponent with DefaultClientReceiverComponent
 
 class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with ActorLogging {
-  self: UserBookingStatisticsRepositoryComponent =>
+  self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
-  import domain.views.CurrentUserTimeBookingsView._
+  import domain.views.UserTimeBookingStatisticsView._
 
   override val persistenceId = userId.value
   override val viewId = userId.value + "-time-booking-statistics"
@@ -43,27 +67,29 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
       bookingByTagRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
+      sender ! Ack
     case UserTimeBookingStopped(booking) =>
-      log.debug(s"UserTimeBookingStatisticsView -> stopped booking, add:$booking")
-
-      val durations = calculatDurations(booking)
-      storeDurations(durations)
-      val events = getEventsDurations(durations, false)
-      notifyClient(events)
+      handleBookingAddedOrStopped(booking)
     case UserTimeBookingAdded(booking) =>
-      if (booking.end.isDefined) {
-        log.debug(s"UserTimeBookingStatisticsView -> booking added:$booking")
-        val durations = calculatDurations(booking)
-        storeDurations(durations)
-        val events = getEventsDurations(durations, true)
-        notifyClient(events)
-      }
+      handleBookingAddedOrStopped(booking)
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
       removeDurations(durations)
       val events = getEventsDurations(durations, false)
       notifyClient(events)
+      sender ! Ack
+  }
+
+  protected def handleBookingAddedOrStopped(booking: Booking) = {
+    if (booking.end.isDefined) {
+      log.debug(s"UserTimeBookingStatisticsView -> handleBookingAddedOrStopped:$booking")
+      val durations = calculatDurations(booking)
+      storeDurations(durations)
+      val events = getEventsDurations(durations, true)
+      notifyClient(events)
+    }
+    sender ! Ack
   }
 
   protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {
@@ -139,15 +165,14 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       getDurations(booking, startDateStartOfDay, duration)
     } else {
       //extract duration at start date
-      val endOfStart = startDate.withTimeAtEndOfDay
-      val startDuration = new Interval(startDate, endOfStart).toDuration()
+      val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
 
       val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
 
       //extract whole day for duration inbetween start and end date
       val inBetweenDurations = if (daysBetween > 1) {
         for {
-          dayDiff <- 0 to daysBetween - 1
+          dayDiff <- 1 to daysBetween - 1
         } yield {
           val date = startDateStartOfDay.plusDays(dayDiff)
 
@@ -178,6 +203,6 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   }
 
   private def notifyClient(event: OutEvent) = {
-    ClientMessagingWebsocketActor ! (userId, event, List(userId))
+    clientReceiver ! (userId, event, List(userId))
   }
 }

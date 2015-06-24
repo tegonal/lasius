@@ -22,6 +22,9 @@ GET      /assets/*file                          controllers.Assets.at(path="/pub
 # TimeBooking
 POST     /mylasius/bookings/start               controllers.TimeBookingController.start(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 POST     /mylasius/bookings/stop                controllers.TimeBookingController.stop(bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST     /mylasius/bookings/pause               controllers.TimeBookingController.pause(bookingId:models.BookingId, time:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST     /mylasius/bookings/resume              controllers.TimeBookingController.resume(bookingId:models.BookingId, time:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST     /mylasius/bookings/changeStart         controllers.TimeBookingController.stop(bookingId:models.BookingId, newStart:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 DELETE   /mylasius/bookings/remove/:bookingId   controllers.TimeBookingController.remove(bookingId:models.BookingId)
 POST     /mylasius/bookings/append              controllers.TimeBookingController.append(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 POST     /mylasius/bookings/edit                controllers.TimeBookingController.edit(bookingId:models.BookingId, start:org.joda.time.DateTime, end:org.joda.time.DateTime)
