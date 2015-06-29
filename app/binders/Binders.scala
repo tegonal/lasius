@@ -29,7 +29,7 @@ import models._
 
 object Binders {
 
-  val format = "ddMMyyyyHHmm"
+  val format = "ddMMyyyyHHmmss"
 
   implicit def OptionBindable[T: PathBindable] = new PathBindable[Option[T]] {
     override def bind(key: String, value: String): Either[String, Option[T]] =

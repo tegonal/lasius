@@ -29,12 +29,14 @@ define(
               'lasCurrentTimeBooking',
               [
                   '$window',
+                  '$modal',
+                  '$log',
                   'MY_CONFIG',
                   'currentTimeBookingService',
                   'favoritesService', 
                   'msgBus',
                   'moment',
-                  function($window, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
+                  function($window, $modal, $log, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -109,7 +111,9 @@ define(
                             scope.result.booking.isFavorite = isFavorite(scope.result.booking);
                           }
 
-                          checkBooking(scope.result.booking.start);
+                          if (scope.result.booking) {
+                            checkBooking(scope.result.booking.start);
+                          }
                           
                           console.log(msg);
                           scope.$apply();
@@ -125,7 +129,7 @@ define(
                                 scope.$apply();
                                 return;
                               }
-                            }
+                            } 
                           }
                         });
 
@@ -147,7 +151,26 @@ define(
                         };
                         
                         scope.changeStartTime = function(bookingId, time) {
-                          currentTimeBookingService.changeStartTime(bookingId, time).then(function() {
+                          var formatted = time.format(MY_CONFIG.FULL_DATE_PATTERN);
+                          currentTimeBookingService.changeStartTime(bookingId, formatted);
+                        };
+                        
+                        scope.showChangeStartTime = function() {
+                          var modalInstance = $modal.open({
+                            animation: true,
+                            templateUrl: '/assets/changeStartTime.html',
+                            controller: 'ChangeStartTimeCtrl',
+                            resolve: {
+                              time: function () {
+                                return scope.result.booking.start;
+                              }
+                            }
+                          });
+
+                          modalInstance.result.then(function (time) {                           
+                            scope.changeStartTime(scope.result.booking.id, time);
+                          }, function () {
+                            $log.info('Modal dismissed at: ' + new Date());
                           });
                         };
                         

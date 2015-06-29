@@ -95,6 +95,7 @@ define(['angular',
   //declare constants
   mod.constant("MY_CONFIG", {
     "DATE_PATTERN": "DDMMYYYYHHmm",
+    "FULL_DATE_PATTERN": "DDMMYYYYHHmmss",
     "MILLIS_PER_HOUR": 1000*60*60
   });
   

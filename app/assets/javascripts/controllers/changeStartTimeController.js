@@ -18,28 +18,26 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-/**
- * Configure routes
- */
-define(['angular',
-        './controllers/loginController',
-        './controllers/dashboardController',
-        './controllers/changeStartTimeController'], 
-    function(angular, loginController, dashboardController, changeStartTimeController) {
+define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('routes', []);
+  var ChangeStartTimeCtrl = function($q, $log, $scope, $rootScope, $modalInstance, time, moment) {
+    
+    $scope.format = 'HH:mm:ss';
+    $scope.time = moment(time).format($scope.format);
+    $scope.ok = function () {
+      $modalInstance.close(moment($scope.time, $scope.format));
+    };
 
-  mod.config(['$routeProvider', function($routeProvider) {
-    $routeProvider
-      .when('/', {templateUrl: '/assets/home.html', controller:dashboardController.DashboardCtrl, access:userRoles.FreeUser})
-      .when('/login', {templateUrl: '/assets/login.html', controller:loginController.LoginCtrl, access:userRoles.Guest})
-      .when('/forbidden', {templateUrl:'/assets/forbidden.html', access:userRoles.Guest})
-      .otherwise({redirectTo: '/assets/notFound.html'});
-  }]);
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  };
   
-  mod.controller('DashboardCtrl', dashboardController.DashboardCtrl);
-  mod.controller('ChangeStartTimeCtrl', changeStartTimeController.ChangeStartTimeCtrl);
+  ChangeStartTimeCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$modalInstance', 'time', 'moment'];  
 
-  return mod;
+  return {
+    ChangeStartTimeCtrl: ChangeStartTimeCtrl
+  };
+
 });
