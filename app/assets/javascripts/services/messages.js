@@ -48,7 +48,7 @@ define(['angular'], function (angular) {
                 Auth.isLoggedIn().then(function(loggedIn) {
                   if (loggedIn) {          
                     console.log('registering websocket');          
-                    var wsUrl = playRoutes.controllers.ApplicationController.messagingSocket().webSocketUrl();
+                    var wsUrl = playRoutes.controllers.ApplicationController.messagingSocket().webSocketUrl(); // add param true to force wss://
                     //append token to websocket url because normal http headers can't get controlled
                     var securedUrl = wsUrl+ "?auth="+userService.getToken();
                     if(!(angular.isDefined($rootScope.messagingSocket))) {
