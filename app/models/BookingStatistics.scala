@@ -33,9 +33,6 @@ trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   val duration: Duration
   val day: DateTime
 
-  def +(that: E): E
-  def -(that: E): E
-
   def invert: E
 
   def duration(duration: Duration): E
@@ -62,14 +59,6 @@ object BookingByTagId {
 case class BookingByProject(_id: BookingByProjectId, userId: UserId, day: DateTime, projectId: ProjectId, duration: Duration) extends OperatorEntity[BookingByProjectId, BookingByProject] {
   val id = _id
 
-  def +(that: BookingByProject): BookingByProject = {
-    BookingByProject(id, userId, day, projectId, duration.plus(that.duration))
-  }
-
-  def -(that: BookingByProject): BookingByProject = {
-    BookingByProject(id, userId, day, projectId, duration.minus(that.duration))
-  }
-
   def invert: BookingByProject = {
     BookingByProject(id, userId, day, projectId, Duration.ZERO.minus(duration))
   }
@@ -86,14 +75,6 @@ object BookingByProject {
 case class BookingByCategory(_id: BookingByCategoryId, userId: UserId, day: DateTime, categoryId: CategoryId, duration: Duration) extends OperatorEntity[BookingByCategoryId, BookingByCategory] {
   val id = _id
 
-  def +(that: BookingByCategory): BookingByCategory = {
-    BookingByCategory(_id, userId, day, categoryId, duration.plus(that.duration))
-  }
-
-  def -(that: BookingByCategory): BookingByCategory = {
-    BookingByCategory(_id, userId, day, categoryId, duration.minus(that.duration))
-  }
-
   def invert: BookingByCategory = {
     BookingByCategory(id, userId, day, categoryId, Duration.ZERO.minus(duration))
   }
@@ -109,13 +90,6 @@ object BookingByCategory {
 
 case class BookingByTag(_id: BookingByTagId, userId: UserId, day: DateTime, tagId: TagId, duration: Duration) extends OperatorEntity[BookingByTagId, BookingByTag] {
   val id = _id
-  def +(that: BookingByTag): BookingByTag = {
-    BookingByTag(_id, userId, day, tagId, duration.plus(that.duration))
-  }
-
-  def -(that: BookingByTag): BookingByTag = {
-    BookingByTag(_id, userId, day, tagId, duration.minus(that.duration))
-  }
 
   def duration(duration: Duration): BookingByTag = {
     copy(duration = duration)

@@ -39,6 +39,10 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
   val user = UserId("user")
   val day = DateTime.now.withTimeAtStartOfDay
 
+  def findByUserDayProject(user: UserId, day: DateTime, projectId: ProjectId) = {
+    Await.result(repository.find(Json.obj("userId" -> user, "day" -> day, "projectId" -> projectId), 1, 0).map(x => x.headOption.map(_._1)), DurationInt(15).seconds)
+  }
+
   "BookingStatistic add" should {
     "insert new record for new unique constraint" in new WithMongo {
       val projectId = ProjectId("p1")
@@ -52,10 +56,11 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
 
       //check
       val result = Await.result(resultFuture, DurationInt(15).seconds)
-      result.day === day
-      result.projectId === projectId
-      result.userId === user
-      result.duration === newDuration
+      result === true
+
+      val result2 = findByUserDayProject(user, day, projectId)
+      result2 !== None
+      result2.get.duration === newDuration
     }
     "add to correct previous unique constraint" in new WithMongo {
       val existingDuration = Duration.standardHours(2)
@@ -80,14 +85,15 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
 
       //check
       val result = Await.result(resultFuture, DurationInt(15).seconds)
-      result.day === day
-      result.projectId === projectId
-      result.userId === user
-      result.duration === existingDuration.plus(newDuration)
+      result === true
+
+      val result2 = findByUserDayProject(user, day, projectId)
+      result2 !== None
+      result2.get.duration === existingDuration.plus(newDuration)
     }
   }
   "BookingStatistic subtract" should {
-    "Remove nothing if no previous entry was found" in new WithMongo {
+    "Remove negatvie value if no previous entry was found" in new WithMongo {
       //initialize
       val newDuration = Duration.standardHours(1)
       val projectId = ProjectId("p3")
@@ -98,7 +104,11 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
 
       //check
       val result = Await.result(resultFuture, DurationInt(15).seconds)
-      result === None
+      result === true
+
+      val result2 = findByUserDayProject(user, day, projectId)
+      result2 !== None
+      result2.get.duration === Duration.standardHours(-1)
     }
     "Remove from correct previous constraint" in new WithMongo {
       val existingDuration = Duration.standardHours(2)
@@ -123,31 +133,11 @@ class BookingStatisticsRepositorySpec extends EmbedMongo {
 
       //check
       val result = Await.result(resultFuture, DurationInt(15).seconds)
-      result !== None
-      result.get.day === day
-      result.get.projectId === projectId
-      result.get.userId === user
-      result.get.duration === existingDuration.minus(newDuration)
-    }
-    "Set to 0 if existing duration is lower than new" in new WithMongo {
+      result === true
 
-      //initialize various statistics
-      val projectId = ProjectId("p5")
-      val f = repository.insert(BookingByProject(BookingByProjectId(), user, day, projectId, Duration.standardHours(2)))
-      Await.result(f, DurationInt(15).seconds)
-
-      val newValue = BookingByProject(BookingByProjectId(), user, day, projectId, Duration.standardHours(4))
-
-      //test
-      val resultFuture = repository.subtract(newValue)
-
-      //check
-      val result = Await.result(resultFuture, DurationInt(15).seconds)
-      result !== None
-      result.get.day === day
-      result.get.projectId === projectId
-      result.get.userId === user
-      result.get.duration === new Duration(0)
+      val result2 = findByUserDayProject(user, day, projectId)
+      result2 !== None
+      result2.get.duration === existingDuration.minus(newDuration)
     }
   }
 
