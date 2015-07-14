@@ -72,6 +72,8 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       handleBookingAddedOrStopped(booking)
     case UserTimeBookingAdded(booking) =>
       handleBookingAddedOrStopped(booking)
+    case UserTimeBookingEdited(booking, start, end) =>
+      handleBookingEdited(booking, start, end)
     case UserTimeBookingRemoved(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculatDurations(booking)
@@ -89,6 +91,22 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       val events = getEventsDurations(durations, true)
       notifyClient(events)
     }
+    sender ! Ack
+  }
+
+  protected def handleBookingEdited(booking: Booking, start: DateTime, end: DateTime) = {
+    //first remove durations of 'old' booking
+    val durations = calculatDurations(booking)
+    removeDurations(durations)
+    val events = getEventsDurations(durations, false)
+    notifyClient(events)
+
+    val newBooking = booking.copy(start = start, end = Some(end))
+    val durations2 = calculatDurations(newBooking)
+    storeDurations(durations2)
+    val events2 = getEventsDurations(durations2, true)
+    notifyClient(events2)
+
     sender ! Ack
   }
 

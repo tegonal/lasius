@@ -34,7 +34,7 @@ import models.BaseFormat._
 import org.joda.time.Duration
 
 trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I]
-    with PersistentUserViewRepository[M, I] {
+  with PersistentUserViewRepository[M, I] {
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
 
@@ -53,7 +53,7 @@ trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, Bo
 }
 
 abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I]
-    with MongoPeristentUserViewRepository[M, I] {
+  with MongoPeristentUserViewRepository[M, I] {
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]] = {
     val sel = Json.obj("userId" -> userId,
@@ -71,6 +71,7 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
         o match {
           case (current, id) =>
             val newModel = current + model
+            Logger.debug(s"addes [$sel]:$model:$newModel")
             update(newModel) map {
               case true =>
                 newModel
@@ -94,10 +95,9 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
       _.map { o =>
         o match {
           case (current, _) =>
-            Logger.debug(s"subtract [$sel]:$current - $model")
             val duration = if (current.duration.getMillis < model.duration.getMillis) { 0 } else { current.duration.getMillis - model.duration.getMillis }
             val newModel = current.duration(Duration.millis(duration))
-            Logger.debug(s"subtract [$sel]:result=$newModel")
+            Logger.debug(s"subtracted [$sel]:result=$newModel")
             update(newModel) map {
               case true =>
                 Some(newModel)
