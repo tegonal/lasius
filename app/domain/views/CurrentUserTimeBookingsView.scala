@@ -41,6 +41,7 @@ import actors.DefaultClientReceiverComponent
 object CurrentUserTimeBookingsView {
 
   case class GetCurrentTimeBooking(userId: UserId)
+  case object Ack
 
   def props(userId: UserId): Props = Props(classOf[DefaultCurrentUserTimeBookingsView], userId)
 }
@@ -71,12 +72,14 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       val durations = state.booking.map(b => addDailyDuration(b, day)).getOrElse(getMapForDay(day))
       state = updateBooking(userId, Some(e.booking), day, durations)
       notifyClient()
+      sender ! Ack
     case e: UserTimeBookingStopped =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStopped($e.booking)")
       val day = e.booking.end.get.withTimeAtStartOfDay
       val durations = addDailyDuration(e.booking, day)
       state = updateBooking(userId, None, day, durations)
       notifyClient()
+      sender ! Ack
     case e: UserTimeBookingPaused =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingPaused($e)")
       state.booking.filter(_.id == e.bookingId) map { b =>
@@ -86,6 +89,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         state = updateBooking(userId, Some(newB), day, durations)
         notifyClient()
       }
+      sender ! Ack
     case e: UserTimeBookingStartTimeChanged =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStartTimeChanged($e)")
       state.booking.filter(b => b.id == e.bookingId && b.end.isEmpty) map { b =>
@@ -93,6 +97,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         state = updateBooking(userId, Some(newB), state.currentDay, state.dailyBookingsMap)
         notifyClient()
       }
+      sender ! Ack
     case e: UserTimeBookingAdded =>
       e.booking.end.map { end =>
         //check if on same day        
@@ -110,6 +115,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         state = updateBooking(e.booking.userId, Some(e.booking), day, durations)
         notifyClient()
       }
+      sender ! Ack
     case e: UserTimeBookingRemoved =>
       e.booking.end.map { end =>
         //check if on same day        
@@ -134,6 +140,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         state = updateBooking(e.booking.userId, None, day, durations)
         notifyClient()
       }
+      sender ! Ack
     case UserTimeBookingEdited(booking, start, end) =>
       //check if on same day        
       if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
@@ -150,6 +157,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
           state = updateBooking(booking.userId, state.booking, day, durations2)
           notifyClient()
         }
+        sender ! Ack
       }
     case GetCurrentTimeBooking(userId) =>
       //check if still on same day
@@ -158,6 +166,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       state = updateBooking(userId, state.booking, day, durations)
 
       notifyClient()
+      sender ! Ack
   }
 
   private def notifyClient() = {
