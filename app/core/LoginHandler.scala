@@ -55,7 +55,6 @@ class LoginHandler extends Actor with ActorLogging {
   def handleLoggedIn(userId: UserId) = {
     log.debug(s"user logged in:$userId, start persistentViews")
     //initialize persistentviews
-    timeBookingHistoryViewService ! StartUserTimeBookingView(userId)
     currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
     timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
     timeBookingManagerService ! StartAggregate(userId)
@@ -65,7 +64,6 @@ class LoginHandler extends Actor with ActorLogging {
     log.debug(s"user logged in:$userId, stop persistentViews")
 
     //kill persistentviews
-    timeBookingHistoryViewService ! StopUserView(userId)
     currentUserTimeBookingsViewService ! StopUserView(userId)
     timeBookingStatisticsViewService ! StopUserView(userId)
   }

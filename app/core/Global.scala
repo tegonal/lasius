@@ -34,7 +34,7 @@ import domain.views.CurrentUserTimeBookingsView
 import services._
 import domain.LoginStateAggregate
 
-object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings  {
+object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
 
   val system = ActorSystem("lasius-actor-system")
   val executionContext = system.dispatcher
@@ -44,7 +44,6 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val loginHandler = system.actorOf(LoginHandler.props)
 
   val currentUserTimeBookingsViewService = system.actorOf(CurrentUserTimeBookingsViewService.props)
-  val timeBookingHistoryViewService = system.actorOf(TimeBookingHistoryViewService.props)
   val timeBookingStatisticsViewService = system.actorOf(TimeBookingStatisticsViewService.props)
 
   override def onStart(app: Application) {

@@ -26,6 +26,11 @@ import akka.actor._
 import akka.persistence._
 import java.util.UUID
 import play.api.Logger
+import repositories.UserBookingHistoryRepositoryComponent
+import actors.ClientReceiverComponent
+import scala.concurrent.ExecutionContext.Implicits.global
+import actors.DefaultClientReceiverComponent
+import repositories.MongoUserBookingHistoryRepositoryComponent
 
 object UserTimeBookingAggregate {
   import AggregateRoot._
@@ -60,11 +65,15 @@ object UserTimeBookingAggregate {
   case class AppendBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
   case class EditBooking(userId: UserId, bookingId: BookingId, start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
-  def props(userId: UserId): Props = Props(classOf[UserTimeBookingAggregate], userId)
+  def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingAggregate], userId)
 
 }
 
+class MongoUserTimeBookingAggregate(userId: UserId) extends UserTimeBookingAggregate(userId)
+  with MongoUserBookingHistoryRepositoryComponent with DefaultClientReceiverComponent
+
 class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
+  this: UserBookingHistoryRepositoryComponent with ClientReceiverComponent =>
   import UserTimeBookingAggregate._
   import AggregateRoot._
 
@@ -87,53 +96,67 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       case e: UserTimeBookingInitialized =>
         log.debug(s"UserTimeBookingInitialized")
         context become created
+
+        bookingHistoryRepository.deleteByUser(userId)
+        notifyClient(UserTimeBookingHistoryEntryCleaned(userId))
       case UserTimeBookingStarted(booking) =>
         log.debug(s"UserBookingStarted - $booking")
         state = state match {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
-          case _                   => state
+          case _ => state
         }
       case UserTimeBookingStopped(booking) =>
         log.debug(s"UserBookingStopped - $booking")
         state = state match {
-          case ub: UserTimeBooking => endUserBooking(ub, booking.id, booking.end.get)
-          case _                   => state
+          case ub: UserTimeBooking => endAndLogUserBooking(ub, booking)
+          case _ => state
         }
       case UserTimeBookingPaused(bookingId, time) =>
         log.debug(s"UserBookingPaused - $bookingId")
         state = state match {
           case ub: UserTimeBooking => endUserBooking(ub, bookingId, time)
-          case _                   => state
+          case _ => state
         }
       case UserTimeBookingRemoved(booking) =>
         log.debug(s"UserBookingRemoved - $booking")
         state = state match {
           case ub: UserTimeBooking => removeUserBooking(ub, booking)
-          case _                   => state
+          case _ => state
         }
       case UserTimeBookingAdded(booking) =>
         log.debug(s"UserBookingAdded - $booking")
         state = state match {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
-          case _                   => state
+          case _ => state
         }
       case UserTimeBookingEdited(booking) =>
         log.debug(s"UserBookingEdited- $booking")
         state = state match {
           case ub: UserTimeBooking => editUserBooking(ub, booking)
-          case _                   => state
+          case _ => state
         }
       case UserTimeBookingStartTimeChanged(bookingId, fromStart, toStart) =>
         log.debug(s"UserBookingStartTimeChanged - $bookingId - $fromStart -> $toStart")
         state = state match {
           case ub: UserTimeBooking => updateStartTime(ub, bookingId, fromStart, toStart)
-          case _                   => state
+          case _ => state
         }
     }
   }
 
   def startUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    if (booking.end.isDefined) {
+      bookingHistoryRepository.insert(booking)
+      notifyClient(UserTimeBookingHistoryEntryAdded(booking))
+    }
+
     ub.copy(bookings = ub.bookings :+ booking)
+  }
+
+  def endAndLogUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    bookingHistoryRepository.insert(booking)
+    notifyClient(UserTimeBookingHistoryEntryAdded(booking))
+    endUserBooking(ub, booking.id, booking.end.get)
   }
 
   def endUserBooking(ub: UserTimeBooking, bookingId: BookingId, endTime: DateTime) = {
@@ -145,6 +168,9 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def removeUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    bookingHistoryRepository.coll.remove(booking)
+    notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
+
     val newBookings = ub.bookings.filter(_.id != booking.id)
     ub.copy(bookings = newBookings)
   }
@@ -167,9 +193,9 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   override def restoreFromSnapshot(metadata: SnapshotMetadata, state: State) = {
     state match {
-      case Removed            => context become removed
-      case Created            => context become created
-      case _: User            => context become uninitialized
+      case Removed => context become removed
+      case Created => context become created
+      case _: User => context become uninitialized
       case s: UserTimeBooking => this.state = s
     }
   }
@@ -275,6 +301,10 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       val stoppedB = b.copy(end = Some(time))
       persist(UserTimeBookingStopped(stoppedB))(afterEventPersisted)
     }
+  }
+
+  private def notifyClient(event: OutEvent) = {
+    clientReceiver ! (userId, event, List(userId))
   }
 
   val removed: Receive = {

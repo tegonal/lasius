@@ -30,7 +30,6 @@ import models.ProjectId
 import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props
-import domain.views.UserTimeBookingHistoryView
 import services.UserService.StartUserTimeBookingView
 import domain.views.UserTimeBookingStatisticsView
 

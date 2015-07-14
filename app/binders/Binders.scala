@@ -26,9 +26,11 @@ import play.api.mvc._
 import com.tegonal.play.json.TypedId._
 import java.text.SimpleDateFormat
 import models._
+import java.text.ParseException
 
 object Binders {
 
+  val formatShort = "ddMMyyyyHHmm"
   val format = "ddMMyyyyHHmmss"
 
   implicit def OptionBindable[T: PathBindable] = new PathBindable[Option[T]] {
@@ -114,7 +116,15 @@ object Binders {
               val someDate = formatter.parse(dateStr);
               Right(new DateTime(someDate.getTime(), DateTimeZone.getDefault()))
             } catch {
-              case e: NumberFormatException => Left("Cannot parse parameter " + key + " as DateTime: " + e.getMessage)
+              case e: ParseException =>
+                val formatterShort = new SimpleDateFormat(formatShort);
+                try {
+                  val someDate = formatterShort.parse(dateStr);
+                  Right(new DateTime(someDate.getTime(), DateTimeZone.getDefault()))
+                } catch {
+                  case e: ParseException =>
+                    Left("Cannot parse parameter " + key + " as small DateTime: " + e.getMessage)
+                }
             }
           }
           case _ => Left("Unable to bind DateTime")
