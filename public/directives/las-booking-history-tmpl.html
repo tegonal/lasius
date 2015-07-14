@@ -1,3 +1,4 @@
+<h4>Bookings <button class="btn btn-primary" ng-if="bookingForm.changed">Unsaved</button></h4>
 <div class="booking-table">
 <table class="table table-stripe">
 	<tr>
@@ -23,19 +24,21 @@
 		        </span>
             </span>
         </td>
-        <td ng-if="booking === editedBooking" colspan="2">
-          <form name="formEdit" class="form-inline" role="form" novalidate ng-submit="formEdit.$valid && doneEditing(booking)" ng-show="booking == editedBooking">
-            <input type="datetime-local" required ng-model="booking.start" placeholder="dd.MM.yyyyTHH:mm:ss" auto-focus>
-            <input type="datetime-local" required ng-model="booking.end" placeholder="dd.MM.yyyyTHH:mm:ss">
-            <button type="button" class="btn btn-small" ng-click="doneEditingBooking(booking)">Submit</button>
+        <td>
+          <form ng-show="booking === editedBooking && bookingForm.start" name="formEdit" class="form-inline" role="form">
+            <input ng-blur="saveEditingBooking()" type="time" required ng-model="bookingForm.start" ng-change="changeEditBooking()" auto-focus>
           </form>
+          <span ng-dblclick="editBookingStart(booking)" ng-hide="booking === editedBooking && bookingForm.start">{{booking.start | date: dateFormat(booking)}}</span>
         </td>
-        <td ng-if="booking !== editedBooking">{{booking.start | date: dateFormat(booking)}}</td>
-        <td ng-if="booking !== editedBooking">{{booking.end | date: dateFormat(booking)}}</td>
+        <td>
+          <form ng-show="booking === editedBooking && bookingForm.end" name="formEdit" class="form-inline" role="form" novalidate>
+            <input ng-blur="saveEditingBooking()" type="time" required ng-model="bookingForm.end" ng-change="changeEditBooking()" auto-focus>
+          </form>
+          <span ng-dblclick="editBookingEnd(booking)" ng-hide="booking === editedBooking && bookingForm.end">{{booking.end | date: dateFormat(booking)}}</span>
+        </td>
         <td>{{dayDiff(booking)| number : 1}} <span ng-if="!sameDay(booking)">({{totalDiff(booking)| number : 1}})</span></td>
         <td>
           <button type="button" class="btn btn-xs" ng-hide="isActive(booking)" ng-click="startStop(booking)"><span class="glyphicon glyphicon-play-circle"></span></button>
-          <button type="button" class="btn btn-xs" ng-click="editBooking(booking)" las-edit-event><span class="glyphicon glyphicon-edit"></span></button>
           <button type="button" class="btn btn-xs btn-danger" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button>
         </td>
     </tr>
