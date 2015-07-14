@@ -134,6 +134,23 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         state = updateBooking(e.booking.userId, None, day, durations)
         notifyClient()
       }
+    case UserTimeBookingEdited(booking, start, end) =>
+      //check if on same day        
+      if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
+        state.dailyBookingsMap.filter(_._1 == booking.createStub).headOption map { x =>
+          //remove old booking from totals
+          val day = state.currentDay
+          val durations = removeDailyDuration(booking, day)
+          state = updateBooking(booking.userId, state.booking, day, durations)
+
+          //add new booking value to totals
+          val newBooking = booking.copy(start = start, end = Some(end))
+          val durations2 = addDailyDuration(newBooking, day)
+
+          state = updateBooking(booking.userId, state.booking, day, durations2)
+          notifyClient()
+        }
+      }
     case GetCurrentTimeBooking(userId) =>
       //check if still on same day
       val day = DateTime.now.withTimeAtStartOfDay
