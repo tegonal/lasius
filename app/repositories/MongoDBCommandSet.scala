@@ -32,4 +32,5 @@ object MongoDBCommandSet {
   final val NotEquals = "$ne"
   final val Or = "$or"
   final val And = "$and"
+  final val Inc = "$inc"
 }

@@ -36,6 +36,8 @@ trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   def +(that: E): E
   def -(that: E): E
 
+  def invert: E
+
   def duration(duration: Duration): E
 }
 
@@ -68,6 +70,10 @@ case class BookingByProject(_id: BookingByProjectId, userId: UserId, day: DateTi
     BookingByProject(id, userId, day, projectId, duration.minus(that.duration))
   }
 
+  def invert: BookingByProject = {
+    BookingByProject(id, userId, day, projectId, Duration.ZERO.minus(duration))
+  }
+
   def duration(duration: Duration): BookingByProject = {
     copy(duration = duration)
   }
@@ -86,6 +92,10 @@ case class BookingByCategory(_id: BookingByCategoryId, userId: UserId, day: Date
 
   def -(that: BookingByCategory): BookingByCategory = {
     BookingByCategory(_id, userId, day, categoryId, duration.minus(that.duration))
+  }
+
+  def invert: BookingByCategory = {
+    BookingByCategory(id, userId, day, categoryId, Duration.ZERO.minus(duration))
   }
 
   def duration(duration: Duration): BookingByCategory = {
@@ -109,6 +119,10 @@ case class BookingByTag(_id: BookingByTagId, userId: UserId, day: DateTime, tagI
 
   def duration(duration: Duration): BookingByTag = {
     copy(duration = duration)
+  }
+
+  def invert: BookingByTag = {
+    BookingByTag(id, userId, day, tagId, Duration.ZERO.minus(duration))
   }
 }
 

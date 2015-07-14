@@ -38,9 +38,9 @@ trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tego
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]]
 
-  def add(model: M)(implicit writes: Writes[I]): Future[M]
+  def add(model: M)(implicit writes: Writes[I]): Future[Boolean]
 
-  def subtract(model: M)(implicit writes: Writes[I]): Future[Option[M]]
+  def subtract(model: M)(implicit writes: Writes[I]): Future[Boolean]
 }
 
 trait BookingByProjectRepository extends BookingStatisticRepository[BookingByProject, BookingByProjectId] {
@@ -63,55 +63,16 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
     find(sel) map (_.map(_._1))
   }
 
-  def add(model: M)(implicit writes: Writes[I]): Future[M] = {
+  def add(model: M)(implicit writes: Writes[I]): Future[Boolean] = {
     val sel = getUniqueContraint(model)
     Logger.debug(s"add [$sel]:$model")
-    findFirst(sel) flatMap {
-      _.map { o =>
-        o match {
-          case (current, id) =>
-            val newModel = current + model
-            Logger.debug(s"addes [$sel]:$model:$newModel")
-            update(newModel) map {
-              case true =>
-                newModel
-              case _ => current
-            }
-          case _ =>
-            Logger.debug(s"add [$sel]: no model found to add to: ${model}:$sel, create new one2")
-            insert(model) map (id => model)
-        }
-      }.getOrElse {
-        Logger.debug(s"add [$sel]: no model found to add to: ${model}:$sel, create new one")
-        insert(model).map(id => model)
-      }
-    }
+    update(sel, Json.obj(Inc -> Json.obj("duration" -> model.duration)), true)
   }
 
-  def subtract(model: M)(implicit writes: Writes[I]): Future[Option[M]] = {
+  def subtract(model: M)(implicit writes: Writes[I]): Future[Boolean] = {
     val sel = getUniqueContraint(model)
     Logger.debug(s"subtract [$sel]:$model")
-    findFirst(sel) flatMap {
-      _.map { o =>
-        o match {
-          case (current, _) =>
-            val duration = if (current.duration.getMillis < model.duration.getMillis) { 0 } else { current.duration.getMillis - model.duration.getMillis }
-            val newModel = current.duration(Duration.millis(duration))
-            Logger.debug(s"subtracted [$sel]:result=$newModel")
-            update(newModel) map {
-              case true =>
-                Some(newModel)
-              case _ => None
-            }
-          case e =>
-            Logger.warn(s"subtract [$sel]: no model found to subtract from: ${model}:$sel - $e")
-            Future.successful(None)
-        }
-      }.getOrElse {
-        Logger.warn(s"subtract [$sel]: no model found to subtract from: ${model}:$sel")
-        Future.successful(None)
-      }
-    }
+    update(sel, Json.obj(Inc -> Json.obj("duration" -> Duration.ZERO.minus(model.duration))), true)
   }
 
   def getUniqueContraint(model: M): JsObject
@@ -121,7 +82,7 @@ class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[Bo
   def coll = db.collection[JSONCollection]("BookingByProject")
 
   def getUniqueContraint(model: BookingByProject): JsObject = {
-    Json.obj("day" -> model.day, "projectId" -> model.projectId)
+    Json.obj("userId" -> model.userId, "day" -> model.day, "projectId" -> model.projectId)
   }
 }
 
@@ -129,7 +90,7 @@ class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[B
   def coll = db.collection[JSONCollection]("BookingByCategory")
 
   def getUniqueContraint(model: BookingByCategory): JsObject = {
-    Json.obj("day" -> model.day, "categoryId" -> model.categoryId)
+    Json.obj("userId" -> model.userId, "day" -> model.day, "categoryId" -> model.categoryId)
   }
 }
 
@@ -137,6 +98,6 @@ class BookingByTagMongoRepository extends BookingStatisticMongoRepository[Bookin
   def coll = db.collection[JSONCollection]("BookingByTag")
 
   def getUniqueContraint(model: BookingByTag): JsObject = {
-    Json.obj("day" -> model.day, "tagId" -> model.tagId)
+    Json.obj("userId" -> model.userId, "day" -> model.day, "tagId" -> model.tagId)
   }
 }

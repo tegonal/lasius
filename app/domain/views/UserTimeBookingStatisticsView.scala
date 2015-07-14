@@ -177,37 +177,42 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
     val daysBetween = Days.daysBetween(startDateStartOfDay, endDateStartOfDay).getDays()
 
-    //handle if start and end date are within same day
-    if (daysBetween == 0) {
-      val duration = new Interval(startDate, endDate).toDuration()
-      getDurations(booking, startDateStartOfDay, duration)
+    if (endDate.isBefore(startDate)) {
+      Seq()
     } else {
-      //extract duration at start date
-      val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
 
-      val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
-
-      //extract whole day for duration inbetween start and end date
-      val inBetweenDurations = if (daysBetween > 1) {
-        for {
-          dayDiff <- 1 to daysBetween - 1
-        } yield {
-          val date = startDateStartOfDay.plusDays(dayDiff)
-
-          val dayDuration = Duration.standardDays(1)
-          getDurations(booking, date, dayDuration)
-        }
+      //handle if start and end date are within same day
+      if (daysBetween == 0) {
+        val duration = new Interval(startDate, endDate).toDuration()
+        getDurations(booking, startDateStartOfDay, duration)
       } else {
-        Seq()
+        //extract duration at start date
+        val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
+
+        val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
+
+        //extract whole day for duration inbetween start and end date
+        val inBetweenDurations = if (daysBetween > 1) {
+          for {
+            dayDiff <- 1 to daysBetween - 1
+          } yield {
+            val date = startDateStartOfDay.plusDays(dayDiff)
+
+            val dayDuration = Duration.standardDays(1)
+            getDurations(booking, date, dayDuration)
+          }
+        } else {
+          Seq()
+        }
+
+        //extract duration on end date      
+        val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
+        val endDurations = getDurations(booking, endDateStartOfDay, endDuration)
+
+        (startDurations ++ inBetweenDurations.flatten) ++ endDurations
       }
 
-      //extract duration on end date      
-      val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
-      val endDurations = getDurations(booking, endDateStartOfDay, endDuration)
-
-      (startDurations ++ inBetweenDurations.flatten) ++ endDurations
     }
-
   }
 
   private def getDurations(booking: Booking, day: DateTime, duration: Duration): Seq[OperatorEntity[_, _]] = {
