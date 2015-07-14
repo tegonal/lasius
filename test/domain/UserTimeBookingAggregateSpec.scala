@@ -20,12 +20,11 @@
 \*                                                                           */
 package domain
 
+import actor.ClientReceiverComponentMock
 import scala.concurrent.duration._
-import akka.testkit.TestKit
-import akka.actor.ActorSystem
+import akka.actor._
 import com.typesafe.config.ConfigFactory
-import akka.testkit.DefaultTimeout
-import akka.testkit.ImplicitSender
+import akka.testkit._
 import org.specs2.matcher.Matchers
 import org.mockito.Matchers.{ argThat, anyInt, eq => isEq }
 import org.specs2.mutable.Specification
@@ -37,8 +36,6 @@ import domain.AggregateRoot._
 import org.junit.runner.RunWith
 import org.specs2.time.NoTimeConversions
 import akka.testkit.TestProbe
-import akka.actor.Props
-import akka.actor.Actor
 import akka.event.LoggingReceive
 import akka.testkit.TestActorRef
 import org.specs2.matcher.Scope
@@ -46,17 +43,14 @@ import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
 import domain.AggregateRoot.Initialize
-import akka.ActorTestScope
+import akka._
 import akka.PersistentActorTestScope
 import mongo.EmbedMongo
 import scala.concurrent.Await
 import org.specs2.execute.Result
-import repositories.UserBookingHistoryRepositoryComponentMock
-import repositories.BookingHistoryRepository
-import actor.ClientReceiverComponentMock
+import repositories._
 import repositories.UserBookingHistoryRepositoryComponent
-import scala.concurrent.ExecutionContext
-import org.hamcrest.core.IsEqual
+import scala.concurrent._
 
 class UserTimeBookingAggregateSpec extends Specification with Mockito {
 
@@ -254,6 +248,36 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
 
       //add current booking to repository
       there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
+    }
+  }
+
+  "UserTimeBookingAggregate UserTimeBookingEdited" should {
+    "Update user time booking" in new PersistentActorTestScope {
+      val probe = TestProbe()
+      val stream = TestProbe()
+      val userId = UserId("noob")
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
+
+      system.eventStream.subscribe(stream.ref, classOf[Any])
+      val end = DateTime.now()
+      val start = end.minusHours(2)
+      val newStart = start.minusHours(2)
+      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val modifiedBooking = currentBooking.copy(start = newStart)
+
+      component.bookingHistoryRepository.updateTimeBooking(isEq(currentBooking.id), isEq(newStart), isEq(end)) returns Future.successful(true)
+
+      actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
+
+      //execute
+      probe.send(actorRef, EditBooking(userId, currentBooking.id, newStart, end))
+
+      //verify
+      probe.expectMsg(UserTimeBooking(userId, Seq(modifiedBooking)))
+      stream.expectMsg(UserTimeBookingEdited(currentBooking, newStart, end))
+
+      there was one(component.bookingHistoryRepository).updateTimeBooking(isEq(currentBooking.id), isEq(newStart), isEq(end))
     }
   }
 }

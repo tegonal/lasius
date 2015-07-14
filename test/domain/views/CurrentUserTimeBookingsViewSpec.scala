@@ -41,6 +41,45 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
     }
   }
+
+  "CurrentUserTimeBookingsView UserTimeBookingEdited" should {
+    "adjusted daily total of booking when editing booking" in new PersistentActorTestScope {
+
+      val userId = UserId("noob")
+      val probe = TestProbe()
+      val clientReceiver = mock[ClientReceiver]
+      val actorRef = system.actorOf(CurrentUserTimeBookingsViewMock.props(userId, clientReceiver))
+
+      val day = DateTime.parse("2000-01-01")
+      val end = DateTime.now()
+      val start = end.minusHours(2)
+      val categoryId = CategoryId("cat")
+      val projectId = ProjectId("proj")
+      val tagId1 = TagId("tag1")
+      val tagId2 = TagId("tag2")
+      val duration = Duration.standardHours(2)
+
+      val booking = Booking(BookingId("b1"), start, Some(end), userId, categoryId, projectId, Seq(tagId1, tagId2))
+
+      val state = CurrentUserTimeBooking(userId, None, None, duration)
+
+      probe.send(actorRef, UserTimeBookingStopped(booking))
+      probe.expectMsg(CurrentUserTimeBookingsView.Ack)
+
+      there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
+
+      //edit time booking
+      val newDuration = Duration.standardHours(4)
+      //expect new duration of current booking, without booking in progress
+      val newState = CurrentUserTimeBooking(userId, None, None, newDuration)
+
+      val newStart = start.minusHours(2)
+      probe.send(actorRef, UserTimeBookingEdited(booking, newStart, end))
+      probe.expectMsg(CurrentUserTimeBookingsView.Ack)
+
+      there was one(clientReceiver) ! (isEq(userId), isEq(newState), isEq(List(userId)))
+    }
+  }
 }
 
 object CurrentUserTimeBookingsViewMock {
