@@ -34,6 +34,8 @@ import akka.actor.Actor
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
+
+  def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean]
 }
 
 class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking, BookingId] with BookingHistoryRepository
@@ -47,6 +49,11 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
         Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
     Logger.debug(s"findByUserAndRange:$sel")
     find(sel) map (_.map(_._1))
+  }
+
+  def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean] = {
+    Logger.debug(s"updateTimeBooking[$bookingId]: $from - $to")
+    update(Json.obj("id" -> bookingId), Json.obj(Set -> Json.obj("start" -> from, "end" -> to)))
   }
 
 }

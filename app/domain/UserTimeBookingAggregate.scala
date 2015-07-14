@@ -41,7 +41,7 @@ object UserTimeBookingAggregate {
   case class UserTimeBookingPaused(bookingId: BookingId, time: DateTime) extends Event
   case class UserTimeBookingRemoved(booking: Booking) extends Event
   case class UserTimeBookingAdded(booking: Booking) extends Event
-  case class UserTimeBookingEdited(booking: Booking) extends Event
+  case class UserTimeBookingEdited(booking: Booking, start: DateTime, end: DateTime) extends Event
   case class UserTimeBookingStartTimeChanged(bookingId: BookingId, fromStart: DateTime, toStart: DateTime) extends Event
 
   case class UserTimeBooking(userId: UserId, bookings: Seq[Booking]) extends State {
@@ -129,10 +129,10 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
           case _ => state
         }
-      case UserTimeBookingEdited(booking) =>
-        log.debug(s"UserBookingEdited- $booking")
+      case UserTimeBookingEdited(booking, start, end) =>
+        log.debug(s"UserBookingEdited- $booking: $start-$end")
         state = state match {
-          case ub: UserTimeBooking => editUserBooking(ub, booking)
+          case ub: UserTimeBooking => editUserBooking(ub, booking, start, end)
           case _ => state
         }
       case UserTimeBookingStartTimeChanged(bookingId, fromStart, toStart) =>
@@ -175,9 +175,16 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     ub.copy(bookings = newBookings)
   }
 
-  def editUserBooking(ub: UserTimeBooking, booking: Booking) = {
+  def editUserBooking(ub: UserTimeBooking, booking: Booking, start: DateTime, end: DateTime) = {
+    bookingHistoryRepository.updateTimeBooking(booking.id, start, end) map {
+      case true =>
+        val updatedBooking = booking.copy(start = start, end = Some(end))
+        notifyClient(UserTimeBookingHistoryEntryChanged(updatedBooking))
+      case _ => log.warning(s"Couldn't update time booking:$booking")
+    }
+
     val newBookings = ub.bookings.map { b =>
-      if (b.id == booking.id) b.copy(start = booking.start, end = booking.end)
+      if (b.id == booking.id) b.copy(start = start, end = Some(end))
       else b
     }
     ub.copy(bookings = newBookings)
@@ -251,7 +258,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         case b: UserTimeBooking =>
           b.bookings.find(_.id == bookingId) map { edited =>
             log.debug(s"EditBooking, found existing booking:$edited")
-            persist(UserTimeBookingEdited(edited))(afterEventPersisted)
+            persist(UserTimeBookingEdited(edited, start, end))(afterEventPersisted)
           }
       }
     case AppendBooking(userId, categoryId, projectId, tags, start, end) =>

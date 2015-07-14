@@ -43,6 +43,7 @@ case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], tota
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
 case class UserTimeBookingHistoryEntryRemoved(bookingId: BookingId) extends OutEvent
+case class UserTimeBookingHistoryEntryChanged(booking: Booking) extends OutEvent
 
 case class UserTimeBookingByProjectEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingByCategoryEntryCleaned(userId: UserId) extends OutEvent

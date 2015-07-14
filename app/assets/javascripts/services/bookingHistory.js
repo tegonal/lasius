@@ -22,7 +22,7 @@ define(['angular'], function (angular) {
   'use strict';
 
   var mod = angular.module('services.bookingHistory', []);
-  mod.factory('bookingHistoryService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
+  mod.factory('bookingHistoryService', ['$http', '$location', '$q', 'playRoutes', '$log', 'MY_CONFIG', 'moment', function ($http, $location, $q, playRoutes, $log, MY_CONFIG, moment) {
     
     return {             
       getTimeBookingHistory: function (from, to) {
@@ -42,7 +42,10 @@ define(['angular'], function (angular) {
         });
       },
       editTimeBooking: function (booking) {
-        return playRoutes.controllers.TimeBookingController.edit(booking.id, booking.start, booking.end).post().then(function (response) {
+        var start = moment(booking.start).format(MY_CONFIG.DATE_PATTERN);
+        var end = moment(booking.end).format(MY_CONFIG.DATE_PATTERN);
+        
+        return playRoutes.controllers.TimeBookingController.edit(booking.id, start, end).post().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

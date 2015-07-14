@@ -220,6 +220,23 @@ define(
                                 scope.bookings.clear();
                               }
                             });
+                        
+                        msgBus.onMsg('UserTimeBookingHistoryEntryChanged',
+                            scope, function(event, msg) {
+                              console.log('msg received' + msg.type);
+                              if (scope.userId === msg.booking.userId) {
+                                
+                                var arrayLength = scope.bookings.length;
+                                for (var i = 0; i < arrayLength; i++) {            
+                                  if(scope.bookings[i].id === msg.booking.id) {
+                                    scope.bookings[i] = msg.booking;
+                                    break;
+                                  }
+                                }
+                                
+                                scope.$apply();
+                              }
+                            });
 
                         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
                             event, msg) {
