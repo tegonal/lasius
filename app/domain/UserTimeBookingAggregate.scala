@@ -168,7 +168,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def removeUserBooking(ub: UserTimeBooking, booking: Booking) = {
-    bookingHistoryRepository.coll.remove(booking)
+    bookingHistoryRepository.remove(booking)
     notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
 
     val newBookings = ub.bookings.filter(_.id != booking.id)

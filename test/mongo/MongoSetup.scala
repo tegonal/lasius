@@ -64,7 +64,7 @@ trait EmbedMongo extends Specification {
   lazy val nodes = List(s"localhost:$port")
 
   lazy val mongodConfig = new MongodConfigBuilder()
-    .version(Version.V2_6_1)
+    .version(Version.Main.V2_6)
     .net(new Net(port, Network.localhostIsIPv6()))
     .build
 

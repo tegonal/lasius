@@ -36,6 +36,7 @@ trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with P
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
 
   def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean]
+
 }
 
 class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking, BookingId] with BookingHistoryRepository

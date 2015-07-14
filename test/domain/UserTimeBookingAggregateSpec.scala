@@ -27,7 +27,9 @@ import com.typesafe.config.ConfigFactory
 import akka.testkit.DefaultTimeout
 import akka.testkit.ImplicitSender
 import org.specs2.matcher.Matchers
+import org.mockito.Matchers.{ argThat, anyInt, eq => isEq }
 import org.specs2.mutable.Specification
+import org.specs2.mock.Mockito
 import akka.testkit.TestKitBase
 import models.UserId
 import org.specs2.runner.JUnitRunner
@@ -49,15 +51,22 @@ import akka.PersistentActorTestScope
 import mongo.EmbedMongo
 import scala.concurrent.Await
 import org.specs2.execute.Result
+import repositories.UserBookingHistoryRepositoryComponentMock
+import repositories.BookingHistoryRepository
+import actor.ClientReceiverComponentMock
+import repositories.UserBookingHistoryRepositoryComponent
+import scala.concurrent.ExecutionContext
+import org.hamcrest.core.IsEqual
 
-class UserTimeBookingAggregateSpec extends Specification {
+class UserTimeBookingAggregateSpec extends Specification with Mockito {
 
   "UserTimeBookingAggregate RemoveBooking" should {
     "remove existing booking" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
       system.eventStream.subscribe(stream.ref, classOf[Any])
 
       val booking = Booking(BookingId("1"), DateTime.now(), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -70,13 +79,16 @@ class UserTimeBookingAggregateSpec extends Specification {
       //verify
       probe.expectMsg(UserTimeBooking(userId, Seq()))
       stream.expectMsg(UserTimeBookingRemoved(booking))
+
+      there was one(component.bookingHistoryRepository).remove(booking)
     }
 
     "not publish event if booking does not exist" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
 
@@ -87,6 +99,8 @@ class UserTimeBookingAggregateSpec extends Specification {
       //verify
       probe.expectNoMsg
       stream.expectNoMsg
+
+      there was no(component.bookingHistoryRepository).remove(any[Booking])
     }
   }
 
@@ -95,7 +109,8 @@ class UserTimeBookingAggregateSpec extends Specification {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
       val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -127,13 +142,17 @@ class UserTimeBookingAggregateSpec extends Specification {
           booking.projectId must beEqualTo(newBooking.projectId)
           booking.tags must beEqualTo(newBooking.tags)
       }
+
+      //add current booking to repository
+      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
     }
 
     "Start new booking" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
       val newBooking = Booking(BookingId("2"), DateTime.now, None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -168,7 +187,8 @@ class UserTimeBookingAggregateSpec extends Specification {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[UserTimeBookingRemoved])
       val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -181,13 +201,17 @@ class UserTimeBookingAggregateSpec extends Specification {
       //verify
       probe.expectNoMsg
       stream.expectNoMsg
+
+      //add current booking to repository
+      there was no(component.bookingHistoryRepository).insert(any[Booking])(any[ExecutionContext])
     }
 
     "stop booking with provided enddate" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
       val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -202,13 +226,17 @@ class UserTimeBookingAggregateSpec extends Specification {
       //verify
       probe.expectMsg(UserTimeBooking(userId, Seq(closedBooking)))
       stream.expectMsg(UserTimeBookingStopped(closedBooking))
+
+      //add current booking to repository
+      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
     }
 
     "stop booking with enddate in future" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
-      val actorRef = system.actorOf(UserTimeBookingAggregate.props(userId))
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
       val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
@@ -223,6 +251,18 @@ class UserTimeBookingAggregateSpec extends Specification {
       //verify
       probe.expectMsg(UserTimeBooking(userId, Seq(closedBooking)))
       stream.expectMsg(UserTimeBookingStopped(closedBooking))
+
+      //add current booking to repository
+      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
     }
   }
 }
+
+object UserTimeBookingAggregateMock {
+
+  def props(userId: UserId, comp: UserBookingHistoryRepositoryComponentMock) = Props(classOf[UserTimeBookingAggregateMock], userId,
+    comp.bookingHistoryRepository)
+}
+
+class UserTimeBookingAggregateMock(userId: UserId, val bookingHistoryRepository: BookingHistoryRepository) extends UserTimeBookingAggregate(userId)
+  with UserBookingHistoryRepositoryComponent with ClientReceiverComponentMock

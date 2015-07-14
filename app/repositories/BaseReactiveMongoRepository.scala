@@ -67,6 +67,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
 
+  def remove(obj: T): Future[Boolean]
+
   //def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
@@ -106,6 +108,16 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
         _ match {
           case LastError(ok, _, _, _, _, _, _) => Future.successful(ok)
           case e => Future.failed(new MongoDBCommandException(e.errMsg.getOrElse("Update failed")))
+        }
+      }
+  }
+
+  def remove(obj: T): Future[Boolean] = {
+    coll.remove(obj)
+      .flatMap {
+        _ match {
+          case LastError(ok, _, _, _, _, _, _) => Future.successful(ok)
+          case e => Future.failed(new MongoDBCommandException(e.errMsg.getOrElse("Remove failed")))
         }
       }
   }
