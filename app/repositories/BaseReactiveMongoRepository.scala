@@ -20,10 +20,8 @@
 \*                                                                           */
 package repositories
 
-import play.modules.reactivemongo.json.BSONFormats._
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.core.commands.LastError
-import reactivemongo.core.protocol.Query
+import play.modules.reactivemongo.json._
+import play.modules.reactivemongo.json.collection._
 import reactivemongo.api.QueryOpts
 import reactivemongo.core.commands.PipelineOperator
 import reactivemongo.core.commands.Aggregate
@@ -34,11 +32,11 @@ import scala.concurrent.Future
 import play.api.libs.iteratee.Enumerator
 import play.api.Logger
 import play.api.Play.current
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.ReactiveMongoPlugin
 import com.tegonal.play.json.TypedId.BaseId
 import models.BaseEntity
 import play.api.libs.json.Json.JsValueWrapper
+import reactivemongo.bson.BSONObjectID
+import play.modules.reactivemongo.ReactiveMongoPlugin
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
@@ -67,13 +65,15 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
 
-  def remove(obj: T): Future[Boolean]
+  def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean]
 
   //def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
 }
 
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
   self: BaseRepository[T, ID] =>
+  import play.modules.reactivemongo.json._
+  import play.modules.reactivemongo.json.collection._
 
   def db = ReactiveMongoPlugin.db
 
@@ -93,33 +93,16 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   }
 
   def update(sel: JsObject, modifier: JsObject, upsert: Boolean = true)(implicit ctx: ExecutionContext): Future[Boolean] = {
-    coll.update(sel, modifier, upsert = upsert)
-      .flatMap {
-        _ match {
-          case LastError(ok, _, _, _, _, _, _) => Future.successful(ok)
-          case e => Future.failed(new MongoDBCommandException(e.errMsg.getOrElse("Update failed")))
-        }
-      }
+    coll.update(sel, modifier, upsert = upsert) map (_.ok)
   }
 
   def update(doc: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
-    coll.save(doc)
-      .flatMap {
-        _ match {
-          case LastError(ok, _, _, _, _, _, _) => Future.successful(ok)
-          case e => Future.failed(new MongoDBCommandException(e.errMsg.getOrElse("Update failed")))
-        }
-      }
+    coll.save(doc) map (_.ok)
   }
 
-  def remove(obj: T): Future[Boolean] = {
-    coll.remove(obj)
-      .flatMap {
-        _ match {
-          case LastError(ok, _, _, _, _, _, _) => Future.successful(ok)
-          case e => Future.failed(new MongoDBCommandException(e.errMsg.getOrElse("Remove failed")))
-        }
-      }
+  def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
+    val json = format.writes(obj).as[JsObject]
+    coll.remove(json) map (_.ok)
   }
 
   def insert(t: T)(implicit ctx: ExecutionContext): Future[BSONObjectID] = {

@@ -25,7 +25,7 @@ import akka.actor._
 import services._
 import domain._
 import domain.LoginStateAggregate._
-import models.UserId
+import models._
 import core.Global._
 import akka.event.EventStream
 

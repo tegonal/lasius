@@ -48,7 +48,6 @@ import repositories.BookingByCategoryRepository
 import repositories.BookingByProjectRepository
 import repositories.BookingByTagMongoRepository
 import repositories.UserBookingStatisticsRepositoryComponent
-import domain.AggregateRoot.Event
 import akka.actor.ActorSystem
 import repositories.BookingByProjectRepository
 import org.mockito.verification.VerificationMode
@@ -236,7 +235,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     }
   }
 
-  def testAddDurationOverSeveralDays(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+  def testAddDurationOverSeveralDays(eventFactory: Booking => PersistetEvent)(implicit system: ActorSystem) = {
     testHandleDurationOverSeveralDays(eventFactory) {
       (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day1, day2, day3, duration1, duration2, duration3) =>
         there was 3.times(bookingByCategoryRepository).add {
@@ -374,7 +373,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     }
   }
 
-  def testHandleDurationOverSeveralDays(eventFactory: Booking => Event)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, DateTime, DateTime, Duration, Duration, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
+  def testHandleDurationOverSeveralDays(eventFactory: Booking => PersistetEvent)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, DateTime, DateTime, Duration, Duration, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
     val userId = UserId("noob")
     val probe = TestProbe()
     val bookingByCategoryRepository = mock[BookingByCategoryRepository]
@@ -404,7 +403,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     verify
   }
 
-  def testAddDuration(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+  def testAddDuration(eventFactory: Booking => PersistetEvent)(implicit system: ActorSystem) = {
     testHandleDurationOfOneDay(eventFactory) {
       (bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository, categoryId, projectId, tagId1, tagId2, userId, day, duration) =>
         there was one(bookingByCategoryRepository).add {
@@ -502,7 +501,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     }
   }
 
-  def testHandleDurationOfOneDay(eventFactory: Booking => Event)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
+  def testHandleDurationOfOneDay(eventFactory: Booking => PersistetEvent)(verify: (BookingByCategoryRepository, BookingByProjectRepository, BookingByTagRepository, UserId, CategoryId, ProjectId, TagId, TagId, DateTime, Duration) => MatchResult[_])(implicit system: ActorSystem) = {
     val userId = UserId("noob")
     val probe = TestProbe()
     val bookingByCategoryRepository = mock[BookingByCategoryRepository]
@@ -527,7 +526,7 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     verify
   }
 
-  def testAddDurationWithoutEnd(eventFactory: Booking => Event)(implicit system: ActorSystem) = {
+  def testAddDurationWithoutEnd(eventFactory: Booking => PersistetEvent)(implicit system: ActorSystem) = {
     val userId = UserId("noob")
     val probe = TestProbe()
     val bookingByCategoryRepository = mock[BookingByCategoryRepository]

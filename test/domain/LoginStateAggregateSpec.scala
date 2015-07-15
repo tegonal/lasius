@@ -21,7 +21,6 @@
 package domain
 
 import scala.concurrent.duration._
-
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
@@ -44,6 +43,8 @@ import akka.testkit.TestActorRef
 import org.specs2.matcher.Scope
 import akka.PersistentActorTestScope
 import mongo.EmbedMongo
+import models.UserLoggedIn
+import models.UserLoggedOut
 
 class LoginStateAggregateSpec extends Specification {
 

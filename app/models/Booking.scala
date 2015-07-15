@@ -21,12 +21,12 @@
 package models
 
 import reactivemongo.bson.BSONObjectID
-
 import models.BaseFormat._
 import com.tegonal.play.json._
 import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
 import org.joda.time.DateTime
+import scala.beans.BeanInfo
 
 case class BookingId(value: String) extends StringBaseId
 
@@ -42,7 +42,8 @@ object BookingStub {
 }
 
 @SerialVersionUID(1241414)
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) extends BaseEntity[BookingId] {
+case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], comment: Option[String] = None) extends BaseEntity[BookingId] {
+
   def createStub: BookingStub = {
     BookingStub(categoryId, projectId, tags)
   }

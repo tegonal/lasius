@@ -25,10 +25,6 @@ import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
 import akka.actor.actorRef2Scala
-import domain.UserTimeBookingAggregate.UserTimeBookingAdded
-import domain.UserTimeBookingAggregate.UserTimeBookingRemoved
-import domain.UserTimeBookingAggregate.UserTimeBookingStarted
-import domain.UserTimeBookingAggregate.UserTimeBookingStopped
 import actors.ClientMessagingWebsocketActor
 import models.CurrentUserTimeBooking
 import org.joda.time.Duration
@@ -69,7 +65,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       val day = e.booking.start.withTimeAtStartOfDay
-      val durations = state.booking.map(b => addDailyDuration(b, day)).getOrElse(getMapForDay(day))
+      val durations = state.booking.filter(_.end.isDefined).map(b => addDailyDuration(b, day)).getOrElse(getMapForDay(day))
       state = updateBooking(userId, Some(e.booking), day, durations)
       notifyClient()
       sender ! Ack

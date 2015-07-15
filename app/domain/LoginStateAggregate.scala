@@ -24,14 +24,13 @@ import models.UserId
 import akka.persistence._
 import akka.actor._
 import akka.event.LoggingReceive
+import models.PersistetEvent
+import models._
 
 object LoginStateAggregate {
   import AggregateRoot._
 
   case class LoggedInState(loggedInUsers: Seq[UserId]) extends State
-
-  case class UserLoggedIn(userId: UserId) extends Event
-  case class UserLoggedOut(userId: UserId) extends Event
 
   def props: Props = Props(classOf[LoginStateAggregate])
 
@@ -46,7 +45,7 @@ class LoginStateAggregate extends AggregateRoot {
 
   override var state: State = LoggedInState(Seq())
 
-  override def updateState(evt: Event): Unit = {
+  override def updateState(evt: PersistetEvent): Unit = {
     evt match {
       case UserLoggedIn(userId) =>
         state = state match {

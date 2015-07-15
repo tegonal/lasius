@@ -48,6 +48,10 @@ define(['angular'], function(angular) {
       }
     };
     
+    $scope.toggleCurrentBooking = function() {
+      $scope.showCurrentBooking(!$scope.currentBookingOn);
+    };
+    
     $scope.contentTypeMapping = {
         "workview": "assets/workview.html",
         "bookings": "assets/bookings.html",

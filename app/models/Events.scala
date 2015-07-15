@@ -26,6 +26,22 @@ import reactivemongo.bson.BSONObjectID
 import julienrf.variants.Variants
 import org.joda.time.Duration
 import models.BaseFormat._
+import org.joda.time.DateTime
+
+sealed trait PersistetEvent extends Serializable
+
+case object UndefinedEvent extends PersistetEvent
+
+case class UserLoggedIn(userId: UserId) extends PersistetEvent
+
+case class UserTimeBookingInitialized(userId: UserId) extends PersistetEvent
+case class UserTimeBookingStarted(booking: Booking) extends PersistetEvent
+case class UserTimeBookingStopped(booking: Booking) extends PersistetEvent
+case class UserTimeBookingPaused(bookingId: BookingId, time: DateTime) extends PersistetEvent
+case class UserTimeBookingRemoved(booking: Booking) extends PersistetEvent
+case class UserTimeBookingAdded(booking: Booking) extends PersistetEvent
+case class UserTimeBookingEdited(booking: Booking, start: DateTime, end: DateTime) extends PersistetEvent
+case class UserTimeBookingStartTimeChanged(bookingId: BookingId, fromStart: DateTime, toStart: DateTime) extends PersistetEvent
 
 sealed trait InEvent
 
@@ -37,7 +53,7 @@ object InEvent {
 
 sealed trait OutEvent
 case object HelloClient extends OutEvent
-case class UserLoggedOut(userId: UserId) extends OutEvent
+case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
 case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
@@ -67,4 +83,8 @@ object OutEvent {
 object Events {
   implicit val inEventFrameFormatter = FrameFormatter.jsonFrame[InEvent]
   implicit val outEventFrameFormatter = FrameFormatter.jsonFrame[OutEvent]
+}
+
+object PersistetEvent {
+  implicit val eventFormat: Format[PersistetEvent] = Variants.format[PersistetEvent]("type")
 }

@@ -79,7 +79,7 @@ class ApplicationController {
         val uuid = UUID.randomUUID.toString
         Cache.set(uuid, user.id)
 
-        loginStateAggregate ! LoginStateAggregate.UserLoggedIn(user.id)
+        loginStateAggregate ! UserLoggedIn(user.id)
 
         Ok(Json.obj("token" -> uuid))
           .withCookies(Cookie(AuthTokenCookieKey, uuid, None, httpOnly = false))
@@ -115,7 +115,7 @@ class ApplicationController {
     Logger.debug(s"Remove token from cache: ${subject.token}")
     Cache.remove(subject.token)
 
-    loginStateAggregate ! LoginStateAggregate.UserLoggedOut(subject.userId)
+    loginStateAggregate ! UserLoggedOut(subject.userId)
 
     //notify client
     ClientMessagingWebsocketActor ! (subject.userId, UserLoggedOut(subject.userId), List(subject.userId))

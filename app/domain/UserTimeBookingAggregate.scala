@@ -35,15 +35,6 @@ import repositories.MongoUserBookingHistoryRepositoryComponent
 object UserTimeBookingAggregate {
   import AggregateRoot._
 
-  case class UserTimeBookingInitialized(userId: UserId) extends Event
-  case class UserTimeBookingStarted(booking: Booking) extends Event
-  case class UserTimeBookingStopped(booking: Booking) extends Event
-  case class UserTimeBookingPaused(bookingId: BookingId, time: DateTime) extends Event
-  case class UserTimeBookingRemoved(booking: Booking) extends Event
-  case class UserTimeBookingAdded(booking: Booking) extends Event
-  case class UserTimeBookingEdited(booking: Booking, start: DateTime, end: DateTime) extends Event
-  case class UserTimeBookingStartTimeChanged(bookingId: BookingId, fromStart: DateTime, toStart: DateTime) extends Event
-
   case class UserTimeBooking(userId: UserId, bookings: Seq[Booking]) extends State {
     def bookingInProgress = {
       bookings.filter(_.end.isEmpty).headOption
@@ -90,7 +81,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
    *
    * @param evt Event to apply
    */
-  override def updateState(evt: Event): Unit = {
+  override def updateState(evt: PersistetEvent): Unit = {
     log.debug(s"updateStart:$evt")
     evt match {
       case e: UserTimeBookingInitialized =>

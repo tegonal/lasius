@@ -15,12 +15,12 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 libraryDependencies ++= Seq(
-  "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
+  "org.reactivemongo" %% "play2-reactivemongo" % "0.11.2.play23",
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
-  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.8",
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.8" % "test",  
-  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.2.2", 
+  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.9",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test",  
+  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.4.1", 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
