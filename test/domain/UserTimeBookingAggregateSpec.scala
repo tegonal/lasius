@@ -282,7 +282,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
   }
 
   "UserTimeBookingAggregate UserTimeBookingStartTimeChanged" should {
-    "Move start time of booking" in new PersistentActorTestScope {
+    "Move start time of booking in progress" in new PersistentActorTestScope {
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")
@@ -303,6 +303,29 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       //verify
       probe.expectMsg(UserTimeBooking(userId, Seq(adjustedBooking)))
       stream.expectMsg(UserTimeBookingStartTimeChanged(adjustedBooking.id, start, newStart))
+    }
+
+    "do nothing if booking is not in progress" in new PersistentActorTestScope {
+      val probe = TestProbe()
+      val stream = TestProbe()
+      val userId = UserId("noob")
+      val component = new UserBookingHistoryRepositoryComponentMock
+      val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
+      val start = DateTime.now.minusHours(2)
+      val end = start.plusHours(3)
+      val newStart = start.minusHours(4)
+
+      system.eventStream.subscribe(stream.ref, classOf[Any])
+      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, CategoryId("cat"), ProjectId("proj"), Seq())
+
+      actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
+
+      //execute
+      probe.send(actorRef, ChangeStartTimeOfBooking(userId, currentBooking.id, newStart))
+
+      //verify
+      probe.expectNoMsg
+      stream.expectNoMsg
     }
   }
 }
