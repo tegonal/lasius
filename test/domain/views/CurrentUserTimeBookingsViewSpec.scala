@@ -42,6 +42,39 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
     }
   }
 
+  "CurrentUserTimeBookingsView UserTimeBookingStartTimeChanged" should {
+    "adjust time of current booking" in new PersistentActorTestScope {
+
+      val userId = UserId("noob")
+      val probe = TestProbe()
+      val clientReceiver = mock[ClientReceiver]
+      val actorRef = system.actorOf(CurrentUserTimeBookingsViewMock.props(userId, clientReceiver))
+
+      val day = DateTime.parse("2000-01-01")
+      val start = DateTime.now().minusHours(2)
+      val categoryId = CategoryId("cat")
+      val projectId = ProjectId("proj")
+      val tagId1 = TagId("tag1")
+      val tagId2 = TagId("tag2")
+      val duration = Duration.standardHours(2)
+      val newStart = start.minusHours(2)
+
+      val booking = Booking(BookingId("b1"), start, None, userId, categoryId, projectId, Seq(tagId1, tagId2))
+
+      //first start booking
+      probe.send(actorRef, UserTimeBookingStarted(booking))
+      probe.expectMsg(CurrentUserTimeBookingsView.Ack)
+
+      //then move start time
+      probe.send(actorRef, UserTimeBookingStartTimeChanged(booking.id, start, newStart))
+      probe.expectMsg(CurrentUserTimeBookingsView.Ack)
+
+      val newBooking = booking.copy(start = newStart)
+      val state = CurrentUserTimeBooking(userId, Some(newBooking), None, Duration.ZERO)
+      there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
+    }
+  }
+
   "CurrentUserTimeBookingsView UserTimeBookingEdited" should {
     "adjusted daily total of booking when editing booking" in new PersistentActorTestScope {
 
