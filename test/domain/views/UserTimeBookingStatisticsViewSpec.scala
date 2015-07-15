@@ -130,6 +130,34 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
     }
   }
 
+  "UserTimeBookingStatisticsView UserTimeBookingStartTimeChanged" should {
+    "do nothing" in new PersistentActorTestScope {
+      val userId = UserId("noob")
+      val probe = TestProbe()
+      val bookingByCategoryRepository = mock[BookingByCategoryRepository]
+      val bookingByProjectRepository = mock[BookingByProjectRepository]
+      val bookingByTagRepository = mock[BookingByTagMongoRepository]
+      val actorRef = system.actorOf(UserTimeBookingStatisticsViewMock.props(userId,
+        bookingByCategoryRepository, bookingByProjectRepository, bookingByTagRepository))
+      val day = DateTime.parse("2000-01-01")
+      val stop = day.plusHours(10)
+      val start = day.plusHours(5)
+      val bookingId = BookingId("b1")
+      val newStart = start.minusHours(3)
+
+      val duration1 = Duration.standardHours(24 - 5)
+      val duration2 = Duration.standardHours(24)
+      val duration3 = Duration.standardHours(10)
+
+      probe.send(actorRef, UserTimeBookingStartTimeChanged(bookingId, start, newStart))
+      probe.expectMsg(UserTimeBookingStatisticsView.Ack)
+
+      there was noCallsTo(bookingByCategoryRepository)
+      there was noCallsTo(bookingByProjectRepository)
+      there was noCallsTo(bookingByTagRepository)
+    }
+  }
+
   "UserTimeBookingStatisticsView various cases" should {
     "LAS-24" in new PersistentActorTestScope {
       val userId = UserId("noob")

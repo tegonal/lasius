@@ -81,6 +81,9 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
       val events = getEventsDurations(durations, false)
       notifyClient(events)
       sender ! Ack
+    case UserTimeBookingStartTimeChanged(bookingId, oldStart, newStart) =>
+      //do nothing, booking is still in progress
+      sender ! Ack
   }
 
   protected def handleBookingAddedOrStopped(booking: Booking) = {
