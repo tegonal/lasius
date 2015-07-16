@@ -94,7 +94,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       probe.expectNoMsg
       stream.expectNoMsg
 
-      there was no(component.bookingHistoryRepository).remove(any[Booking])
+      there was no(component.bookingHistoryRepository).remove(any[Booking])(any[ExecutionContext])
     }
   }
 
