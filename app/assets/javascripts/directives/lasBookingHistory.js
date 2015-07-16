@@ -27,13 +27,15 @@ define(
       mod
           .directive(
               'lasBookingHistory',
-              [
+              [ 
+                  '$modal',
+                  '$log',
                   'MY_CONFIG',
                   'bookingHistoryService',
                   'bookingService',
                   'msgBus',
                   'moment',
-                  function(MY_CONFIG, bookingHistoryService, bookingService,
+                  function($modal, $log, MY_CONFIG, bookingHistoryService, bookingService,
                       msgBus, moment) {
                     return {
                       restrict : 'E',
@@ -193,6 +195,24 @@ define(
                             scope.editedBooking.end = moment(scope.editedBooking.end).hour(e.hour()).minute(e.minute()).valueOf();
                           }
                         }, false);
+                        
+                        scope.addBooking = function(booking) {
+                          bookingHistoryService.addTimeBooking(booking);
+                        };
+                        
+                        scope.showAddBooking = function() {
+                          var modalInstance = $modal.open({
+                            animation: true,
+                            templateUrl: '/assets/dialogs/add-booking.html',
+                            controller: 'AddBookingCtrl'
+                          });
+
+                          modalInstance.result.then(function (booking) {                           
+                            scope.addBooking(booking);
+                          }, function () {
+                            $log.info('Modal dismissed at: ' + new Date());
+                          });
+                        };
 
                         msgBus
                             .onMsg('UserTimeBookingHistoryEntryAdded', scope,

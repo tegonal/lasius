@@ -1,0 +1,57 @@
+<div class="modal-header">
+  <h3>Add Worklog</h3>
+</div>'
+<div class="modal-body">
+   <!--  Project@Category -->
+   <div class="form-group">
+	   <ui-select ng-model="booking.project"
+	             theme="bootstrap"
+	             on-remove="projectSelectionChanged()"
+	             on-select="projectSelectionChanged()"
+	             class="booking">
+		    <ui-select-match placeholder="Project@Category">{{$select.selected.name}}</ui-select-match>
+		    <ui-select-choices repeat="proj in projects  | filter: {name: $select.search}">
+		      <div ng-bind-html="proj.name | highlight: $select.search"></div>
+		    </ui-select-choices>
+	  	</ui-select>
+	 </div>
+  	
+  	<!-- Tags -->
+  	<div class="form-group">
+		<ui-select multiple ng-model="booking.tags" theme="bootstrap" tagging="newTag" reset-search-input="true"
+	  	tagging-tokens="," class="booking">
+		    <ui-select-match placeholder="Select Tags...">{{$item.id}}</ui-select-match>
+		    <ui-select-choices repeat="tag in availableTags | filter:$select.search track by tag.id">
+		      {{tag.id}}
+		    </ui-select-choices>
+		</ui-select>
+	</div>
+	
+	<!-- day -->
+	<div class="form-group">
+		<div style="display:inline-block; min-height:290px;">
+      		<datepicker ng-model="day" datepicker-options="dateOptions" class="well well-sm"></datepicker>
+    	</div>
+    </div>
+	
+	<!-- start / end -->
+	<div class="form-group row">
+		<span class="col-md-1"><label for="start" class="form-label">Start</label></span>
+		<span class="col-md-5">
+			<timepicker id="start" ng-model="booking.start" hour-step="1" minute-step="5" show-meridian="false" placeholder="Start"></timepicker>
+		</span>
+		<span class="col-md-1"><label for="end" class="form-label">End</label></span>
+		<span class="col-md-5">
+			<timepicker id="end" ng-model="booking.end" hour-step="1" minute-step="5" show-meridian="false" placeholder="End"></timepicker>
+		</span>
+	</div>
+	
+	<!-- comment -->
+	<div class="form-group">
+		<textarea rows="3" class="form-control" type="text" ng-model="booking.comment" placeholder="Comment"/>
+	</div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+     <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

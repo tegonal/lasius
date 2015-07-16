@@ -53,7 +53,7 @@ object UserTimeBookingAggregate {
   case class PauseBooking(userId: UserId, bookingId: BookingId, date: DateTime) extends UserTimeBookingCommand
   case class ResumeBooking(userId: UserId, bookingId: BookingId, date: DateTime) extends UserTimeBookingCommand
   case class RemoveBooking(userId: UserId, bookingId: BookingId) extends UserTimeBookingCommand
-  case class AppendBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime) extends UserTimeBookingCommand
+  case class AddBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime, comment: Option[String] = None) extends UserTimeBookingCommand
   case class EditBooking(userId: UserId, bookingId: BookingId, start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
   def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingAggregate], userId)
@@ -252,8 +252,8 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
             persist(UserTimeBookingEdited(edited, start, end))(afterEventPersisted)
           }
       }
-    case AppendBooking(userId, categoryId, projectId, tags, start, end) =>
-      persist(UserTimeBookingAdded(Booking(newBookingId, start, Some(end), userId, categoryId, projectId, tags)))(afterEventPersisted)
+    case AddBooking(userId, categoryId, projectId, tags, start, end, comment) =>
+      persist(UserTimeBookingAdded(Booking(newBookingId, start, Some(end), userId, categoryId, projectId, tags, comment)))(afterEventPersisted)
     case PauseBooking(userId, bookingId, time) =>
       state match {
         case b: UserTimeBooking =>

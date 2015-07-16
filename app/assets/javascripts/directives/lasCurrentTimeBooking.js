@@ -158,7 +158,7 @@ define(
                         scope.showChangeStartTime = function() {
                           var modalInstance = $modal.open({
                             animation: true,
-                            templateUrl: '/assets/changeStartTime.html',
+                            templateUrl: '/assets/dialogs/change-start-time.html',
                             controller: 'ChangeStartTimeCtrl',
                             size: 'sm',
                             resolve: {

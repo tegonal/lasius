@@ -7,6 +7,7 @@
 		<th>From</th>
 		<th>To</th>
 		<th>Amount</th>
+		<th>Comment</th>
 		<th></th>
 	</tr>	
 	<tr>
@@ -33,11 +34,12 @@
           <span ng-dblclick="editBookingEnd(booking)" ng-hide="booking === editedBooking && bookingForm.end">{{booking.end | date: dateFormat(booking)}}</span>
         </td>
         <td ng-click="saveEditingBooking()" >{{dayDiff(booking)| number : 1}} <span ng-if="!sameDay(booking)">({{totalDiff(booking)| number : 1}})</span></td>
+        <td ng-click="saveEditingBooking()" >{{booking.comment}}</td>
         <td ng-click="saveEditingBooking()" >
           <button type="button" class="btn btn-xs" ng-hide="isActive(booking)" ng-click="startStop(booking)"><span class="glyphicon glyphicon-play-circle"></span></button>
           <button type="button" class="btn btn-xs btn-danger" ng-click="removeTimeBooking(booking.id)" las-stop-event><span class="glyphicon glyphicon-remove"></span></button>
-        </td>
+        </td>        
     </tr>
 </table>
-	<button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span>&nbsp;Add</button>
+	<button type="button" class="btn btn-primary" ng-click="showAddBooking()"><span class="glyphicon glyphicon-plus"></span>&nbsp;Add</button>
 </div>

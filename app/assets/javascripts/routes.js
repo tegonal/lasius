@@ -24,8 +24,9 @@
 define(['angular',
         './controllers/loginController',
         './controllers/dashboardController',
-        './controllers/changeStartTimeController'], 
-    function(angular, loginController, dashboardController, changeStartTimeController) {
+        './controllers/changeStartTimeController',
+        './controllers/addBookingController'], 
+    function(angular, loginController, dashboardController, changeStartTimeController, addBookingController) {
   'use strict';
 
   var mod = angular.module('routes', []);
@@ -40,6 +41,7 @@ define(['angular',
   
   mod.controller('DashboardCtrl', dashboardController.DashboardCtrl);
   mod.controller('ChangeStartTimeCtrl', changeStartTimeController.ChangeStartTimeCtrl);
+  mod.controller('AddBookingCtrl', addBookingController.AddBookingCtrl);
 
   return mod;
 });

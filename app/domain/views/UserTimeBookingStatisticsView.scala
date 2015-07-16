@@ -21,6 +21,7 @@
 package domain.views
 
 import akka.persistence.PersistentView
+
 import akka.actor._
 import domain.UserTimeBookingAggregate._
 import repositories._
@@ -37,6 +38,7 @@ import utils.DateTimeUtils._
 import actors.ClientReceiverComponent
 import actors.DefaultClientReceiverComponent
 import play.api.Logger
+import scala.concurrent.duration._
 
 object UserTimeBookingStatisticsView {
 
@@ -55,6 +57,8 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
 
   override val persistenceId = userId.value
   override val viewId = userId.value + "-time-booking-statistics"
+
+  override def autoUpdateInterval = 1 second
 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>

@@ -51,6 +51,22 @@ define(['angular'], function (angular) {
           $log.debug("Failed loading document:"+reason);
           return reason.data;
         });
+      },
+      addTimeBooking: function (booking) {
+        var start = moment(booking.start).format(MY_CONFIG.DATE_PATTERN);
+        var end = moment(booking.end).format(MY_CONFIG.DATE_PATTERN);
+        
+        var tagStrings = [];
+        angular.forEach(booking.tags, function(value, key) {
+          this.push(value.id);
+        }, tagStrings);
+        
+        return playRoutes.controllers.TimeBookingController.add(booking.project.categoryId, booking.project.project.id, tagStrings, start, end, booking.comment).post().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading document:"+reason);
+          return reason.data;
+        });
       }
     };
   }]);
