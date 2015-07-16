@@ -153,14 +153,14 @@ define(
 
                         scope.saveEditingBooking = function() {
                           if (scope.editedBooking && scope.bookingForm.changed) {
-                            var booking = scope.editedBooking;
-                            scope.editedBooking = undefined;                            
+                            var booking = scope.editedBooking;                                                       
                             bookingHistoryService.editTimeBooking(booking).then(
                                 function() {
                                   // maybe notify change
                                   scope.bookingForm.changed = false;
                                 });
                           }
+                          scope.editedBooking = undefined;
                         };
 
                         var isEquals = function(booking, favorite) {
