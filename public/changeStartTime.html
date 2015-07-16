@@ -1,8 +1,8 @@
 <div class="modal-header">
-  <h1>Change start time</h1>
+  <h3>Change start time</h3>
 </div>'
 <div class="modal-body">
-   <input type="text" ng-model="time" class="form-control" />
+	<timepicker ng-model="time" hour-step="1" minute-step="5" show-meridian="false"></timepicker>
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="ok()">OK</button>

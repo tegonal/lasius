@@ -160,6 +160,7 @@ define(
                             animation: true,
                             templateUrl: '/assets/changeStartTime.html',
                             controller: 'ChangeStartTimeCtrl',
+                            size: 'sm',
                             resolve: {
                               time: function () {
                                 return scope.result.booking.start;

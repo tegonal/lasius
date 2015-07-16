@@ -23,10 +23,9 @@ define(['angular'], function(angular) {
 
   var ChangeStartTimeCtrl = function($q, $log, $scope, $rootScope, $modalInstance, time, moment) {
     
-    $scope.format = 'HH:mm:ss';
-    $scope.time = moment(time).format($scope.format);
+    $scope.time = moment(time);
     $scope.ok = function () {
-      $modalInstance.close(moment($scope.time, $scope.format));
+      $modalInstance.close(moment($scope.time));
     };
 
     $scope.cancel = function () {
