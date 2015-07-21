@@ -11,7 +11,7 @@
 			</div>
 			<div class="col-md-7">
 			  <span class="pull-right">
-			 	<las-current-time-booking class="if-fade" ng-if="!currentBookingOn" compact="true" user-id="'noob'"></las-current-time-booking>
+			 	<las-current-time-booking class="if-fade" ng-if="!currentBookingOn" compact="true" user-id="user.id"></las-current-time-booking>
 			 	<span ng-if="currentBookingOn" class="glyphicon glyphicon-collapse-up" ng-click="showCurrentBooking(false)"></span>
       		 	<span ng-if="!currentBookingOn" class="glyphicon glyphicon-collapse-down" ng-click="showCurrentBooking(true)"></span>
       		  </span>         
@@ -19,12 +19,12 @@
 		</div>
 		<div class="row animate-if" ng-if="currentBookingOn" ng-animate-children>
 			<div class="col-md-4">				
-				<las-booking  user-id="'noob'"/>
+				<las-booking  user-id="user.id"/>
 			</div>
 			<div class="col-md-1">
 			</div>
 			<div class="col-md-7">
-				<las-current-time-booking compact="false" user-id="'noob'"></las-current-time-booking>							
+				<las-current-time-booking compact="false" user-id="user.id"></las-current-time-booking>							
 			</div>
 		</div>
 	</div>
