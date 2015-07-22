@@ -21,6 +21,7 @@
 package domain.views
 
 import akka.persistence.PersistentView
+
 import models._
 import akka.actor.Props
 import akka.actor.ActorLogging

@@ -56,6 +56,7 @@ class LoginHandler extends Actor with ActorLogging {
     log.debug(s"user logged in:$userId, start persistentViews")
     //initialize persistentviews
     currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
+    latestUserTimeBookingsViewService ! domain.views.LatestUserTimeBookingsView.GetLatestTimeBooking(userId, 5)
     timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
     timeBookingManagerService ! StartAggregate(userId)
   }
@@ -65,6 +66,7 @@ class LoginHandler extends Actor with ActorLogging {
 
     //kill persistentviews
     currentUserTimeBookingsViewService ! StopUserView(userId)
+    latestUserTimeBookingsViewService ! StopUserView(userId)
     timeBookingStatisticsViewService ! StopUserView(userId)
   }
 }

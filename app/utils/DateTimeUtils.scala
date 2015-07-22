@@ -30,4 +30,6 @@ object DateTimeUtils {
     }
 
   }
+
+  implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
 }

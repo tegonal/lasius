@@ -18,49 +18,35 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package core
+package services
 
-import models._
+import akka.actor.ActorLogging
+import akka.actor.Actor
+import akka.actor.ActorRef
+import domain.UserTimeBookingAggregate
+import akka.actor.Terminated
+import models.UserId
+import models.ProjectId
+import models.TagId
+import org.joda.time.DateTime
+import akka.actor.Props
+import domain.views.LatestUserTimeBookingsView._
+import domain.views.LatestUserTimeBookingsView
 
-import play.api._
-import play.api.mvc._
-import play.api.mvc.Results._
-import controllers._
-import play.api.mvc.RequestHeader
-import scala.concurrent.Future
-import akka.actor.ActorSystem
-import services.TimeBookingViewService
-import domain.views.CurrentUserTimeBookingsView
-import services._
-import domain.LoginStateAggregate
+object LatestUserTimeBookingsViewService {
 
-object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
+  def props: Props = Props(new LatestUserTimeBookingsViewService)
+}
 
-  val system = ActorSystem("lasius-actor-system")
-  val executionContext = system.dispatcher
-  val timeBookingManagerService = system.actorOf(TimeBookingViewService.props)
+class LatestUserTimeBookingsViewService extends UserService[domain.views.LatestUserTimeBookingsView.GetLatestTimeBooking] {
 
-  val loginStateAggregate = system.actorOf(LoginStateAggregate.props)
-  val loginHandler = system.actorOf(LoginHandler.props)
+  import domain.UserTimeBookingAggregate._
 
-  val currentUserTimeBookingsViewService = system.actorOf(CurrentUserTimeBookingsViewService.props)
-  val latestUserTimeBookingsViewService = system.actorOf(LatestUserTimeBookingsViewService.props)
-  val timeBookingStatisticsViewService = system.actorOf(TimeBookingStatisticsViewService.props)
-
-  override def onStart(app: Application) {
-    val initData = Play.current.configuration.getBoolean("db.initialize_data")
-    if (initData.isDefined && initData.get) {
-      InitialData.init()
-    }
-
-    //initialite login handler
-    LoginHandler.subscribe(loginHandler, system.eventStream)
-
-    ()
+  def processCommand: Receive = {
+    case cmd: GetLatestTimeBooking =>
+      processAggregateCommand(cmd.userId, cmd)
+    case c => log.debug(s"CurrentUserTimeBookingsViewService -> unknown command:$c")
   }
 
-  override def onError(request: RequestHeader, ex: Throwable) = {
-    //Airbrake.notify(request, ex)
-    Future.successful(InternalServerError(views.html.errorPage(ex)))
-  }
+  def aggregateProps(id: UserId) = LatestUserTimeBookingsView.props(id)
 }

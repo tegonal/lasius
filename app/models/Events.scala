@@ -21,12 +21,14 @@
 package models
 
 import play.api.libs.json._
+
 import play.api.mvc.WebSocket.FrameFormatter
 import reactivemongo.bson.BSONObjectID
 import julienrf.variants.Variants
 import org.joda.time.Duration
 import models.BaseFormat._
 import org.joda.time.DateTime
+import scala.collection.SortedSet
 
 sealed trait PersistetEvent extends Serializable
 
@@ -75,6 +77,8 @@ case class UserTimeBookingByTagEntryRemoved(booking: BookingByTag) extends OutEv
 
 case class FavoriteAdded(userId: UserId, bookingStub: BookingStub) extends OutEvent
 case class FavoriteRemoved(userId: UserId, bookingStub: BookingStub) extends OutEvent
+
+case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends OutEvent
 
 object OutEvent {
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")

@@ -35,6 +35,9 @@ GET      /mylasius/history                      controllers.TimeBookingHistoryCo
 # CurrentUserTimeBookings
 GET      /mylasius/current                      controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking()
 
+# LatestUserTimeBookings
+GET		/mylasius/latest						controllers.LatestUserTimeBookingsController.getLatestTimeBooking(maxHistory:Int?=5)
+
 # StructureController
 GET      /mylasius/structure                    controllers.StructureController.getCategories()
 
