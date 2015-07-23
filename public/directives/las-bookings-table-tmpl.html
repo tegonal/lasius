@@ -1,0 +1,21 @@
+{{removeBooking}}
+<table class="table">
+	<tr>
+		<th>Project</th>
+		<th>Tags</th>	
+		<th ng-if="hasRemoveBooking"></th>
+	</tr>
+    <tr ng-repeat="booking in bookings" ng-class="isActive(booking)?'info':''" ng-click="startStop(booking)">
+        <td>{{booking.projectId}}@{{booking.categoryId}}</td>
+        <td>
+            <span ng-repeat="tag in booking.tags" >
+		        <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
+		            <span>{{tag}}</span>        
+		        </span>
+            </span>
+        </td>
+        <td ng-if="hasRemoveBooking">
+        <button type="button" class="btn btn-xs btn-danger" ng-click="removeBooking({categoryId:booking.categoryId, projectId:booking.projectId, tags:booking.tags})" las-stop-event><span class="glyphicon glyphicon-remove"></span></button>
+        </td>
+    </tr>
+</table>

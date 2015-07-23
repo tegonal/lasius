@@ -21,49 +21,67 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('directives.lasFavorites', []);
-  mod.directive('lasFavorites', ['favoritesService', 'bookingService', 'msgBus', 'moment', function(favoritesService, bookingService, msgBus, moment) {
+  var mod = angular.module('directives.lasBookingsTable', []);
+  mod.directive('lasBookingsTable', ['msgBus', 'bookingService', function(msgBus, bookingService) {
     return {
       restrict: 'E',
-      transclude: true,
-      templateUrl: '/assets/directives/las-favorites-tmpl.html',
+      templateUrl: '/assets/directives/las-bookings-table-tmpl.html',
       scope:  {
-        userId:'='
+        userId: '=',
+        bookings:'=',
+        removeBooking:'&'
       },
       link: function(scope, iElement, iAttrs) {
-                
         
-        favoritesService.getFavorites().then(function(favorites) {
-          scope.favorites = favorites;
-        });
+        scope.hasRemoveBooking = angular.isDefined(iAttrs.removeBooking);
         
-        scope.removeFavorite = function(categoryId, projectId, tags) {
-          favoritesService.removeFavorite(categoryId, projectId, tags).then(function(favorites) {
-            scope.favorites = favorites;
+        var isEquals = function(booking, bookingStub) {
+          if (booking === undefined || bookingStub === undefined) {
+            return false;
+          }
+          return booking.categoryId === bookingStub.categoryId &&
+            booking.projectId === bookingStub.projectId &&
+            booking.tags.equals(bookingStub.tags);
+        };
+             
+        var startBooking = function(bookingStub) {
+          bookingService.start(bookingStub.categoryId, bookingStub.projectId, bookingStub.tags).then(function(result) {
+            //assign dummy booking that row gets selected directly
+            scope.booking = {
+                projectId: bookingStub.projectId,
+                categoryId: bookingStub.categoryId,
+                tags: bookingStub.tags
+            };
           });
         };
-                
-        msgBus.onMsg('FavoriteAdded', scope, function(
+        
+        var stopBooking = function() {
+          bookingService.stop(scope.booking.id).then(function() {
+            scope.booking = undefined;
+          });
+        };
+        
+        scope.startStop = function(bookingStub) {
+          if (scope.isActive(bookingStub)) {
+            stopBooking(bookingStub);
+          }
+          else {
+            startBooking(bookingStub);
+          }
+        };        
+        
+        scope.isActive = function(bookingStub) {
+          return isEquals(scope.booking, bookingStub);          
+        };
+        
+        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
             event, msg) {
-          if (msg.userId === scope.userId) {
-            scope.favorites.favorites.push(msg.bookingStub);
-          
+          if (msg.userId == userId) {
+            scope.booking = msg.booking;
             scope.$apply();
           }
         });
         
-        msgBus.onMsg('FavoriteRemoved', scope, function(
-            event, msg) {
-          if (msg.userId === scope.userId) {
-            for(var i=0;i<scope.favorites.favorites.length;i++){
-              if(isEquals(scope.favorites.favorites[i], msg.bookingStub)){
-                scope.favorites.favorites.splice(i, 1);
-                scope.$apply();
-                return;
-              }
-            }
-          }
-        });
       }
     };
   }]);

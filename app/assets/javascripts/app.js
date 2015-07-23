@@ -38,6 +38,8 @@ define(['angular',
         './directives/lasStopEvent',
         './directives/lasLogin',
         './directives/lasLoginDropdown',
+        './directives/lasBookingsTable',
+        './directives/lasLatestBookings',
         './services/helper', 
         './services/playRoutes',
         './services/currentTimeBooking',
@@ -48,7 +50,8 @@ define(['angular',
         './services/favorites',
         './services/user',
         './services/auth',
-        './services/alert'],
+        './services/alert',
+        './services/latestTimeBookings'],
     function(angular) {
   'use strict';
   
@@ -80,6 +83,8 @@ define(['angular',
                                          'directives.lasStopEvent',
                                          'directives.lasLogin',
                                          'directives.lasLoginDropdown',
+                                         'directives.lasBookingsTable',
+                                         'directives.lasLatestBookings',
                                          'services.helper', 
                                          'services.playRoutes', 
                                          'services.currentTimeBooking',
@@ -90,7 +95,8 @@ define(['angular',
                                          'services.favorites',
                                          'services.user',
                                          'services.auth',
-                                         'services.alert']);
+                                         'services.alert',
+                                         'services.latestTimeBookings']);
   
   //declare constants
   mod.constant("MY_CONFIG", {

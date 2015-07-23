@@ -21,49 +21,28 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var mod = angular.module('directives.lasFavorites', []);
-  mod.directive('lasFavorites', ['favoritesService', 'bookingService', 'msgBus', 'moment', function(favoritesService, bookingService, msgBus, moment) {
+  var mod = angular.module('directives.lasLatestBookings', []);
+  mod.directive('lasLatestBookings', ['latestTimeBookingsService', 'bookingService', 'msgBus', 'moment', function(latestTimeBookingsService, bookingService, msgBus, moment) {
     return {
       restrict: 'E',
       transclude: true,
-      templateUrl: '/assets/directives/las-favorites-tmpl.html',
+      templateUrl: '/assets/directives/las-latest-time-bookings-tmpl.html',
       scope:  {
         userId:'='
       },
       link: function(scope, iElement, iAttrs) {
-                
         
-        favoritesService.getFavorites().then(function(favorites) {
-          scope.favorites = favorites;
-        });
+        scope.history = [];
+        latestTimeBookingsService.getLatestTimeBooking(5);              
         
-        scope.removeFavorite = function(categoryId, projectId, tags) {
-          favoritesService.removeFavorite(categoryId, projectId, tags).then(function(favorites) {
-            scope.favorites = favorites;
-          });
-        };
-                
-        msgBus.onMsg('FavoriteAdded', scope, function(
+        msgBus.onMsg('LatestTimeBooking', scope, function(
             event, msg) {
           if (msg.userId === scope.userId) {
-            scope.favorites.favorites.push(msg.bookingStub);
-          
+            scope.history = msg.history;
             scope.$apply();
           }
         });
-        
-        msgBus.onMsg('FavoriteRemoved', scope, function(
-            event, msg) {
-          if (msg.userId === scope.userId) {
-            for(var i=0;i<scope.favorites.favorites.length;i++){
-              if(isEquals(scope.favorites.favorites[i], msg.bookingStub)){
-                scope.favorites.favorites.splice(i, 1);
-                scope.$apply();
-                return;
-              }
-            }
-          }
-        });
+                        
       }
     };
   }]);
