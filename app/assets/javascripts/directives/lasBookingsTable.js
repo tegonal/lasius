@@ -76,7 +76,7 @@ define(['angular'], function(angular) {
         
         msgBus.onMsg('CurrentUserTimeBooking', scope, function(
             event, msg) {
-          if (msg.userId == userId) {
+          if (msg.userId == scope.userId) {
             scope.booking = msg.booking;
             scope.$apply();
           }

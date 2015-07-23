@@ -36,28 +36,26 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
   override val persistenceId = userId.value
   override val viewId = userId.value + "-latest-time-bookings"
 
-  case class LatestBookingStub(start: DateTime, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId])
-  object LatestBookingStub {
-    implicit val bookingStubFormat: Format[LatestBookingStub] = Json.format[LatestBookingStub]
-  }
+  val oldDateTime: DateTime = DateTime.parse("2000-01-01")
+  val maxInternalHistory = 1000
 
-  implicit def booking2LatestBookingStub(b: Booking): LatestBookingStub = LatestBookingStub(b.start, b.categoryId, b.projectId, b.tags)
-  implicit def latestBookingStub2BookingStub(b: LatestBookingStub): BookingStub = BookingStub(b.categoryId, b.projectId, b.tags)
+  val ordering = Ordering.by[BookingStub, DateTime](b => getStartTime(b)).reverse
 
-  case class TimeBookingsHistory(maxHistory: Int = maxHistory, history: SortedSet[LatestBookingStub] = SortedSet.empty(Ordering.by[LatestBookingStub, DateTime](_.start).reverse))
-  import domain.UserTimeBookingAggregate._
-
-  val maxHistory = 1000
+  case class TimeBookingsHistory(maxHistory: Int = maxInternalHistory,
+    startTimeMap: Map[BookingStub, DateTime] = Map(),
+    history: Set[BookingStub] = Set())
 
   var state: TimeBookingsHistory = TimeBookingsHistory()
 
   override def autoUpdateInterval = 100 millis
 
+  private def getStartTime(booking: BookingStub): DateTime = {
+    state.startTimeMap.get(booking).getOrElse(oldDateTime)
+  }
+
   val receive: Receive = {
     case e: UserTimeBookingStarted =>
-      val newHistory = (state.history + e.booking).take(maxHistory)
-      state = state.copy(history = newHistory)
-      notifyClient()
+      addBooking(e.booking)
       sender ! Ack
     case e: UserTimeBookingStopped =>
       sender ! Ack
@@ -66,10 +64,8 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
     case e: UserTimeBookingStartTimeChanged =>
       sender ! Ack
     case e: UserTimeBookingAdded =>
-      if (state.history.last.start.isBefore(e.booking.start)) {
-        val newHistory = (state.history + e.booking).take(maxHistory)
-        state = state.copy(history = newHistory)
-        notifyClient()
+      if (getStartTime(state.history.last).isBefore(e.booking.start)) {
+        addBooking(e.booking)
       }
     case e: UserTimeBookingRemoved =>
       sender ! Ack
@@ -81,8 +77,16 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
       sender ! Ack
   }
 
+  private def addBooking(booking: Booking) = {
+    val stub = booking.createStub
+    val newHistory = (state.history + stub).toSeq.sorted(ordering).take(maxInternalHistory).toSet
+    val newStartTimeMap = state.startTimeMap + (stub -> booking.start)
+    state = state.copy(history = newHistory, startTimeMap = newStartTimeMap)
+    notifyClient()
+  }
+
   private def notifyClient() = {
-    val result: Seq[BookingStub] = state.history.take(state.maxHistory).toSeq.map(latestBookingStub2BookingStub(_))
+    val result = state.history.toSeq.sorted(ordering).take(state.maxHistory)
     clientReceiver ! (userId, LatestTimeBooking(userId, result), List(userId))
   }
 
