@@ -53,7 +53,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "momentjs" % "2.9.0",
   "org.webjars" % "nvd3-community" % "1.7.0",
   "org.webjars" % "d3js" % "3.5.3",
-  "org.webjars" % "angularjs-nvd3-directives" % "0.0.7-1"
+  "org.webjars" % "angularjs-nvd3-directives" % "0.0.7-1",
+  "org.webjars.bower" % "angular-datepicker" % "1.0.12"
 )
 
 routesImport ++= Seq(
