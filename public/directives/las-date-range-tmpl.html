@@ -52,15 +52,18 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4">
 				<div ng-if="selection === 'day'" date-picker="dateSelection.date"
-					min-view="date"></div>
+					min-view="date"
+					class="col-md-2"></div>
 				<div ng-if="selection === 'month'" date-picker="dateSelection.date"
-					min-view="month"></div>
+					min-view="month"
+					class="col-md-2"></div>
 				<div ng-if="selection === 'year'" date-picker="dateSelection.date"
-					min-view="year"></div>
+					min-view="year"
+					class="col-md-2"></div>
 				<div ng-if="selection === 'range'" date-range
-					start="dateSelection.range.from" end="dateSelection.range.to"></div>
+					start="dateSelection.range.from" end="dateSelection.range.to"
+					class="col-md-5"></div>
 			</div>
 		</div>
 	</div>

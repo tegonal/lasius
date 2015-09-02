@@ -42,6 +42,8 @@ define(['angular'], function(angular) {
         
         scope.toggleSelection = function(mode) {
           scope.selection = mode;
+          
+          dateChanged(scope.dateSelection.date);
         };
         
         scope.dateSelection = {
@@ -106,23 +108,26 @@ define(['angular'], function(angular) {
             }
                                    
             
-            }, true); 
+            }, true);
+        
+        var dateChanged = function(value) {
+          if (!scope.dateChanging) {
+            if (scope.selection === 'range') {
+              scope.range = {
+                  from: moment(scope.dateSelection.range.from).startOf('day'),
+                  to: moment(scope.dateSelection.range.to).endOf('day')
+              };
+            }
+            else {
+              scope.date = moment(value.date);
+            }                            
+          }
+        };
         
         scope.$watch('dateSelection',
             function(value){
-            if (!scope.dateChanging) {
-              if (scope.selection === 'range') {
-                scope.range = {
-                    from: moment(scope.dateSelection.range.from).startOf('day'),
-                    to: moment(scope.dateSelection.range.to).endOf('day')
-                };
-              }
-              else {
-                scope.date = moment(value.date);
-              }              
-              scope.isCollapsed = false;
-            }
-            }, true);
+              dateChanged(value);
+            }, true); 
       }
     };
   }]);
