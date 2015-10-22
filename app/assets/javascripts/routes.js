@@ -36,7 +36,8 @@ define(['angular',
       .when('/', {templateUrl: '/assets/home.html', controller:dashboardController.DashboardCtrl, access:userRoles.FreeUser})
       .when('/login', {templateUrl: '/assets/login.html', controller:loginController.LoginCtrl, access:userRoles.Guest})
       .when('/forbidden', {templateUrl:'/assets/forbidden.html', access:userRoles.Guest})
-      .otherwise({redirectTo: '/assets/notFound.html'});
+      .when('/notFound', {templateUrl:'/assets/notFound.html', access:userRoles.Guest})
+      .otherwise({redirectTo: '/notFound'});
   }]);
   
   mod.controller('DashboardCtrl', dashboardController.DashboardCtrl);
