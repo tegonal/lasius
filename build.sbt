@@ -4,9 +4,11 @@ name := """lasius"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val jiraScalaApi = RootProject(uri("git://github.com/toggm/play-scala-jira-api.git"))
 
-scalaVersion := "2.11.1"
+lazy val root = (project.dependsOn(jiraScalaApi) in file(".")).enablePlugins(PlayScala)
+
+scalaVersion := "2.11.7"
 
 resolvers += "Tegonal releases" at "https://github.com/tegonal/tegonal-mvn/raw/master/releases/"
 
