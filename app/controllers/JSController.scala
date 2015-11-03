@@ -21,7 +21,6 @@
 package controllers
 
 import models._
-
 import play.api._
 import play.api.mvc._
 import play.api.libs.json._
@@ -29,6 +28,8 @@ import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
 import play.api.cache._
 import play.api.Play.current
+import play.core.Router
+import play.api.routing.JavaScriptReverseRoute
 
 object JSController extends Controller {
 
@@ -42,7 +43,7 @@ object JSController extends Controller {
     val controllers = jsRoutesClass.getFields.map(_.get(null))
     controllers.flatMap { controller =>
       controller.getClass.getDeclaredMethods.map { action =>
-        action.invoke(controller).asInstanceOf[play.core.Router.JavascriptReverseRoute]
+        action.invoke(controller).asInstanceOf[JavaScriptReverseRoute]
       }
     }
   }

@@ -25,8 +25,6 @@ import play.api.mvc._
 import play.api.test._
 import play.api.test.Helpers._
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.mutable._
 import play.api.libs.json.Json
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -38,16 +36,31 @@ import org.apache.http.HttpStatus
 import controllers.ApplicationController._
 import play.cache.Cache
 import scala.concurrent.ExecutionContext
-import org.specs2.mock.Mockito
 import org.mockito.internal.stubbing.answers.DoesNothing
 import scala.concurrent._
 import scala.concurrent.duration._
+import org.specs2.runner.JUnitRunner
+import org.specs2.mutable.Specification
+import org.specs2.mock.Mockito
 
 @RunWith(classOf[JUnitRunner])
-class SecuritySpec extends PlaySpecification with Results with Mockito {
+class SecuritySpec extends Specification with Results with Mockito {
   sequential =>
   "HasToken" should {
-    "Fail if token is missing in cookie" in new WithApplication() {
+
+    def runHasToken(controller: SecurityMock, request: Request[Unit]) = {
+      //execute
+      implicit val context = scala.concurrent.ExecutionContext.Implicits.global
+      val result: Future[Result] = controller.HasToken(parse.empty) { subject =>
+        implicit request =>
+          Future.successful(Ok)
+      }.apply(request)
+
+      //return results
+      Await.ready(result, 2 seconds)
+    }
+
+    "Fail if token is missing in cookie" in new WithApplication {
       //prepare    
       val controller = new SecurityMockImpl()
       val request = FakeRequest().asInstanceOf[Request[Unit]]
@@ -60,7 +73,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       contentAsJson(result) === Json.obj("message" -> "Invalid XSRF Token cookie")
     }
 
-    "Fail if token is missing in request header" in new WithApplication() {
+    "Fail if token is missing in request header" in new WithApplication {
       //prepare    
       val controller = new SecurityMockImpl()
       val token = "ghvhvh"
@@ -74,7 +87,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       contentAsJson(result) === Json.obj("message" -> "No Token")
     }
 
-    "Fail if token is missing in cache" in new WithApplication() {
+    "Fail if token is missing in cache" in new WithApplication {
       //prepare    
       val controller = new SecurityMockImpl()
       val token = "ghvhvh"
@@ -88,7 +101,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       contentAsJson(result) === Json.obj("message" -> "No Token")
     }
 
-    "Fail if token in cookie and request header mismatches" in new WithApplication() {
+    "Fail if token in cookie and request header mismatches" in new WithApplication {
       //prepare    
       val controller = new SecurityMockImpl()
       val token = "ghvhvh"
@@ -104,7 +117,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       contentAsJson(result) === Json.obj("message" -> "Invalid Token")
     }
 
-    "Succeed in all cases" in new WithApplication() {
+    "Succeed in all cases" in new WithApplication {
       //prepare    
       val controller = spy(new SecurityMockImpl())
       val token = "ghvhvh"
@@ -118,17 +131,6 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       //check results
       status(result) === HttpStatus.SC_OK
     }
-
-    def runHasToken(controller: SecurityMock, request: Request[Unit]) = {
-      //execute
-      val result: Future[Result] = controller.HasToken(parse.empty) { subject =>
-        implicit request =>
-          Future.successful(Ok)
-      }.apply(request)
-
-      //return results
-      Await.ready(result, 2 seconds)
-    }
   }
 
   "HasRole" should {
@@ -137,6 +139,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       val request = FakeRequest().asInstanceOf[Request[Unit]]
 
       //execute
+      implicit val context = scala.concurrent.ExecutionContext.Implicits.global
       val result: Future[Result] = controller.HasRole(role, parse.empty) { subject =>
         implicit request =>
           Future.successful(Ok)
@@ -146,7 +149,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       Await.ready(result, 2 seconds)
     }
 
-    "return unauthorized when user can't get resolved" in new WithApplication() {
+    "return unauthorized when user can't get resolved" in new WithApplication {
       //prepare    
       val controller = new HasRoleSecurityMock()
       controller.authConfig.resolveUser(any[UserId])(any[ExecutionContext]) returns Future.successful(None)
@@ -158,7 +161,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       there was one(controller.authConfig).authorizationFailed(any[RequestHeader])(any[ExecutionContext])
     }
 
-    "return unauthorized when autorization failed" in new WithApplication() {
+    "return unauthorized when autorization failed" in new WithApplication {
       //prepare    
       val controller = new HasRoleSecurityMock()
       controller.authConfig.authorize(any[User], any[Role])(any[ExecutionContext]) returns Future.successful(false)
@@ -171,7 +174,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       there was one(controller.authConfig).authorizationFailed(any[RequestHeader])(any[ExecutionContext])
     }
 
-    "return InternalServerError on any failure" in new WithApplication() {
+    "return InternalServerError on any failure" in new WithApplication {
       //prepare    
       val controller = new HasRoleSecurityMock()
       controller.authConfig.authorize(any[User], any[Role])(any[ExecutionContext]) returns Future.failed(new RuntimeException)
@@ -184,7 +187,7 @@ class SecuritySpec extends PlaySpecification with Results with Mockito {
       status(result) === HttpStatus.SC_INTERNAL_SERVER_ERROR
     }
 
-    "Succeed if authorized" in new WithApplication() {
+    "Succeed if authorized" in new WithApplication {
       //prepare    
       val controller = new HasRoleSecurityMock()
       controller.authConfig.authorize(any[User], any[Role])(any[ExecutionContext]) returns Future.successful(true)

@@ -80,8 +80,10 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
           JsError(s"Unexpected JSON value $json")
       }
     }
-    case JsObject(Seq((_, oid))) =>
-      reads(oid)
+    case JsObject(maps) =>
+      maps.get("$oid").map { value =>
+        reads(value)
+      }.getOrElse(JsError(s"Unexpected JSON value $maps"))
     case _ => JsError(s"Unexpected JSON value $json")
   }
 }
@@ -89,9 +91,9 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
 class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f1: Format[I1], f2: Format[I2]) extends Format[I] {
   def reads(json: JsValue): JsResult[I] = json match {
     case JsObject(values) => {
-      Json.fromJson[I1](values(0)._2) match {
+      Json.fromJson[I1](values.toSeq(0)._2) match {
         case JsSuccess(i1, _) =>
-          Json.fromJson[I2](values(1)._2) match {
+          Json.fromJson[I2](values.toSeq(1)._2) match {
             case JsSuccess(i2, _) =>
               JsSuccess(fact(i1, i2))
             case _ => JsError(s"Unexpected JSON value $json")
