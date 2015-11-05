@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
   "com.typesafe.akka" %% "akka-persistence" % "2.4.0",
-  "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test",  
+  "com.typesafe.akka" %% "akka-slf4j" % "2.4.0",  
+  "com.typesafe.akka" %% "akka-testkit" % "2.4.0" % "test", 
   "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "1.0.8", 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
