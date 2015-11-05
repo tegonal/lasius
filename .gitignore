@@ -17,3 +17,5 @@ dist
 bin
 /journal
 activator-*.sbt
+.cache-main
+.cache-tests

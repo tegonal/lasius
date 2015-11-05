@@ -68,5 +68,5 @@ routesImport ++= Seq(
 
 javaOptions in Test += "-Dconfig.file=conf/test.conf"
 
-javaOptions in Production += "-Dconfig.file=conf/prod.conf"
+javaOptions in Production += "-Dconfig.file=conf/prod.conf -Dlogger.resource=logback-prod.xml" 
 
