@@ -29,7 +29,7 @@ define(['angular'], function(angular) {
       templateUrl: '/assets/directives/las-date-range-tmpl.html',
       scope:  {
         range: '=',
-        selection: '='
+        selection: '=?'
       },
       link: function(scope, iElement, iAttrs) {
         scope.date = moment();
