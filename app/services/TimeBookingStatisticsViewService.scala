@@ -35,7 +35,7 @@ import domain.views.UserTimeBookingStatisticsView
 
 object TimeBookingStatisticsViewService {
 
-  def props: Props = Props(new TimeBookingStatisticsViewService)
+  def props: Props = Props(classOf[TimeBookingStatisticsViewService])
 }
 
 class TimeBookingStatisticsViewService extends UserService[StartUserTimeBookingView] {

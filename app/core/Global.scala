@@ -21,7 +21,6 @@
 package core
 
 import models._
-
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
@@ -29,23 +28,34 @@ import controllers._
 import play.api.mvc.RequestHeader
 import scala.concurrent.Future
 import akka.actor.ActorSystem
+import akka.pattern.{ ask, pipe }
 import services.TimeBookingViewService
 import domain.views.CurrentUserTimeBookingsView
 import services._
 import domain.LoginStateAggregate
+import akka.LasiusSupervisorActor
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import akka.actor.ActorRef
+
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
 
   val system = ActorSystem("lasius-actor-system")
+  val supervisor = system.actorOf(LasiusSupervisorActor.props)
   val executionContext = system.dispatcher
-  val timeBookingManagerService = system.actorOf(TimeBookingViewService.props)
+  implicit val timeout = Timeout(5 seconds) // needed for `?` below
+  val duration = Duration.create(5, SECONDS);
+  val timeBookingManagerService = Await.result(supervisor ? TimeBookingViewService.props, duration).asInstanceOf[ActorRef]
 
-  val loginStateAggregate = system.actorOf(LoginStateAggregate.props)
-  val loginHandler = system.actorOf(LoginHandler.props)
+  val loginStateAggregate = Await.result(supervisor ? LoginStateAggregate.props, duration).asInstanceOf[ActorRef]
+  val loginHandler =  Await.result(supervisor ? LoginHandler.props, duration).asInstanceOf[ActorRef]
 
-  val currentUserTimeBookingsViewService = system.actorOf(CurrentUserTimeBookingsViewService.props)
-  val latestUserTimeBookingsViewService = system.actorOf(LatestUserTimeBookingsViewService.props)
-  val timeBookingStatisticsViewService = system.actorOf(TimeBookingStatisticsViewService.props)
+  val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
+  val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
+  val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
 
   override def onStart(app: Application) {
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
@@ -54,8 +64,8 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
     }
 
     //initialite login handler
-    LoginHandler.subscribe(loginHandler, system.eventStream)
-
+    LoginHandler.subscribe(loginHandler, system.eventStream)    
+    
     ()
   }
 

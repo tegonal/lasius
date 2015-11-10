@@ -29,14 +29,14 @@ define(
               'lasCurrentTimeBooking',
               [
                   '$window',
-                  '$modal',
+                  '$uibModal',
                   '$log',
                   'MY_CONFIG',
                   'currentTimeBookingService',
                   'favoritesService', 
                   'msgBus',
                   'moment',
-                  function($window, $modal, $log, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
+                  function($window, $uibModal, $log, MY_CONFIG, currentTimeBookingService, favoritesService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -156,7 +156,7 @@ define(
                         };
                         
                         scope.showChangeStartTime = function() {
-                          var modalInstance = $modal.open({
+                          var modalInstance = $uibModal.open({
                             animation: true,
                             templateUrl: '/assets/dialogs/change-start-time.html',
                             controller: 'ChangeStartTimeCtrl',

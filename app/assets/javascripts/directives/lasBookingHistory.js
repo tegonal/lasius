@@ -28,14 +28,14 @@ define(
           .directive(
               'lasBookingHistory',
               [ 
-                  '$modal',
+                  '$uibModal',
                   '$log',
                   'MY_CONFIG',
                   'bookingHistoryService',
                   'bookingService',
                   'msgBus',
                   'moment',
-                  function($modal, $log, MY_CONFIG, bookingHistoryService, bookingService,
+                  function($uibModal, $log, MY_CONFIG, bookingHistoryService, bookingService,
                       msgBus, moment) {
                     return {
                       restrict : 'E',
@@ -201,7 +201,7 @@ define(
                         };
                         
                         scope.showAddBooking = function() {
-                          var modalInstance = $modal.open({
+                          var modalInstance = $uibModal.open({
                             animation: true,
                             templateUrl: '/assets/dialogs/add-booking.html',
                             controller: 'AddBookingCtrl'

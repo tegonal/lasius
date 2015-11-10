@@ -33,7 +33,7 @@ import akka.actor.Props
 
 object TimeBookingViewService {
 
-  def props: Props = Props(new TimeBookingViewService)
+  def props: Props = Props(classOf[TimeBookingViewService])
 }
 
 class TimeBookingViewService extends UserService[domain.UserTimeBookingAggregate.UserTimeBookingCommand] {
