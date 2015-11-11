@@ -40,7 +40,7 @@ class TimeBookingViewService extends UserService[domain.UserTimeBookingAggregate
 
   import domain.UserTimeBookingAggregate._
 
-  def processCommand: Receive = {
+  def processCommand: Receive = {    
     case cmd: UserTimeBookingCommand =>
       log.debug(s"TimeBookingManagerService -> processCommand:$cmd")
       processAggregateCommand(cmd.userId, cmd)

@@ -41,9 +41,11 @@
   <!-- Set logging for all Akka library classes to INFO -->
   <logger name="akka" level="DEBUG" />
   <!-- Set a specific actor to DEBUG -->
-  <logger name="actors.MyActor" level="DEBUG" />
+  <logger name="actors" level="DEBUG" />
+  
+  <logger name="r.c.a" level="INFO" />
 
-  <root level="WARN">
+  <root level="INFO">
     <appender-ref ref="ASYNCFILE" />
     <appender-ref ref="ASYNCSTDOUT" />
   </root>
