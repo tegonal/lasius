@@ -21,7 +21,6 @@
 package domain.views
 
 import akka.persistence.PersistentView
-
 import models._
 import akka.actor.Props
 import akka.actor.ActorLogging
@@ -34,6 +33,13 @@ import org.joda.time.Interval
 import scala.concurrent.duration._
 import actors.ClientReceiverComponent
 import actors.DefaultClientReceiverComponent
+import akka.persistence.query.PersistenceQuery
+import akka.contrib.persistence.mongodb.ScalaDslMongoReadJournal
+import akka.stream.scaladsl.Source
+import akka.stream.ActorMaterializer
+import akka.persistence.query.EventEnvelope
+import akka.contrib.persistence.mongodb.MongoReadJournal
+import akka.actor.Actor
 
 object CurrentUserTimeBookingsView {
 
@@ -47,20 +53,20 @@ class DefaultCurrentUserTimeBookingsView(userId: UserId)
   extends CurrentUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
-class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
+class CurrentUserTimeBookingsView(userId: UserId) extends PersistenceViewWrapper with ActorLogging {
   self: ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.CurrentUserTimeBookingsView._
 
   override val persistenceId = userId.value
-  override val viewId = userId.value + "-current-time-bookings"
+  //override val viewId = userId.value + "-current-time-bookings"
 
   case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
   import domain.UserTimeBookingAggregate._
 
   var state: CurrentTimeBookings = CurrentTimeBookings(None, DateTime.now, Map())
 
-  override def autoUpdateInterval = 100 millis
+  //override def autoUpdateInterval = 100 millis
 
   val receive: Receive = {
     case e: UserTimeBookingStarted =>

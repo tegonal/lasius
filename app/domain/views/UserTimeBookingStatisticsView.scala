@@ -50,15 +50,15 @@ object UserTimeBookingStatisticsView {
 class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBookingStatisticsView(userId)
   with MongoUserBookingStatisticsRepositoryComponent with DefaultClientReceiverComponent
 
-class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with ActorLogging {
+class UserTimeBookingStatisticsView(userId: UserId) extends PersistenceViewWrapper with ActorLogging {
   self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.UserTimeBookingStatisticsView._
 
   override val persistenceId = userId.value
-  override val viewId = userId.value + "-time-booking-statistics"
+  //override val viewId = userId.value + "-time-booking-statistics"
 
-  override def autoUpdateInterval = 1 second
+  //override def autoUpdateInterval = 1 second
 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>

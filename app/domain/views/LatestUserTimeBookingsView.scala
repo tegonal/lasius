@@ -28,13 +28,13 @@ class DefaultLatestUserTimeBookingsView(userId: UserId)
   extends LatestUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
-class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
+class LatestUserTimeBookingsView(userId: UserId) extends PersistenceViewWrapper with ActorLogging {
   self: ClientReceiverComponent =>
   import domain.UserTimeBookingAggregate._
   import domain.views.LatestUserTimeBookingsView._
 
   override val persistenceId = userId.value
-  override val viewId = userId.value + "-latest-time-bookings"
+  //override val viewId = userId.value + "-latest-time-bookings"
 
   val oldDateTime: DateTime = DateTime.parse("2000-01-01")
   val maxInternalHistory = 1000
@@ -47,7 +47,7 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
 
   var state: TimeBookingsHistory = TimeBookingsHistory()
 
-  override def autoUpdateInterval = 100 millis
+  //override def autoUpdateInterval = 100 millis
 
   private def getStartTime(booking: BookingStub): DateTime = {
     state.startTimeMap.get(booking).getOrElse(oldDateTime)
