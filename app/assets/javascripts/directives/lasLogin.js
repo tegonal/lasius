@@ -36,13 +36,14 @@ define(['angular'], function(angular) {
         };
         
         scope.login = function() {
+          scope.message = undefined;
           userService.login(scope.user.email, scope.user.password).then(function(user) {       
             if (user !== undefined) {
               //TODO: maybe fetch requested url and redirect to it back
               $location.path('/');
             }
             else {
-              $location.path('/login_failed');
+              scope.message = "Login failed, please enter correct email and password!"; 
             }
           });
         };
