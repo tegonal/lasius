@@ -105,9 +105,9 @@ define(['angular'], function(angular) {
             scope.chartOptions.push(getChartOptions(i));
           }
           
-          //if (scope.charts.length > numberOfCharts) {
-            //scope.charts.slice(numberOfCharts, scope.charts.length - numberOfCharts);
-          //}
+          if (scope.charts.length > numberOfCharts) {
+            scope.charts.slice(numberOfCharts, scope.charts.length - numberOfCharts);
+          }
           
           //push 100% workload charts
           for (i = scope.charts.length; i < numberOfCharts-1; i++) { 
