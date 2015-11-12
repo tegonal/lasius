@@ -29,12 +29,17 @@ define(['angular'], function(angular) {
       templateUrl: '/assets/directives/las-date-range-tmpl.html',
       scope:  {
         range: '=',
-        selection: '='
+        initialSelection: '@'
       },
       link: function(scope, iElement, iAttrs) {
         scope.date = moment();
         
-        scope.selection = 'day';
+        if (scope.initialSelection) {
+          scope.selection = scope.initialSelection;
+        }
+        else {
+          scope.selection = 'day';
+        }
         
         scope.isCollapsed = false;
         
