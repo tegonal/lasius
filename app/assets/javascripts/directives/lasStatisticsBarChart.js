@@ -34,37 +34,54 @@ define(['angular'], function(angular) {
         height: '=',
       },
       link: function(scope, iElement, iAttrs) {
-        
-        scope.xFunction = function(){
-          return function(d) {
-              return d.day;
-          };
+  
+        scope.chartOptions = {
+            chart: {
+                type: 'multiBarChart',
+                height: scope.height,
+                width: scope.width,
+                noData: 'No Statistics found!',
+                margin : {
+                    top: 50,
+                    right: 50,
+                    bottom: 50,
+                    left: 50
+                },
+                showValues: true,
+                showXAxis: true,
+                showYAxis: true,
+                showControls: false,
+                clipEdge: true,
+                reduceXTicks: true,
+                tooltips:true,
+                duration: 500,
+                stacked: true,
+                x: function (d) { return d.day; },
+                y: function (d) { return d.duration; },
+                tooltipContent: function(key, x, y, e, graph) {
+                  return  '<h3>' + key + '</h3>' +
+                  '<p>Date:<b>' + x +'</b><br />Hours:<b>' + y + '</b></p>';
+                },
+                staggerLabels: false,
+                xAxis: {
+                    axisLabel: 'Tag',
+                    showMaxMin: false,
+                    tickFormat: function(day) {
+                      return moment(day).format("D.M.YY");            
+                    },
+                    rotateXLabel: true
+                },
+                yAxis: {
+                    axisLabel: 'Stunden',
+                    axisLabelDistance: -20,
+                    showMaxMin: true,
+                    tickFormat: function(d) {
+                      var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
+                      return time;
+                    }
+                }
+            }
         };
-        scope.yFunction = function(){
-          return function(d) { 
-            return d.duration; 
-          };
-        };
-        
-        scope.yAxisFunction = function() {
-          return function(d) {
-            var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
-            return time;
-          };
-        };
-        
-        scope.xAxisFunction = function() {
-          return function(day) {
-            return moment(day).format("D");            
-          };
-        };
-        
-        scope.toolTipContentFunction = function(){
-          return function(key, x, y, e, graph) {
-              return  '<h3>' + key + '</h3>' +
-                    '<p>' + y + ' hours</p>';
-          };
-        };               
                        
         var load = function(range) {
           if (range === undefined || range.from === undefined) {

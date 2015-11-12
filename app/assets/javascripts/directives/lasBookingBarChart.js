@@ -35,25 +35,7 @@ define(['angular'], function(angular) {
         height: '=',
       },
       link: function(scope, iElement, iAttrs) {
-        
-        scope.xFunction = function(){
-          return function(d) {
-              return d.label;
-          };
-        };
-        scope.yFunction = function(){
-          return function(d) { 
-            return d.value; 
-          };
-        };  
-    
-        scope.valueFormatFunction = function(){
-          return function(d){
-            var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
-              return time+' hours';
-          };
-        };
-                                         
+                                     
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
             return;
@@ -67,6 +49,7 @@ define(['angular'], function(angular) {
               "key": scope.serie,
                 "values": statistics
             }];
+            scope.chartOptions.chart.height = statistics.length * 40;
           });
         };
         
@@ -74,11 +57,33 @@ define(['angular'], function(angular) {
             function(value){
               load(value);                              
             }, true);
+
         
-        scope.callbackFunction = function(){
-          return function(chart){
-              console.log('inner callback function', chart);
-          };
+        scope.chartOptions = {
+            chart: {
+              type: 'multiBarHorizontalChart',
+              height: scope.height,
+              margin : {top: 30, right: 20, bottom: 50, left: 150},
+              x: function(d){return d.label;},
+              y: function(d){return d.value;},
+              showValues: true,
+              showLegend: false,
+              showXAxis: true,
+              showYAxis: false,
+              showControls: false,
+              stacked:true,
+              tooltips:false,
+              noData:'No Statistics found!',              
+              valueFormat:  function(d){
+                  var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
+                    return time+' hours';                
+              },
+              duration: 500,
+              xAxis: {
+                  axisLabel: '',
+                  showMaxMin: true
+              }
+          }
         };
         
         msgBus.onMsg('UserTimeBookingByCategoryEntryAdded', scope, function(
