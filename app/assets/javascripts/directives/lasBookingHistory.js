@@ -30,12 +30,14 @@ define(
               [ 
                   '$modal',
                   '$log',
+                  '$document',
+                  '$timeout',
                   'MY_CONFIG',
                   'bookingHistoryService',
                   'bookingService',
                   'msgBus',
                   'moment',
-                  function($modal, $log, MY_CONFIG, bookingHistoryService, bookingService,
+                  function($modal, $log, $document, $timeout,MY_CONFIG, bookingHistoryService, bookingService,
                       msgBus, moment) {
                     return {
                       restrict : 'E',
@@ -108,6 +110,43 @@ define(
                                 removeBooking(bookingId);
                               });
                         };
+                        
+                        var downloadCSVFile = function(filename, csv, charset) {
+                          var defCharset = charset || "utf-8";
+                          var blob = new Blob([csv], {
+                            type: "text/csv;charset="+ defCharset + ";"
+                          });
+
+                          if (window.navigator.msSaveOrOpenBlob) {
+                            navigator.msSaveBlob(blob, filename);
+                          } else {
+
+                            var downloadLink = angular.element('<a></a>');
+                            downloadLink.attr('href', window.URL.createObjectURL(blob));
+                            downloadLink.attr('download', filename);
+                            downloadLink.attr('target', '_blank');
+
+                            $document.find('body').append(downloadLink);
+                            $timeout(function () {
+                              downloadLink[0].click();
+                              downloadLink.remove();
+                            }, null);
+                          }
+                        };
+                        
+                        scope.exportTimeBookings = function() {
+                          var range = scope.range;
+                          if (range === undefined || range.from === undefined) {
+                            return;
+                          }
+                          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+                          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
+
+                          bookingHistoryService.exportTimeBookingHistory(from, to)
+                              .then(function(csv) {
+                                downloadCSVFile('export.csv', csv);
+                              });
+                        };                                              
 
                         var startBooking = function(booking) {
                           bookingService.start(booking.categoryId,

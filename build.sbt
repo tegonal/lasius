@@ -34,6 +34,7 @@ libraryDependencies ++= Seq(
   "io.kamon" %% "kamon-system-metrics" % "0.3.5",
   "io.kamon" %% "kamon-log-reporter"   % "0.3.5",
   "com.typesafe.play.plugins" %% "play-statsd" % "2.3.0",
+  "com.github.melrief" %% "purecsv" % "0.0.4",
   cache,
   ws,
   // WebJars (i.e. client-side) dependencies
