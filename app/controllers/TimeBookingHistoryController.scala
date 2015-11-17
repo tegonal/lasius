@@ -47,7 +47,7 @@ object CSVHelper {
 
     def toCSV = Seq(booking.projectId.value.quote,
       booking.categoryId.value.quote,
-      booking.tags.toCSV(t => t.value),
+      booking.tags.toCSV(t => t.value).quote,
       format(booking.start),
       booking.end.map(format(_)).getOrElse(""),
       booking.comment.quote,
@@ -55,7 +55,7 @@ object CSVHelper {
   }
 
   implicit class CSVSeqWrapper[A](val seq: Seq[A]) {
-    def toCSV(f: A => String) = seq.map(t => f(t).quote).mkString(",")
+    def toCSV(f: A => String) = seq.map(t => f(t)).mkString(",")
   }
 }
 
