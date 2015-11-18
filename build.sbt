@@ -4,9 +4,9 @@ name := """lasius"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val jiraScalaApi = RootProject(uri("git://github.com/toggm/play-scala-jira-api.git"))
+lazy val jiraScalaApi = ProjectRef(uri("git://github.com/toggm/play-scala-jira-api.git"), "root")
 
-lazy val root = (project.dependsOn(jiraScalaApi) in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).dependsOn(jiraScalaApi).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.7"
 
@@ -16,13 +16,15 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
+val akkaVs = "2.3.14"
+
 libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.11.7.play24",
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.0.0",
-  "com.typesafe.akka" %% "akka-persistence-experimental" % "2.3.9",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.9",  
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.9" % "test", 
+  "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVs,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVs,  
+  "com.typesafe.akka" %% "akka-testkit" % akkaVs % "test", 
   "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.4.2", 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
