@@ -135,7 +135,7 @@ define(['angular',
     }]);
   }]);
   
-  mod.factory('httpErrorInterceptor', ['$q', '$rootScope', '$timeout', 'alertService', function($q, $rootScope, $timeout, alertService) {
+  mod.factory('httpErrorInterceptor', ['$q', '$rootScope', '$timeout', '$location', 'alertService', function($q, $rootScope, $timeout, $location, alertService) {
     return {
       response: function (response) {
         return response || $q.when(response);
@@ -145,7 +145,14 @@ define(['angular',
         var status = rejection.status || {};
         var data = rejection.data || {};
         $rootScope.$removeAlert = alertService.removeAlert($rootScope);
-        alertService.addAlert($rootScope, $timeout, 'error', status + ': ' + data);
+        if (status === 401) {
+          //is unauthorized, redirect to login page
+          alertService.addAlert($rootScope, $timeout, 'info', 'Redirect to login page');
+          $location.path('/login');
+        }
+        else {
+          alertService.addAlert($rootScope, $timeout, 'error', status + ': ' + data);
+        }
 
         return $q.reject(rejection);
       }
