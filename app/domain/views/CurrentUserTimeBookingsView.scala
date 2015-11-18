@@ -167,12 +167,16 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
   }
 
   private def notifyClient() = {
-    val totalBySameBooking = state.booking.map { b =>
-      state.dailyBookingsMap.get(b.createStub)
-    }.getOrElse(None)
-    val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
-    log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
-    clientReceiver ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
+    //only notify client if time booking concerns the same day
+    val today = DateTime.now().withTimeAtStartOfDay()
+    if (!today.isAfter(state.currentDay)) {
+      val totalBySameBooking = state.booking.map { b =>
+        state.dailyBookingsMap.get(b.createStub)
+      }.getOrElse(None)
+      val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
+      log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
+      clientReceiver ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
+    }
   }
 
   protected def addDailyDuration(booking: Booking, date: DateTime) = {
