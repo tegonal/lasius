@@ -72,14 +72,19 @@ define(['angular'], function(angular) {
               showYAxis: false,
               showControls: false,
               stacked:true,
-              tooltips:false,
+              tooltips:true,
               noData:'No Statistics found!',              
               valueFormat:  function(d){
                   var time = (d / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
                     return time+' hours';                
               },
-              duration: 500,
+              tooltip: function (key, x, y, e, graph) {
+                var time = (e.value / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
+                return '<h3>' + x + '</h3>' +
+                '<p>' +  time+' hours</p>';
+              },
               xAxis: {
+              duration: 500,
                   axisLabel: '',
                   showMaxMin: true
               }
