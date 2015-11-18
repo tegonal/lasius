@@ -106,7 +106,7 @@ define(['angular'], function(angular) {
           }
           
           if (scope.charts.length > numberOfCharts) {
-            scope.charts.slice(numberOfCharts, scope.charts.length - numberOfCharts);
+            scope.charts = scope.charts.slice(0, numberOfCharts);
           }
           
           //push 100% workload charts
