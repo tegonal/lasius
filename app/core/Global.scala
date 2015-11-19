@@ -39,6 +39,8 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import akka.actor.ActorRef
+import akka.scheduler.jira.JiraTagParseScheduler
+import akka.scheduler.jira.JiraTagParseScheduler.StartScheduler
 
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
@@ -56,6 +58,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
+  val jiraTagParseScheduler = system.actorOf(JiraTagParseScheduler.props)
 
   override def onStart(app: Application) {
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
@@ -64,7 +67,10 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
     }
 
     //initialite login handler
-    LoginHandler.subscribe(loginHandler, system.eventStream)    
+    LoginHandler.subscribe(loginHandler, system.eventStream)      
+    
+    //start parsing jira instance
+    jiraTagParseScheduler ! StartScheduler(JiraConfiguration("https://jira.tegonal.com"), OAuthAuthentication("O90elfdjyvMy4kmt9cVKbDIjXrXuRkWf"), "LAS")
     
     ()
   }
