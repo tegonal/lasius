@@ -42,7 +42,7 @@ define(['angular'], function(angular) {
                 width:scope.width,
                 x: function(d){return d.label;},
                 y: function(d){return d.value;},               
-                showLabels: false,
+                showLabels: true,
                 duration: 500,
                 labelThreshold: 0.01,
                 growOnHover:true,
