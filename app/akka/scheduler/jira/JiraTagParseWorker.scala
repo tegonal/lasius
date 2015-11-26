@@ -14,9 +14,10 @@ import play.api.Play.current
 import services.JiraConfiguration
 import scala.concurrent.Future
 import models.JiraIssue
+import models.ProjectId
 
 object JiraTagParseWorker {
-  def props(config: JiraConfiguration, auth:JiraAuthentication, projectId:String): Props = Props(classOf[JiraTagParseWorker], config, auth, projectId)
+  def props(config: JiraConfiguration, auth:JiraAuthentication, projectId:ProjectId, jiraProjectKey: String): Props = Props(classOf[JiraTagParseWorker], config, auth, projectId, jiraProjectKey)
   
   case object StartParsing 
   case object Parse
@@ -26,7 +27,7 @@ class MyJiraApiServiceImpl(override val config:JiraConfiguration) extends JiraAp
   override val ws: WSClient = WS.client
 }
 
-class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthentication, projectId:String) extends Actor with ActorLogging {
+class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthentication, projectId:ProjectId, projectKey:String) extends Actor with ActorLogging {
   import JiraTagParseWorker._
   
   var cancellable: Option[Cancellable] = None
@@ -35,14 +36,14 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   
   val receive: Receive = {
     case StartParsing =>
-      cancellable = Some(context.system.scheduler.schedule(0 milliseconds, 10000 milliseconds, self, Parse))
+      cancellable = Some(context.system.scheduler.scheduleOnce(0 milliseconds, self, Parse))
       context become parsing
   }
   
   val parsing: Receive = {
-    case Parse =>      
+    case Parse =>            
       issues(0, 1).map(_.headOption map { issue =>
-        log.debug(s"Latest issue:${issue.key}")
+        log.error(s"Latest issue:${issue.key}")
         lastIssueKey match {
           case Some(issue.key) =>
             //Nothing to do, still same last issue key
@@ -55,13 +56,19 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
               //TODO: notify about issues
             }
         }
-      })
+      }).andThen{
+        case s =>
+          //restart timer
+          log.error(s"andThen:${s}")
+          cancellable = Some(context.system.scheduler.scheduleOnce(10000 milliseconds, self, Parse))          
+      }
   }
   
   def loadIssues(offset:Int):Future[Seq[JiraIssue]] = {
     val maxSize = 50
     issues(offset, maxSize).flatMap{issues =>      
-      if (issues.size == maxSize) {
+      log.error(s"loadIssues: ${issues.size}, maxSize:$maxSize, lastIssuesKey:$lastIssueKey")
+      if (issues.size == maxSize) {        
         //still more to fetch
         if (lastIssueKey.isEmpty || issues.filter(_.key == lastIssueKey.get).isEmpty) {
           //still not found
@@ -77,7 +84,8 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   }
   
   def issues(offset:Int, max:Int) = {
-    jiraApiService.findIssues(s"project='$projectId' ORDER BY created DESC", offset, max)
+    log.error(s"Parse issues projectId=${projectId.value}, project=$projectKey, offset:$offset, max:$max") 
+    jiraApiService.findIssues(s"project='${projectKey}' ORDER BY created DESC", offset, max)
   }
   
   override def postStop() = {

@@ -18,14 +18,50 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package repositories
+package core
 
-trait BasicRepositoryComponent extends SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val jiraConfigRepository: JiraConfigRepository
+import akka.actor._
+import repositories._
+import akka.scheduler.jira.JiraTagParseScheduler
+import scala.concurrent.ExecutionContext.Implicits.global
+import services.JiraConfiguration
+import services.OAuthAuthentication
+import akka.scheduler.jira.JiraTagParseScheduler.StartScheduler
+
+object PluginHandler {
+  def props(): Props = Props(classOf[DefaultPluginHandler])
+  
+  case object Startup
 }
 
-trait MongoBasicRepositoryComponent extends BasicRepositoryComponent {
-  val userRepository = new UserMongoRepository
-  val jiraConfigRepository = new JiraConfigMongoRepository
+class DefaultPluginHandler extends PluginHandler with MongoBasicRepositoryComponent
+
+trait PluginHandler extends Actor with ActorLogging {
+  self: BasicRepositoryComponent =>
+    import PluginHandler._
+    
+    val jiraTagParseScheduler = context.actorOf(JiraTagParseScheduler.props)
+    
+  val receive: Receive = {
+    case Startup => 
+      initialize
+  }
+  
+  def initialize = {
+    initializeJiraPlugin
+  }
+  
+  def initializeJiraPlugin = {
+    //start jira parse scheduler for every project attached to a jira configuration
+    jiraConfigRepository.getJiraConfigurations() map { _.map { config =>
+        val jiraConfig = JiraConfiguration(config.baseUrl.toString)
+        val auth = OAuthAuthentication(config.consumerKey, config.privateKey, config.accessToken)
+        
+        config.projects.map { proj =>
+          log.debug(s"Start parsing for the following configuration:$jiraConfig - $proj")
+          jiraTagParseScheduler ! StartScheduler(jiraConfig, auth, proj.projectId, proj.jiraProjectKey)
+        }
+      }
+    }
+  }
 }

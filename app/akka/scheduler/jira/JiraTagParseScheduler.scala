@@ -13,11 +13,12 @@ import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
 import akka.actor.SupervisorStrategy._
 import akka.actor.Props
+import models.ProjectId
 
 object JiraTagParseScheduler {
   def props = Props(classOf[JiraTagParseScheduler])
   
-  case class StartScheduler(config:JiraConfiguration, auth: JiraAuthentication, projectId: String)
+  case class StartScheduler(config:JiraConfiguration, auth: JiraAuthentication, projectId: ProjectId, jiraProjectKey: String)
   case class StopScheduler(uuid:UUID)
   case class StopAllSchedulers()
   case class SchedulerStarted(uuid: UUID)
@@ -33,13 +34,15 @@ class JiraTagParseScheduler extends Actor with ActorLogging {
     }
   
   val receive: Receive = {
-    case StartScheduler(config, auth, projectId) =>
+    case StartScheduler(config, auth, projectId, projectKey) =>
+      log.error(s"StartScheduler: $config, $auth, $projectId, $projectKey")
       val uuid = UUID.randomUUID
-      val ref = context.actorOf(JiraTagParseWorker.props(config, auth, projectId))
+      val ref = context.actorOf(JiraTagParseWorker.props(config, auth, projectId, projectKey))
       workers += uuid -> ref
       ref ! StartParsing
       sender ! SchedulerStarted(uuid)
     case StopScheduler(uuid) => 
+      log.error(s"StopScheduler: $uuid")
       workers = workers.get(uuid).map{worker =>
         log.debug(s"Stopping worker with uuid:$uuid")
         worker ! PoisonPill
@@ -47,7 +50,7 @@ class JiraTagParseScheduler extends Actor with ActorLogging {
       }.getOrElse(workers)
        
     case StopAllSchedulers => 
-      log.debug("Stopping all workers")
+      log.error("Stopping all workers")
       workers.map{case (_, worker) => worker ! PoisonPill}
   }
 }

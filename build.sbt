@@ -4,7 +4,7 @@ name := """lasius"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val jiraScalaApi = ProjectRef(uri("git://github.com/toggm/play-scala-jira-api.git"), "root")
+lazy val jiraScalaApi = RootProject(uri("git://github.com/toggm/play-scala-jira-api.git"))
 
 lazy val root = (project in file(".")).dependsOn(jiraScalaApi).enablePlugins(PlayScala)
 
@@ -12,7 +12,9 @@ scalaVersion := "2.11.7"
 
 resolvers += "Tegonal releases" at "https://github.com/tegonal/tegonal-mvn/raw/master/releases/"
 
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/releases"
+resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
+
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 

@@ -20,12 +20,28 @@
 \*                                                                           */
 package repositories
 
-trait BasicRepositoryComponent extends SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val jiraConfigRepository: JiraConfigRepository
+import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.concurrent._
+import play.modules.reactivemongo.json.collection.JSONCollection
+import play.modules.reactivemongo.json.BSONFormats._
+import play.api.libs.json._
+import models._
+import models.BaseFormat._
+import repositories.MongoDBCommandSet._
+import org.openqa.selenium.support.FindAll
+
+trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
+
+  def getJiraConfigurations(): Future[Seq[JiraConfig]]
 }
 
-trait MongoBasicRepositoryComponent extends BasicRepositoryComponent {
-  val userRepository = new UserMongoRepository
-  val jiraConfigRepository = new JiraConfigMongoRepository
+class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, JiraConfigId] with JiraConfigRepository {
+  def coll = db.collection[JSONCollection]("JiraConfig")
+
+  def getJiraConfigurations(): Future[Seq[JiraConfig]] = {
+    find(Json.obj()) map { configs =>
+      configs.map(_._1).toSeq
+    }
+  }
 }

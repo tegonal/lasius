@@ -69,9 +69,6 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
     //initialite login handler
     LoginHandler.subscribe(loginHandler, system.eventStream)      
     
-    //start parsing jira instance
-    jiraTagParseScheduler ! StartScheduler(JiraConfiguration("https://jira.tegonal.com"), OAuthAuthentication("O90elfdjyvMy4kmt9cVKbDIjXrXuRkWf"), "LAS")
-    
     ()
   }
 

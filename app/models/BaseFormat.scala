@@ -33,6 +33,7 @@ import reactivemongo.bson.BSONDateTime
 import reactivemongo.bson.BSONHandler
 import org.joda.time.DateTimeFieldType
 import scala.util.Try
+import java.net.URL
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
@@ -57,6 +58,24 @@ object BaseFormat {
     }
 
     def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
+  }
+  
+  implicit val urlFormat: Format[URL] = new Format[URL] {
+    def reads(json: JsValue): JsResult[URL] = json match {
+
+      case JsString(url) => {
+        try {
+          JsSuccess(new URL(url))
+        }
+        catch {
+          case e:Throwable => 
+            JsError(s"couldn't parse url:$url, $e")
+        }
+      }
+      case _ => JsError(s"Unexpected JSON value $json")
+    }
+
+    def writes(url: URL): JsValue = JsString(url.toString)
   }
 
   implicit object BSONDateTimeHandler extends BSONHandler[BSONDateTime, DateTime] {

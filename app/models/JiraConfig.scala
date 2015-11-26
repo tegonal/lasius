@@ -18,14 +18,26 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package repositories
+package models
 
-trait BasicRepositoryComponent extends SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val jiraConfigRepository: JiraConfigRepository
+import reactivemongo.bson.BSONObjectID
+import java.net.URL
+import models.BaseFormat._
+import play.api.libs.json._
+
+case class JiraConfigId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
+case class ProjectMapping(jiraProjectKey:String, projectId: ProjectId)
+case class JiraConfig(id: JiraConfigId, baseUrl: URL, consumerKey:String, privateKey:String, accessToken:String, 
+    projects: Seq[ProjectMapping])
+
+object JiraConfigId {
+  implicit val idFormat: Format[JiraConfigId] = BaseFormat.idformat[JiraConfigId](JiraConfigId.apply _)
 }
 
-trait MongoBasicRepositoryComponent extends BasicRepositoryComponent {
-  val userRepository = new UserMongoRepository
-  val jiraConfigRepository = new JiraConfigMongoRepository
+object ProjectMapping {
+  implicit val mappingFormat: Format[ProjectMapping] = Json.format[ProjectMapping]
+}
+    
+object JiraConfig {
+  implicit val jiraConfigFormat: Format[JiraConfig] = Json.format[JiraConfig]
 }
