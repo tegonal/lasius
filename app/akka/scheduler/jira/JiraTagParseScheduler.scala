@@ -20,7 +20,7 @@ object JiraTagParseScheduler {
   
   case class StartScheduler(config:JiraConfiguration, auth: JiraAuthentication, projectId: ProjectId, jiraProjectKey: String)
   case class StopScheduler(uuid:UUID)
-  case class StopAllSchedulers()
+  case object StopAllSchedulers
   case class SchedulerStarted(uuid: UUID)
 }
 

@@ -58,7 +58,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
-  val jiraTagParseScheduler = system.actorOf(JiraTagParseScheduler.props)
+  val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]
 
   override def onStart(app: Application) {
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
@@ -68,6 +68,9 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
 
     //initialite login handler
     LoginHandler.subscribe(loginHandler, system.eventStream)      
+    
+    //start pluginhandler
+    pluginHandler ! PluginHandler.Startup
     
     ()
   }

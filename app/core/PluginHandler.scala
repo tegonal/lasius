@@ -32,6 +32,7 @@ object PluginHandler {
   def props(): Props = Props(classOf[DefaultPluginHandler])
   
   case object Startup
+  case object Shutdown
 }
 
 class DefaultPluginHandler extends PluginHandler with MongoBasicRepositoryComponent
@@ -45,6 +46,8 @@ trait PluginHandler extends Actor with ActorLogging {
   val receive: Receive = {
     case Startup => 
       initialize
+    case Shutdown => 
+      jiraTagParseScheduler ! JiraTagParseScheduler.StopAllSchedulers
   }
   
   def initialize = {
