@@ -13,12 +13,12 @@ import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
 import akka.actor.SupervisorStrategy._
 import akka.actor.Props
-import models.ProjectId
+import models._
 
 object JiraTagParseScheduler {
   def props = Props(classOf[JiraTagParseScheduler])
   
-  case class StartScheduler(config:JiraConfiguration, auth: JiraAuthentication, projectId: ProjectId, jiraProjectKey: String)
+  case class StartScheduler(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth: JiraAuthentication, projectId: ProjectId)
   case class StopScheduler(uuid:UUID)
   case object StopAllSchedulers
   case class SchedulerStarted(uuid: UUID)
@@ -34,10 +34,10 @@ class JiraTagParseScheduler extends Actor with ActorLogging {
     }
   
   val receive: Receive = {
-    case StartScheduler(config, auth, projectId, projectKey) =>
-      log.error(s"StartScheduler: $config, $auth, $projectId, $projectKey")
+    case StartScheduler(config, settings, projectSettings, auth, projectId) =>
+      log.error(s"StartScheduler: $config, $auth, $projectId, ${projectSettings.jiraProjectKey}")
       val uuid = UUID.randomUUID
-      val ref = context.actorOf(JiraTagParseWorker.props(config, auth, projectId, projectKey))
+      val ref = context.actorOf(JiraTagParseWorker.props(config, settings, projectSettings, auth, projectId))
       workers += uuid -> ref
       ref ! StartParsing
       sender ! SchedulerStarted(uuid)

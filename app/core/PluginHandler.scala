@@ -67,11 +67,11 @@ trait PluginHandler extends Actor with ActorLogging {
       s.map { config =>
       log.debug(s"Start Jira Scheduler for config:$config")
         val jiraConfig = JiraConfiguration(config.baseUrl.toString)
-        val auth = OAuthAuthentication(config.consumerKey, config.privateKey, config.accessToken)
+        val auth = OAuthAuthentication(config.auth.consumerKey, config.auth.privateKey, config.auth.accessToken)
         
         config.projects.map { proj =>
           log.debug(s"Start parsing for the following configuration:$jiraConfig - $proj")
-          jiraTagParseScheduler ! StartScheduler(jiraConfig, auth, proj.projectId, proj.jiraProjectKey)
+          jiraTagParseScheduler ! StartScheduler(jiraConfig, config.settings, proj.settings, auth, proj.projectId)
         }
       }
     }

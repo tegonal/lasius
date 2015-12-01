@@ -15,9 +15,11 @@ import services.JiraConfiguration
 import scala.concurrent.Future
 import models.JiraIssue
 import models.ProjectId
+import models.JiraSettings
+import models.ProjectSettings
 
 object JiraTagParseWorker {
-  def props(config: JiraConfiguration, auth:JiraAuthentication, projectId:ProjectId, jiraProjectKey: String): Props = Props(classOf[JiraTagParseWorker], config, auth, projectId, jiraProjectKey)
+  def props(config: JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth:JiraAuthentication, projectId:ProjectId): Props = Props(classOf[JiraTagParseWorker], config, settings, projectSettings, auth, projectId)
   
   case object StartParsing 
   case object Parse
@@ -27,12 +29,15 @@ class MyJiraApiServiceImpl(override val config:JiraConfiguration) extends JiraAp
   override val ws: WSClient = WS.client
 }
 
-class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthentication, projectId:ProjectId, projectKey:String) extends Actor with ActorLogging {
+class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, implicit val auth:JiraAuthentication, projectId:ProjectId) extends Actor with ActorLogging {
   import JiraTagParseWorker._
   
   var cancellable: Option[Cancellable] = None
-  var lastIssueKey:Option[String] = None
+  var lastIssueSize:Option[Int] = None
   val jiraApiService = new MyJiraApiServiceImpl(config)
+  val defaultJql = s"project=${projectSettings.jiraProjectKey} and resolution=Unresolved ORDER BY created DESC"
+  val defaultTimeout = 60000 //60 seconds
+  val maxResults = projectSettings.maxResults.getOrElse(100)
   
   val receive: Receive = {
     case StartParsing =>
@@ -41,52 +46,43 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   }
   
   val parsing: Receive = {
-    case Parse =>            
-      issues(0, 1).map(_.issues.headOption map { issue =>
-        log.error(s"Latest issue:${issue.key}")
-        lastIssueKey match {
-          case Some(issue.key) =>
-            //Nothing to do, still same last issue key
-          case _ =>
-            loadIssues(0) map {issues =>
-              lastIssueKey = issues.headOption.map(_.key)
-              issues.map {issues => 
-                log.debug(s"Loaded issue:${issue.key}")                
-              }
-              //TODO: notify about issues
-            }
-        }
-      }).andThen{
+    case Parse =>
+      loadIssues(0, lastIssueSize).map{result =>
+        //fetched all results, notify
+        lastIssueSize = Some(result.size)
+        val keys = result.map(_.key)
+        log.debug(s"Parsed keys:$keys")
+        
+        //handle new parsed issue keys
+      }.andThen{
         case s =>
           //restart timer
-          log.error(s"andThen:${s}")
+          log.debug(s"andThen:restart time $s")
           cancellable = Some(context.system.scheduler.scheduleOnce(10000 milliseconds, self, Parse))          
       }
   }
-  
-  def loadIssues(offset:Int):Future[Seq[JiraIssue]] = {
-    val maxSize = 100
-    issues(offset, maxSize).flatMap{result =>
+
+  def loadIssues(offset:Int, max: Option[Int], lastResult:Set[JiraIssue]=Set()):Future[Set[JiraIssue]] = {    
+    val newMax = max.getOrElse(maxResults)
+    issues(offset, newMax).flatMap{result =>
       val issues = result.issues
-      log.debug(s"loadIssues: ${issues.size}, maxSize:$maxSize, lastIssuesKey:$lastIssueKey")
-      if (issues.size == maxSize) {        
-        //still more to fetch
-        if (lastIssueKey.isEmpty || issues.filter(_.key == lastIssueKey.get).isEmpty) {
-          //still not found
-          loadIssues(offset + maxSize).map(nextIssues => issues ++ nextIssues)
-        }
-        else {
-          Future.successful(issues)
-        }
-      } else {
-        Future.successful(issues)
-      }      
+      val concat = (lastResult ++ result.issues.toSet).toSet
+      log.debug(s"loaded issues: maxResults:${result.maxResults}, fetch count${concat.size}")
+      if (result.maxResults >= concat.size) {
+          //fetched all results, notify
+          Future.successful(concat)
+      }
+      else {
+        val maxNextRun = Math.min(result.maxResults, maxResults)
+        loadIssues(newMax, Some(maxNextRun), concat)
+      }          
     }
   }
   
   def issues(offset:Int, max:Int) = {
-    log.error(s"Parse issues projectId=${projectId.value}, project=$projectKey, offset:$offset, max:$max") 
-    jiraApiService.findIssues(s"project=${projectKey} ORDER BY created DESC", Some(offset), Some(max), expand=Some("key"))
+    log.error(s"Parse issues projectId=${projectId.value}, project=${projectSettings.jiraProjectKey}, offset:$offset, max:$max")
+    val query = projectSettings.jql.getOrElse(defaultJql)
+    jiraApiService.findIssues(query, Some(offset), Some(max))
   }
   
   override def postStop() = {

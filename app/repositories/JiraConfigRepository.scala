@@ -41,6 +41,7 @@ class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, 
 
   def getJiraConfigurations(): Future[Seq[JiraConfig]] = {
     find(Json.obj()) map { configs =>
+      Logger.debug(s"Loaded configs:$configs")
       configs.map(_._1).toSeq
     }
   }
