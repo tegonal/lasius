@@ -41,6 +41,7 @@ import scala.concurrent.Await
 import akka.actor.ActorRef
 import akka.scheduler.jira.JiraTagParseScheduler
 import akka.scheduler.jira.JiraTagParseScheduler.StartScheduler
+import play.api.libs.json.Json
 
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
@@ -70,6 +71,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
     LoginHandler.subscribe(loginHandler, system.eventStream)      
     
     //start pluginhandler
+    Logger.debug(s"Start pluginHandler:$pluginHandler")
     pluginHandler ! PluginHandler.Startup
     
     ()

@@ -21,7 +21,6 @@
 package repositories
 
 import play.api.libs.concurrent.Execution.Implicits._
-
 import scala.concurrent._
 import play.modules.reactivemongo.json.collection.JSONCollection
 import play.modules.reactivemongo.json.BSONFormats._
@@ -30,6 +29,7 @@ import models._
 import models.BaseFormat._
 import repositories.MongoDBCommandSet._
 import org.openqa.selenium.support.FindAll
+import play.api.Logger
 
 trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
 

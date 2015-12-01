@@ -26,9 +26,9 @@ import models.BaseFormat._
 import play.api.libs.json._
 
 case class JiraConfigId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
-case class ProjectMapping(jiraProjectKey:String, projectId: ProjectId)
+case class ProjectMapping(projectId: ProjectId, jiraProjectKey:String)
 case class JiraConfig(id: JiraConfigId, baseUrl: URL, consumerKey:String, privateKey:String, accessToken:String, 
-    projects: Seq[ProjectMapping])
+    projects: Seq[ProjectMapping]) extends BaseEntity[JiraConfigId]
 
 object JiraConfigId {
   implicit val idFormat: Format[JiraConfigId] = BaseFormat.idformat[JiraConfigId](JiraConfigId.apply _)

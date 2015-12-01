@@ -42,7 +42,7 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   
   val parsing: Receive = {
     case Parse =>            
-      issues(0, 1).map(_.headOption map { issue =>
+      issues(0, 1).map(_.issues.headOption map { issue =>
         log.error(s"Latest issue:${issue.key}")
         lastIssueKey match {
           case Some(issue.key) =>
@@ -65,9 +65,10 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   }
   
   def loadIssues(offset:Int):Future[Seq[JiraIssue]] = {
-    val maxSize = 50
-    issues(offset, maxSize).flatMap{issues =>      
-      log.error(s"loadIssues: ${issues.size}, maxSize:$maxSize, lastIssuesKey:$lastIssueKey")
+    val maxSize = 100
+    issues(offset, maxSize).flatMap{result =>
+      val issues = result.issues
+      log.debug(s"loadIssues: ${issues.size}, maxSize:$maxSize, lastIssuesKey:$lastIssueKey")
       if (issues.size == maxSize) {        
         //still more to fetch
         if (lastIssueKey.isEmpty || issues.filter(_.key == lastIssueKey.get).isEmpty) {
@@ -85,7 +86,7 @@ class JiraTagParseWorker(config:JiraConfiguration, implicit val auth:JiraAuthent
   
   def issues(offset:Int, max:Int) = {
     log.error(s"Parse issues projectId=${projectId.value}, project=$projectKey, offset:$offset, max:$max") 
-    jiraApiService.findIssues(s"project='${projectKey}' ORDER BY created DESC", offset, max)
+    jiraApiService.findIssues(s"project=${projectKey} ORDER BY created DESC", Some(offset), Some(max), expand=Some("key"))
   }
   
   override def postStop() = {

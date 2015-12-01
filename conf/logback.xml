@@ -45,7 +45,7 @@
   
   <logger name="r.c.a" level="INFO" />
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="ASYNCFILE" />
     <appender-ref ref="ASYNCSTDOUT" />
   </root>

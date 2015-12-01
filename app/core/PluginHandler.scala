@@ -43,11 +43,16 @@ trait PluginHandler extends Actor with ActorLogging {
     
     val jiraTagParseScheduler = context.actorOf(JiraTagParseScheduler.props)
     
+    log.debug(s"PluginHandler started")
+    
   val receive: Receive = {
-    case Startup => 
+    case Startup =>
+      log.debug(s"PluginHandler startup")
       initialize
     case Shutdown => 
       jiraTagParseScheduler ! JiraTagParseScheduler.StopAllSchedulers
+    case e => 
+      log.warning(s"Received unknown event:$e")
   }
   
   def initialize = {
@@ -55,8 +60,12 @@ trait PluginHandler extends Actor with ActorLogging {
   }
   
   def initializeJiraPlugin = {
+    log.debug(s"PluginHandler initializeJiraPlugin:$jiraConfigRepository")
     //start jira parse scheduler for every project attached to a jira configuration
-    jiraConfigRepository.getJiraConfigurations() map { _.map { config =>
+    jiraConfigRepository.getJiraConfigurations() map { s =>
+      log.debug(s"Got jira configs:$s")
+      s.map { config =>
+      log.debug(s"Start Jira Scheduler for config:$config")
         val jiraConfig = JiraConfiguration(config.baseUrl.toString)
         val auth = OAuthAuthentication(config.consumerKey, config.privateKey, config.accessToken)
         
