@@ -34,6 +34,7 @@ import reactivemongo.bson.BSONHandler
 import org.joda.time.DateTimeFieldType
 import scala.util.Try
 import java.net.URL
+import java.net.URI
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
@@ -48,6 +49,18 @@ object BaseFormat {
   def idformat[I <: BaseBSONObjectId](implicit fact: Factory[BSONObjectID, I]) = new BSONObjectIdTypedIdFormat[I]
   def idformat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f: Format[I1], ff2: Format[I2]) = new CompositeIdTypedIdFormat[I, I1, I2]
 
+  implicit object URIFormat extends Format[URI] {
+    def writes(uri: URI): JsValue = {
+      JsString(uri.toURL().toExternalForm())
+    }
+    def reads(json: JsValue): JsResult[URI] = json match {
+      case JsString(x) => {
+        JsSuccess(new URI(x))
+      }
+      case _ => JsError("Expected URI as JsString")
+    }
+  }
+  
   implicit val durationFormat: Format[Duration] = new Format[Duration] {
     def reads(json: JsValue): JsResult[Duration] = json match {
 

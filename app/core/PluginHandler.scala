@@ -22,11 +22,11 @@ package core
 
 import akka.actor._
 import repositories._
-import akka.scheduler.jira.JiraTagParseScheduler
 import scala.concurrent.ExecutionContext.Implicits.global
 import services.JiraConfiguration
 import services.OAuthAuthentication
-import akka.scheduler.jira.JiraTagParseScheduler.StartScheduler
+import actors.scheduler.jira.JiraTagParseScheduler
+import actors.scheduler.jira.JiraTagParseScheduler._
 
 object PluginHandler {
   def props(): Props = Props(classOf[DefaultPluginHandler])

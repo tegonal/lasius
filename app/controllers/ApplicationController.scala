@@ -33,11 +33,11 @@ import repositories.SecurityRepositoryComponent
 import repositories.UserRepository
 import play.api.libs.concurrent.Execution.Implicits._
 import org.mindrot.jbcrypt.BCrypt
-import play.api.cache.Cache
-import java.util.UUID
 import play.api.libs.json._
 import repositories.MongoSecurityRepositoryComponent
 import domain.LoginStateAggregate
+import java.util.UUID
+import play.api.cache.Cache
 
 class ApplicationController {
   self: Controller with SecurityRepositoryComponent with Security =>

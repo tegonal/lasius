@@ -41,6 +41,7 @@ libraryDependencies ++= Seq(
   "io.kamon" %% "kamon-system-metrics" % "0.3.5",
   "io.kamon" %% "kamon-log-reporter"   % "0.3.5",
   "com.typesafe.play.plugins" %% "play-statsd" % "2.3.0",
+  "com.chuusai" %% "shapeless" % "2.2.5",
   cache,
   ws,
   specs2,

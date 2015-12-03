@@ -27,26 +27,26 @@ import play.api.mvc.Results._
 import controllers._
 import play.api.mvc.RequestHeader
 import scala.concurrent.Future
+import actors.LasiusSupervisorActor
 import akka.actor.ActorSystem
 import akka.pattern.{ ask, pipe }
 import services.TimeBookingViewService
 import domain.views.CurrentUserTimeBookingsView
 import services._
 import domain.LoginStateAggregate
-import akka.LasiusSupervisorActor
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import akka.actor.ActorRef
-import akka.scheduler.jira.JiraTagParseScheduler
-import akka.scheduler.jira.JiraTagParseScheduler.StartScheduler
 import play.api.libs.json.Json
+import actors.TagCache
 
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
 
   val system = ActorSystem("lasius-actor-system")
+  val systemUser = UserId("lasius-system")
   val supervisor = system.actorOf(LasiusSupervisorActor.props)
   val executionContext = system.dispatcher
   implicit val timeout = Timeout(5 seconds) // needed for `?` below
@@ -59,6 +59,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
+  val tagCache = Await.result(supervisor ? TagCache.props, duration).asInstanceOf[ActorRef]
   val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]
 
   override def onStart(app: Application) {
