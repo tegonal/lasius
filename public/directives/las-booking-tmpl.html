@@ -14,7 +14,7 @@
   	tagging-tokens="," class="booking">
 	    <ui-select-match placeholder="Select Tags...">{{$item.id}}</ui-select-match>
 	    <ui-select-choices repeat="tag in availableTags | filter:$select.search track by tag.id">
-	      {{tag.id}}
+	      {{tag.id}} <small ng-if="tag.summary"> - {{tag.summary}}</small>
 	    </ui-select-choices>
 	  </ui-select>
 	  </div>

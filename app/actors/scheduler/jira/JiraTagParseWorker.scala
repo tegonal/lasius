@@ -121,7 +121,7 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
   def issues(offset:Int, max:Int) = {
     log.debug(s"Parse issues projectId=${projectId.value}, project=${projectSettings.jiraProjectKey}, offset:$offset, max:$max")
     val query = projectSettings.jql.getOrElse(defaultJql)
-    jiraApiService.findIssues(query, Some(offset), Some(max))
+    jiraApiService.findIssues(query, Some(offset), Some(max), fields=None)
   }
   
   override def postStop() = {
