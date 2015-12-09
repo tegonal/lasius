@@ -54,13 +54,19 @@ case class JiraVersionTag(id: TagId, configId: JiraConfigId, projectKey:String) 
 case class Project(id: ProjectId, tags: Seq[Tag]) extends BaseEntity[ProjectId]
 case class Category(id: CategoryId, projects: Seq[Project]) extends BaseEntity[CategoryId]
 
+object JiraIsseTag{ 
+  implicit val issueTagFormat: Format[JiraIssueTag]  = Json.format[JiraIssueTag]
+}
+object JiraVersionTag{ 
+  implicit val issueVersionFormat: Format[JiraVersionTag]  = Json.format[JiraVersionTag]
+}
+object Tag{
+  implicit val tagFormat: Format[Tag]  = Json.format[Tag]
+}
 object BaseTag {
   implicit val baseTagFormat: Format[BaseTag]  = Variants.format[BaseTag]("type")  
 }
 
-object Tag {
-  implicit val tagFormat: Format[Tag] = Json.format[Tag]
-}
 object Project {
   implicit val projectFormat: Format[Project] = Json.format[Project]
 }

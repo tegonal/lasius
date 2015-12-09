@@ -39,10 +39,10 @@ define(['angular'], function(angular) {
         //noting to do here
         bookingService.getCategories().then(function(projects) {
           scope.projects = projects;          
-        });
+        });             
         
         scope.projectSelectionChanged = function() {
-           scope.availableTags = scope.project.selected.project.tags;
+           scope.availableTags = scope.project.selected.tagCache;
            scope.tags = {};
         };
         
