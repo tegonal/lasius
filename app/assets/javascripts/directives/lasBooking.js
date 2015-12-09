@@ -22,7 +22,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBooking', []);
-  mod.directive('lasBooking', ['bookingService', function(bookingService) {
+  mod.directive('lasBooking', ['bookingService', 'msgBus', function(bookingService, msgBus) {
     return {
       restrict: 'E',
       transclude: true,
@@ -62,6 +62,47 @@ define(['angular'], function(angular) {
             scope.tags = {};          
           });
         };
+        
+        //listen on tag cache changes per project
+        msgBus.onMsg('TagCacheChanged', scope, function(
+            event, msg) {          
+            
+            var sortById = function(a, b){
+              if(a.id < b.id) return -1;
+              if(a.id > b.id) return 1;
+              return 0;
+            };
+          
+            for(var i=0;i<scope.projects.length;i++){
+              if(scope.projects[i].project.id ===  msg.projectId){
+                //remove tags
+                for(var t=0;t<msg.removed.length;t++){
+                  for(var t2=0;t2<scope.projects[i].tagCache.length;t2++){
+                    if (msg.removed[t].id === scope.projects[i].tagCache[t2].id) {
+                      scope.projects[i].tagCache.splice(t2, 1);
+                      break;
+                    }
+                  }                  
+                }
+                
+                //add new tags
+                for(t=0;t<msg.added.length;t++){
+                  scope.projects[i].tagCache.push(msg.added[t]);
+                }
+                
+                //sort again                
+                scope.projects[i].tagCache.sort(sortById);
+                
+                //check if current project is selected
+                if (scope.project.selected.project.id === scope.projects[i].project.id) {
+                  scope.availableTags = scope.projects[i].tagCache;
+                }
+                
+                scope.$apply();
+                return;
+              }
+            }            
+          });
       }
     };
   }]);
