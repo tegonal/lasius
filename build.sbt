@@ -32,7 +32,7 @@ libraryDependencies ++= Seq(
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
   "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.0" % "test",
-  "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.1.5" % "test",
+  "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.0.5" % "test",
   //Akka monitoring  
   "org.aspectj" % "aspectjweaver" % "1.8.7",
   "io.kamon" %% "kamon-core" % "0.3.5",  

@@ -118,7 +118,7 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
 
       case JsDefined(JsObject(Seq("$oid", JsString(oid)))) =>
         coll.insert(obj).map { _ => BSONObjectID(oid) }
-
+              
       case JsDefined(JsString(oid)) =>
         coll.insert(obj).map { _ => BSONObjectID(oid) }
 
