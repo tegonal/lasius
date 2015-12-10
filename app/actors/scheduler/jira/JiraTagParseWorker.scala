@@ -86,18 +86,10 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
   def toJiraIssueTag(issue:JiraIssue):JiraIssueTag = {
     issue.fields.map { fields => 
       JiraIssueTag(TagId(issue.key), config.baseUrl, fields.primary.summary, 
-          issue.self, projectSettings.jiraProjectKey, 
-          fields.secondary.versions.map(_.map(_.name)),         
-          fields.secondary.fixVersions.map(_.map(_.name)), 
-          fields.secondary.components.map(_.map(_.name)),
-          fields.secondary.labels.map(_.map(_.name)))
+          issue.self, projectSettings.jiraProjectKey)
     }.getOrElse {
       JiraIssueTag(TagId(issue.key), config.baseUrl, None, 
-          issue.self, projectSettings.jiraProjectKey, 
-          None,         
-          None, 
-          None,
-          None)
+          issue.self, projectSettings.jiraProjectKey)
     }
   }
 
@@ -121,7 +113,7 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
   def issues(offset:Int, max:Int) = {
     log.debug(s"Parse issues projectId=${projectId.value}, project=${projectSettings.jiraProjectKey}, offset:$offset, max:$max")
     val query = projectSettings.jql.getOrElse(defaultJql)
-    jiraApiService.findIssues(query, Some(offset), Some(max), fields=None)
+    jiraApiService.findIssues(query, Some(offset), Some(max), fields=Some("summary"))
   }
   
   override def postStop() = {

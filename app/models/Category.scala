@@ -47,8 +47,7 @@ sealed trait BaseTag {
 }
 case class Tag(id: TagId) extends BaseEntity[TagId] with BaseTag
 case class JiraIssueTag(id: TagId, baseUrl: String, summary:Option[String], 
-    url:URI, projectKey:String, versions: Option[Seq[String]], 
-    fixVersions: Option[Seq[String]], components: Option[Seq[String]], labels: Option[Seq[String]]) extends BaseEntity[TagId] with BaseTag 
+    url:URI, projectKey:String) extends BaseEntity[TagId] with BaseTag 
 case class JiraVersionTag(id: TagId, configId: JiraConfigId, projectKey:String) extends BaseEntity[TagId] with BaseTag
 
 case class Project(id: ProjectId, tags: Seq[Tag]) extends BaseEntity[ProjectId]

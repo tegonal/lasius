@@ -132,6 +132,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           case ub: UserTimeBooking => updateStartTime(ub, bookingId, fromStart, toStart)
           case _ => state
         }
+      case x =>
     }
   }
 
