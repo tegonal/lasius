@@ -48,12 +48,13 @@ import play.modules.reactivemongo.ReactiveMongoPlugin
 import play.api.test.PlayRunners
 import play.api.Play
 import de.flapdoodle.embed.mongo.config.processlistener.IMongoProcessListener
-import org.specs2.specification.Fragments
-import org.specs2.specification.Step
-import org.specs2.mutable.script.SpecificationLike
 import mongo.EmbedMongo.MongoConfig
+import org.specs2.specification.core.Fragments
+import org.specs2.specification.Step
+import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder
 
 trait EmbedMongo extends Specification {
+  sequential =>
 
   private lazy val rnd = new scala.util.Random
   private lazy val range = 12000 to 12999
@@ -64,7 +65,7 @@ trait EmbedMongo extends Specification {
   lazy val nodes = List(s"localhost:$port")
 
   lazy val mongodConfig = new MongodConfigBuilder()
-    .version(Version.Main.V2_6)
+    .version(Version.Main.PRODUCTION)
     .net(new Net(port, Network.localhostIsIPv6()))
     .build
 
@@ -76,7 +77,7 @@ trait EmbedMongo extends Specification {
   lazy val runtimeConfig: IRuntimeConfig = new RuntimeConfigBuilder()
     .defaultsWithLogger(Command.MongoD, logger)
     .processOutput(processOutput)
-    .artifactStore(new ArtifactStoreBuilder()
+    .artifactStore(new ExtractedArtifactStoreBuilder()
       .defaults(Command.MongoD))
     .build;
 
@@ -98,7 +99,7 @@ trait EmbedMongo extends Specification {
   implicit val config = MongoConfig(port)
 
   override def map(fragments: => Fragments) = {
-    Step(start) ^ fragments ^ Step(stop)
+    step(start) ^ fragments ^ step(stop)
   }
 }
 
@@ -113,7 +114,7 @@ object EmbedMongo {
 
     override def around[T: AsResult](t: => T): Result = {
       val port = config.port;
-      logger.info(s"Execute test with mongodb on port:${port}")
+      logger.warning(s"Execute test with mongodb on port:${port}")
       implicit lazy val app = FakeApplication(additionalConfiguration =
         Map(
           ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
@@ -121,7 +122,7 @@ object EmbedMongo {
           ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port}")),
           ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
 
-      logger.info("Run with application:" + app)
+      logger.warning("Run with application:" + app)
       AsResult(running(app)(t))
     }
   }

@@ -18,14 +18,31 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package repositories
+package actors
 
-trait BasicRepositoryComponent extends SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val jiraConfigRepository: JiraConfigRepository
+import akka.actor.Actor
+import akka.actor.Props
+import akka.actor.OneForOneStrategy
+import akka.actor.SupervisorStrategy
+import akka.actor.actorRef2Scala
+import scala.concurrent.duration.DurationInt
+     
+class LasiusSupervisorActor extends Actor {
+  import akka.actor.OneForOneStrategy
+  import akka.actor.SupervisorStrategy._
+  import scala.concurrent.duration._
+ 
+  override val supervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+      case _                => Restart
+    }
+  
+  def receive = {
+    case p: Props => sender() ! context.actorOf(p)
+   }
 }
 
-trait MongoBasicRepositoryComponent extends BasicRepositoryComponent {
-  val userRepository = new UserMongoRepository
-  val jiraConfigRepository = new JiraConfigMongoRepository
+object LasiusSupervisorActor {
+  def props: Props = Props(classOf[LasiusSupervisorActor])
 }
+

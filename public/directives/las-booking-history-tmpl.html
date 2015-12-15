@@ -28,11 +28,11 @@
             </span>
         </td>
         <td>
-          <timepicker ng-show="booking === editedBooking && bookingForm.start" ng-model="bookingForm.start" ng-change="changeEditBooking()" hour-step="1" minute-step="5" show-meridian="false"></timepicker>
+          <uib-timepicker ng-show="booking === editedBooking && bookingForm.start" ng-model="bookingForm.start" ng-change="changeEditBooking()" hour-step="1" minute-step="5" show-meridian="false"></uib-timepicker>
           <span ng-dblclick="editBookingStart(booking)" ng-hide="booking === editedBooking && bookingForm.start">{{booking.start | date: dateFormat(booking)}}</span>
         </td>
         <td>
-          <timepicker ng-show="booking === editedBooking && bookingForm.end" ng-model="bookingForm.end" ng-change="changeEditBooking()" hour-step="1" minute-step="5" show-meridian="false"></timepicker>
+          <uib-timepicker ng-show="booking === editedBooking && bookingForm.end" ng-model="bookingForm.end" ng-change="changeEditBooking()" hour-step="1" minute-step="5" show-meridian="false"></uib-timepicker>
           <span ng-dblclick="editBookingEnd(booking)" ng-hide="booking === editedBooking && bookingForm.end">{{booking.end | date: dateFormat(booking)}}</span>
         </td>
         <td ng-click="saveEditingBooking()" >{{dayDiff(booking)| number : 1}} <span ng-if="!sameDay(booking)">({{totalDiff(booking)| number : 1}})</span></td>

@@ -21,6 +21,7 @@
 package repositories
 
 import play.api.libs.concurrent.Execution.Implicits._
+
 import scala.concurrent._
 import play.modules.reactivemongo.json.collection.JSONCollection
 import play.modules.reactivemongo.json.BSONFormats._

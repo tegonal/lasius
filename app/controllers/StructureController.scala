@@ -21,7 +21,6 @@
 package controllers
 
 import play.api.mvc.Controller
-
 import repositories._
 import play.api.mvc.Action
 import play.api.libs.json._
@@ -29,29 +28,49 @@ import play.api.libs.concurrent.Execution.Implicits._
 import models._
 import helpers.UserHelper
 import scala.concurrent.Future
+import actors.TagCache.GetTags
+import core.Global
+import akka.pattern.{ ask, pipe }
+import scala.concurrent.duration._
+import akka.util.Timeout
+import scala.concurrent.Await
+import actors.TagCache.CachedTags
 
 class StructureController extends UserHelper {
   self: Controller with BasicRepositoryComponent with Security =>
 
-  case class ProjectContainer(project: Project, categoryId: CategoryId, name: String)
+  case class ProjectContainer(project: Project, categoryId: CategoryId, name: String, tagCache:Seq[BaseTag])
 
   object ProjectContainer {
     implicit val projContFormat: Format[ProjectContainer] = Json.format[ProjectContainer]
   }
 
-  def getCategories() = HasRole(FreeUser, parse.empty) {
+  def getCategories() = HasRole(FreeUser, parse.empty) {    
     implicit subject =>
       implicit request =>
         withUser(BadRequest("No user found for login")) { user =>
           //invert relationship from category to project
-          val projects = for {
+          Future.sequence(for {
             cat <- user.categories
-            proj <- cat.projects
+            proj <- cat.projects            
           } yield {
-            //remove reference to projects
-            ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}")
-          }
-          Future.successful(Ok(Json.toJson(projects)))
+            for {
+              tags <- getTags(proj.id)
+            } yield {            
+              //remove reference to projects
+              ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}", (tags ++ proj.tags).toSeq.sortBy(_.id.value))
+            }
+          }) map(p => Ok(Json.toJson(p)))
+        }
+  }
+  
+  def getTags(projectId: ProjectId): Future[Set[BaseTag]] = {
+        implicit val timeout = Timeout(5 seconds) // needed for `?` below
+        val future = Global.tagCache ? GetTags(projectId)
+        future.map{ result =>
+          val tagResult = result.asInstanceOf[CachedTags]
+          
+          tagResult.tags
         }
   }
 }

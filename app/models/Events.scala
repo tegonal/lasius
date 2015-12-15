@@ -80,6 +80,8 @@ case class FavoriteRemoved(userId: UserId, bookingStub: BookingStub) extends Out
 
 case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends OutEvent
 
+case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
+
 object OutEvent {
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
 }

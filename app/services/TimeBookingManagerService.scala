@@ -33,14 +33,14 @@ import akka.actor.Props
 
 object TimeBookingViewService {
 
-  def props: Props = Props(new TimeBookingViewService)
+  def props: Props = Props(classOf[TimeBookingViewService])
 }
 
 class TimeBookingViewService extends UserService[domain.UserTimeBookingAggregate.UserTimeBookingCommand] {
 
   import domain.UserTimeBookingAggregate._
 
-  def processCommand: Receive = {
+  def processCommand: Receive = {    
     case cmd: UserTimeBookingCommand =>
       log.debug(s"TimeBookingManagerService -> processCommand:$cmd")
       processAggregateCommand(cmd.userId, cmd)

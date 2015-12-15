@@ -25,6 +25,7 @@ import models._
 import play.api.libs.concurrent.Execution.Implicits._
 import repositories._
 import org.mindrot.jbcrypt.BCrypt
+import java.net.URL
 
 object InitialData extends MongoBasicRepositoryComponent {
   def init() = {
@@ -46,6 +47,7 @@ object InitialData extends MongoBasicRepositoryComponent {
 
     val passwordHash2 = BCrypt.hashpw("demo", BCrypt.gensalt())
     userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team), structure2))
+    
   }
 
   def createStructure() = {

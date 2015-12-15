@@ -35,7 +35,7 @@ import domain.views.CurrentUserTimeBookingsView
 
 object CurrentUserTimeBookingsViewService {
 
-  def props: Props = Props(new CurrentUserTimeBookingsViewService)
+  def props: Props = Props(classOf[CurrentUserTimeBookingsViewService])
 }
 
 class CurrentUserTimeBookingsViewService extends UserService[domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking] {
@@ -43,6 +43,7 @@ class CurrentUserTimeBookingsViewService extends UserService[domain.views.Curren
   import domain.UserTimeBookingAggregate._
 
   def processCommand: Receive = {
+    case Ack =>
     case cmd: GetCurrentTimeBooking =>
       log.debug(s"CurrentUserTimeBookingsViewService -> processCommand:$cmd -> $sender")
       processAggregateCommand(cmd.userId, cmd)

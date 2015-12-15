@@ -22,8 +22,6 @@ package actors
 
 import akka.actor._
 import models._
-import play.api.Logger
-import play.api.libs.iteratee.Concurrent
 import actors.ControlCommands._
 
 object ControlCommands {
@@ -72,7 +70,7 @@ object ClientMessagingWebsocketActor extends ClientReceiver {
   }
 }
 
-class ClientMessagingWebsocketActor(out: ActorRef, userId: UserId) extends Actor {
+class ClientMessagingWebsocketActor(out: ActorRef, userId: UserId) extends Actor with ActorLogging {
   //val (enumerator, channel) = Concurrent.broadcast[OutEvent]
 
   //append to map of active actors
@@ -80,7 +78,7 @@ class ClientMessagingWebsocketActor(out: ActorRef, userId: UserId) extends Actor
 
   def receive = {
     case HelloServer(client) =>
-      Logger.debug(s"Received HelloServer($client)")
+      log.debug(s"Received HelloServer($client)")
 
       out ! HelloClient
     case SendToClient(senderUserId, event, Nil) =>

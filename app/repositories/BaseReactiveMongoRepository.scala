@@ -20,12 +20,6 @@
 \*                                                                           */
 package repositories
 
-import play.modules.reactivemongo.json._
-import play.modules.reactivemongo.json.collection._
-import reactivemongo.api.QueryOpts
-import reactivemongo.core.commands.PipelineOperator
-import reactivemongo.core.commands.Aggregate
-import reactivemongo.bson.BSONDocument
 import scala.concurrent.ExecutionContext
 import play.api.libs.json._
 import scala.concurrent.Future
@@ -35,12 +29,17 @@ import play.api.Play.current
 import com.tegonal.play.json.TypedId.BaseId
 import models.BaseEntity
 import play.api.libs.json.Json.JsValueWrapper
-import reactivemongo.bson.BSONObjectID
-import play.modules.reactivemongo.ReactiveMongoPlugin
+import play.modules.reactivemongo.ReactiveMongoApi
+import play.modules.reactivemongo.json.collection.JSONCollection
+import reactivemongo.api._
+import reactivemongo.api.commands._
+import reactivemongo.api.collections.bson.BSONCollection
+import reactivemongo.bson._
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
 trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
+
   def coll: JSONCollection
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]]
@@ -61,8 +60,6 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def findIds(sel: JsObject): Future[Seq[BSONObjectID]]
 
-  def aggregate(pipelineOps: Seq[PipelineOperator]): Future[Stream[BSONDocument]]
-
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
 
   def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean]
@@ -75,7 +72,10 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   import play.modules.reactivemongo.json._
   import play.modules.reactivemongo.json.collection._
 
-  def db = ReactiveMongoPlugin.db
+  lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
+  def db = reactiveMongoApi.db
+
+  lazy val bsonCollection: BSONCollection = db.collection(coll.name, coll.failoverStrategy)
 
   def findIds(sel: JsObject): Future[Seq[BSONObjectID]] = {
     val cursor = coll.find(sel, Json.obj()).cursor[JsObject]
@@ -113,10 +113,13 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
         coll.insert(obj ++ Json.obj("_id" -> id))
           .map { _ => id }
 
-      case JsObject(Seq((_, JsString(oid)))) =>
+      case JsDefined(JsObject(Seq((_, JsString(oid))))) =>
         coll.insert(obj).map { _ => BSONObjectID(oid) }
 
-      case JsString(oid) =>
+      case JsDefined(JsObject(Seq("$oid", JsString(oid)))) =>
+        coll.insert(obj).map { _ => BSONObjectID(oid) }
+              
+      case JsDefined(JsString(oid)) =>
         coll.insert(obj).map { _ => BSONObjectID(oid) }
 
       case f => sys.error(s"Could not parse _id field: $f")
@@ -125,7 +128,7 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
 
   def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]] = {
 
-    val cursor = coll.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]
+    val cursor = coll.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]()
     val l = if (limit != 0) cursor.collect[Traversable](limit) else cursor.collect[Traversable]()
     l.map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID])))
   }
@@ -135,14 +138,9 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   }
 
   def findStream(sel: JsObject, skip: Int = 0, pageSize: Int = 0)(implicit ctx: ExecutionContext): Enumerator[TraversableOnce[(T, BSONObjectID)]] = {
-    val cursor = coll.find(sel).options(QueryOpts().skip(skip)).cursor[JsObject]
+    val cursor = coll.find(sel).options(QueryOpts().skip(skip)).cursor[JsObject]()
     val enum = if (pageSize != 0) cursor.enumerateBulks(pageSize) else cursor.enumerateBulks()
     enum.map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID])))
-  }
-
-  def aggregate(pipelineOps: Seq[PipelineOperator]): Future[Stream[BSONDocument]] = {
-    val cmd = Aggregate(coll.name, pipelineOps)
-    coll.db.command(cmd)
   }
 
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]] = {

@@ -1,8 +1,8 @@
-<ul class="nav navbar-nav pull-right" dropdown>
-    <li ng-if="isLoggedIn" dropdown-toggle>
+<ul class="nav navbar-nav pull-right" uib-dropdown>
+    <li ng-if="isLoggedIn" uib-dropdown-toggle>
     		<a href="#">{{user.firstName}} {{user.lastName}}<span class="caret"></span></a>        
     </li>
-	    <ul class="dropdown-menu"role="menu" >
+	    <ul class="uib-dropdown-menu"role="menu" >
 	        <li><a href="#/settings" role="menuitem"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
 	        <li>
 	            <a href="" data-ng-click="logout()" role="menuitem" >
