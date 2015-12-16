@@ -46,8 +46,7 @@
   <logger name="r.c.a" level="INFO" />
   <logger name="akka.persistence.inmemory.journal" level="INFO" />
 
-  <root level="DEBUG">
-    <appender-ref ref="ASYNCFILE" />
+  <root level="INFO">
     <appender-ref ref="ASYNCSTDOUT" />
   </root>
   

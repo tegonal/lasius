@@ -79,7 +79,7 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
         case s =>
           //restart timer
           log.debug(s"andThen:restart time $s")
-          cancellable = Some(context.system.scheduler.scheduleOnce(10000 milliseconds, self, Parse))          
+          cancellable = Some(context.system.scheduler.scheduleOnce(settings.checkFrequency milliseconds, self, Parse))          
       }
   }
   

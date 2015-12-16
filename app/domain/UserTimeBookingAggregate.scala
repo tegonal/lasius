@@ -200,7 +200,6 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   val uninitialized: Receive = {
-
     case GetState =>
       sender ! state
     case Initialize(state) =>
@@ -292,7 +291,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     case GetState =>
       sender ! state
     case other =>
-      log.debug(s"Received unknown command")
+      log.warning(s"Received unknown command")
   }
 
   def stopBookingInProgress(b: UserTimeBooking, time: DateTime) = {
@@ -308,8 +307,10 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   val removed: Receive = {
     case GetState =>
+      log.warning(s"Received command in state removed")
       sender() ! state
     case KillAggregate =>
+      log.warning(s"Received KillAggregate command in state removed")
       context.stop(self)
   }
 
