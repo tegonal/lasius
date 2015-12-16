@@ -57,7 +57,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "angular-translate-loader-static-files" % "2.6.1-1",
   "org.webjars.bower" % "angular-dragdrop" % "1.0.12",
   "org.webjars.bower" % "bootstrap-select" % "1.7.5",
-  "org.webjars.bower" % "angular-ui-select" % "0.13.2",
+  "org.webjars" % "angular-ui-select" % "0.13.1",
   "org.webjars.bower" % "angular-sanitize" % "1.4.8",
   "org.webjars.bower" % "angular-moment" % "0.10.3",
   "org.webjars.bower" % "momentjs" % "2.10.6",
