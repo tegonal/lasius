@@ -75,10 +75,11 @@ define(
 
                         scope.duration = {};
                         scope.total_duration = {};
-                        currentTimeBookingService
-                            .getCurrentTimeBooking().then(function(bookings) {
-                          handleCurrentUserTimeBooking(bookings);
-                        });
+//                        currentTimeBookingService
+//                            .getCurrentTimeBooking().then(function(response) {
+//                          handleCurrentUserTimeBooking(response.booking);
+//                        });
+                        currentTimeBookingService.resolveCurrentTimeBooking(true);
                         
                         favoritesService.getFavorites().then(function(favorites) {
                           scope.favorites = favorites;
@@ -118,12 +119,6 @@ define(
                           
                           console.log(msg);
                         };
-
-                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-                            event, msg) {
-                          handleCurrentUserTimeBooking(msg);
-                          scope.$apply();
-                        });                        
                         
                         msgBus.onMsg('FavoriteRemoved', scope, function(
                             event, msg) {
@@ -236,6 +231,12 @@ define(
                             function(value) {
                               checkBooking(value);                              
                             });
+                        
+                        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+                          if (value) {
+                            handleCurrentUserTimeBooking(value);
+                          }                          
+                        });
 
                         scope.$on('$destroy', function() {
                           cancelTimer();

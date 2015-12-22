@@ -1,0 +1,31 @@
+<span>
+	<ui-select ng-model="team"
+             theme="bootstrap">
+	    <ui-select-match placeholder="Team">{{$select.selected.name}}</ui-select-match>
+	    <ui-select-choices repeat="team in user.teams  | filter: {name: $select.search}">
+	      <div ng-bind-html="team.name | highlight: $select.search"></div>
+	    </ui-select-choices>
+  	</ui-select>
+	<span ng-repeat="booking in bookings.timeBookings">		
+		<span>		
+		    {{booking.userId}: {{booking.projectId}}<small>@{{booking.categoryId}}</small>
+		    <span ng-repeat="tag in booking.tags" >
+		            <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
+		                <span>{{tag}}</span>        
+		            </span>
+		        </span>
+		        <span ng-if="duration.moment.hours() > 2"><b>{{duration.moment.hours()-1}}</b> <small>hours</small></span>
+		        <span ng-if="duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
+		        <span ng-if="duration.moment.minutes() > 1"><b>{{duration.moment.minutes()}}</b> <small>minutes</small></span>
+		        <span ng-if="duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
+		        <span><b>{{duration.moment | amDateFormat:'s'}}</b> <small>seconds</small></span>
+		       <span ng-if="total_duration.moment">
+			  		<small>(Total</small> <span ng-if="total_duration.moment.hours() > 2"><b>{{total_duration.moment.hours()-1}}</b> <small>hours</small></span>
+			  		<span ng-if="total_duration.moment.hours() == 2"><b>1</b> <small>hour</small></span>
+			  		<span ng-if="total_duration.moment.minutes() > 1"><b>{{total_duration.moment.minutes()}}</b> <small>minutes</small></span>
+			  		<span ng-if="total_duration.moment.minutes() == 1"><b>1</b> <small>minute</small></span>
+			  		<span ><b>{{total_duration.moment.seconds()}}</b> <small>seconds</small></span><small>)</small>
+			  	</span>
+		 </span>
+	</span>
+</span>

@@ -77,15 +77,14 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
          
          //notify team
          log.debug(s"Notify team members:$teamMembers -> $teamBookings")
-         clientReceiver ! (userId,  CurrentTeamTimeBookings(teamMembers.toSet, teamBookings.timeBookings), teamMembers.toList)
+         clientReceiver ! (userId,  CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten), teamMembers.toList)
        }
      }
    case GetCurrentTeamTimeBookings(teamId) => 
      //get current team time bookings by user
      val s = sender
      teams.get(teamId).map { teamBookings => 
-       val teamMembers = teamBookings.timeBookings.map(_._1)
-       s ! CurrentTeamTimeBookings(teamMembers.toSet, teamBookings.timeBookings)
+       s ! CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten)
      }.getOrElse {
        s ! NoResultFound
      }

@@ -174,11 +174,11 @@ define(['angular'], function(angular) {
           }, millis);
         }
         
-        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
+        msgBus.onMsg('CurrentUserTimeBookingEvent', scope, function(
             event, msg) {
           
-          scope.booking = msg.booking;
-          scope.result = msg;   
+          scope.booking = msg.booking.booking;
+          scope.result = msg.booking;   
           if (scope.booking === undefined) {
             cancelTimer();
           }

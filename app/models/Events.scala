@@ -57,8 +57,9 @@ object InEvent {
 sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
-case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
-case class CurrentTeamTimeBookings(users: Set[UserId], timeBookings: Map[UserId, Option[CurrentUserTimeBooking]]) extends OutEvent
+case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration)
+case class CurrentUserTimeBookingEvent(booking: CurrentUserTimeBooking) extends OutEvent
+case class CurrentTeamTimeBookings(teamId: TeamId, timeBookings: Seq[CurrentUserTimeBooking]) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
@@ -84,34 +85,9 @@ case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends 
 
 case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
 
-object CurrentTeamTimeBookings {
+object OutEvent {
   implicit val currentUserTimeBookingFormat: Format[CurrentUserTimeBooking] = Json.format[CurrentUserTimeBooking]
   
-  implicit val timebookingMapFormat = new Format[Map[UserId, Option[CurrentUserTimeBooking]]] {
-  
-  def writes(map: Map[UserId,  Option[CurrentUserTimeBooking]]): JsValue = 
-    Json.obj(map.map{case (userId, o) =>
-      val ret:Option[(String, JsValueWrapper)] = o match {
-        case Some(x) => Some(userId.value -> currentUserTimeBookingFormat.writes(x))
-        case _ => None
-      }
-      ret
-    }.toSeq.flatten:_*)
-
-
-  def reads(jv: JsValue): JsResult[Map[UserId,  Option[CurrentUserTimeBooking]]] =
-    JsSuccess(jv.as[Map[String, JsValue]].map{case (id, v) =>
-      val bookings = currentUserTimeBookingFormat.reads(v) match {
-        case JsSuccess(x, _) => Some(x)
-        case _ => None
-      }       
-      UserId(id) -> bookings 
-    })
-  }
-}
-
-object OutEvent {
-  import CurrentTeamTimeBookings._
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
 }
 

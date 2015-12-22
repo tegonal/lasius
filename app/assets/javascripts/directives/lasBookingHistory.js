@@ -35,9 +35,12 @@ define(
                   'MY_CONFIG',
                   'bookingHistoryService',
                   'bookingService',
+                  'currentTimeBookingService',
                   'msgBus',
                   'moment',
-                  function($uibModal, $log, $document, $timeout, MY_CONFIG, bookingHistoryService, bookingService,
+                  function($uibModal, $log, $document, $timeout, MY_CONFIG, bookingHistoryService, 
+                      bookingService,
+                      currentTimeBookingService,
                       msgBus, moment) {
                     return {
                       restrict : 'E',
@@ -297,10 +300,10 @@ define(
                               }
                             });
 
-                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-                            event, msg) {
-                          scope.booking = msg.booking;
-                          scope.$apply();
+                        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+                          if (value) {
+                            scope.booking = value.booking;
+                          }                          
                         });
                       }
                     };

@@ -40,7 +40,7 @@ class CurrentUserTimeBookingsController {
     implicit subject =>
       implicit request => {
         currentUserTimeBookingsViewService ? GetCurrentTimeBooking(subject.userId) map {
-          case c:CurrentUserTimeBooking => 
+          case c:CurrentUserTimeBookingEvent => 
             Ok(Json.toJson(c))
           case x =>
             Logger.debug(s"getCurrentTimeBooking:${subject.userId} => $x")
