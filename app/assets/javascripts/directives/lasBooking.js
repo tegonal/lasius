@@ -94,7 +94,7 @@ define(['angular'], function(angular) {
                 scope.projects[i].tagCache.sort(sortById);
                 
                 //check if current project is selected
-                if (scope.project.selected.project.id === scope.projects[i].project.id) {
+                if (scope.project.selected && scope.project.selected.project.id === scope.projects[i].project.id) {
                   scope.availableTags = scope.projects[i].tagCache;
                 }
                 
