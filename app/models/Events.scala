@@ -57,6 +57,7 @@ sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
 case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
+case class CurrentTeamTimebookings(users: Set[UserId], timeBookings: Map[UserId, Option[CurrentUserTimeBooking]]) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent

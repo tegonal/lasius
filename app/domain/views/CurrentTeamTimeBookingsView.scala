@@ -4,6 +4,7 @@ import akka.actor._
 import models._
 import repositories._
 import scala.concurrent.ExecutionContext.Implicits.global
+import actors.ClientReceiverComponent
 
 object CurrentTeamTimeBookingsView {
   
@@ -12,7 +13,7 @@ object CurrentTeamTimeBookingsView {
 }
 
 class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
-  self : BasicRepositoryComponent =>
+  self : BasicRepositoryComponent with ClientReceiverComponent =>
     
     import CurrentTeamTimeBookingsView._
     
@@ -40,11 +41,15 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
      user2Teams.get(e.userId).map { userTeams => 
        //store latest event in map of team
        userTeams.map{ teamId => 
-         teams = teams + (teamId -> (teams.get(teamId).map {state => 
+         val teamBookings  = (teams.get(teamId).map {state => 
            state.copy(timeBookings = state.timeBookings + (e.userId -> Some(e)))
-         }.getOrElse(TeamBookingState(Map(userId -> Some(e))))))
+         }.getOrElse(TeamBookingState(Map(userId -> Some(e)))))
+         teams = teams + (teamId -> teamBookings)
          
-         //notify teams
+         val teamMembers = teams.flatMap(_._2.timeBookings.map(_._1))
+         
+         //notify team
+         clientReceiver ! (userId,  CurrentTeamTimebookings(teamMembers.toSet, teamBookings.timeBookings), teamMembers.toList)
        }
      }
   }
