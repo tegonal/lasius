@@ -175,7 +175,11 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       }.getOrElse(None)
       val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
       log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
-      clientReceiver ! (userId, CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal), List(userId))
+      val event = CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal)
+      clientReceiver ! (userId, event, List(userId))
+      
+      //publish to the event stream as well
+      context.system.eventStream.publish(event)
     }
   }
 

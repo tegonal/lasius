@@ -28,7 +28,6 @@ import play.api.libs.json._
 import models._
 import models.BaseFormat._
 import repositories.MongoDBCommandSet._
-import org.openqa.selenium.support.FindAll
 import play.api.Logger
 
 trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {

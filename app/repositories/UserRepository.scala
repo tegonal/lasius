@@ -34,6 +34,8 @@ import play.api.libs.json.Json.JsValueWrapper
 trait UserRepository extends BaseRepository[User, UserId] {
 
   def findByEmail(email: String): Future[Option[User]]
+  
+  def findAll(): Future[Seq[User]]
 }
 
 class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with UserRepository {
@@ -42,5 +44,10 @@ class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with
   def findByEmail(email: String): Future[Option[User]] = {
     val sel = Json.obj("email" -> email)
     findFirst(sel) map (_.map(_._1))
+  }
+  
+  def findAll(): Future[Seq[User]] = {
+    val sel = Json.obj()
+    find(sel, 0, 0) map (_.map(_._1).toSeq)
   }
 }
