@@ -31,23 +31,27 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import scala.concurrent.Future
+import domain.views.CurrentTeamTimeBookingsView._
 import play.api.Logger
 
-class CurrentUserTimeBookingsController {
+class CurrentTeamTimeBookingsController {
   self: Controller with Security =>
 
-  def getCurrentTimeBooking() = HasRole(FreeUser, parse.empty) {
+  def getTeamTimeBooking(teamId: TeamId) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        currentUserTimeBookingsViewService ? GetCurrentTimeBooking(subject.userId) map {
-          case c:CurrentUserTimeBooking => 
-            Ok(Json.toJson(c))
-          case x =>
-            Logger.debug(s"getCurrentTimeBooking:${subject.userId} => $x")
+        currentTeamTimeBookingsView ? GetCurrentTeamTimeBookings(teamId) map {
+          case b: CurrentTeamTimeBookings => 
+            Ok(Json.toJson(b))
+          case NoResultFound => 
+            NotFound
+          case x => 
+            Logger.debug(s"getCurrentTimeBooking:$teamId => $x")
             BadRequest
         }
+        Future.successful(Ok)
       }
   }
 }
 
-object CurrentUserTimeBookingsController extends CurrentUserTimeBookingsController with Controller with Security with DefaultSecurityComponent
+object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent

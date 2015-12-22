@@ -110,7 +110,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
         val durations = getMapForDay(day)
 
         state = updateBooking(e.booking.userId, Some(e.booking), day, durations)
-        notifyClient()
+        notifyClient()        
       }
       sender ! Ack
     case e: UserTimeBookingRemoved =>
@@ -161,26 +161,30 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       val day = DateTime.now.withTimeAtStartOfDay
       val durations = getMapForDay(day)
       state = updateBooking(userId, state.booking, day, durations)
-
-      notifyClient()
-      sender ! Ack
+      
+      sender ! currentUserTimeBookings
   }
 
   private def notifyClient() = {
     //only notify client if time booking concerns the same day
     val today = DateTime.now().withTimeAtStartOfDay()
-    if (!today.isAfter(state.currentDay)) {
-      val totalBySameBooking = state.booking.map { b =>
-        state.dailyBookingsMap.get(b.createStub)
-      }.getOrElse(None)
-      val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
-      log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
-      val event = CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal)
+    if (!today.isAfter(state.currentDay)) {      
+      val event = currentUserTimeBookings
       clientReceiver ! (userId, event, List(userId))
       
       //publish to the event stream as well
       context.system.eventStream.publish(event)
     }
+  }
+  
+  private def currentUserTimeBookings = {
+    val totalBySameBooking = state.booking.map { b =>
+        state.dailyBookingsMap.get(b.createStub)
+      }.getOrElse(None)
+      val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
+      log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
+      
+      CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal)
   }
 
   protected def addDailyDuration(booking: Booking, date: DateTime) = {

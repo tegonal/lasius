@@ -76,7 +76,9 @@ define(
                         scope.duration = {};
                         scope.total_duration = {};
                         currentTimeBookingService
-                            .getCurrentTimeBooking();
+                            .getCurrentTimeBooking().then(function(bookings) {
+                          handleCurrentUserTimeBooking(bookings);
+                        });
                         
                         favoritesService.getFavorites().then(function(favorites) {
                           scope.favorites = favorites;
@@ -98,9 +100,8 @@ define(
                             scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
                         };
-
-                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-                            event, msg) {
+                        
+                        var handleCurrentUserTimeBooking = function(msg) {
                           scope.result = msg;
                           scope.total_duration = {};
 
@@ -116,8 +117,13 @@ define(
                           }
                           
                           console.log(msg);
+                        };
+
+                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
+                            event, msg) {
+                          handleCurrentUserTimeBooking(msg);
                           scope.$apply();
-                        });
+                        });                        
                         
                         msgBus.onMsg('FavoriteRemoved', scope, function(
                             event, msg) {

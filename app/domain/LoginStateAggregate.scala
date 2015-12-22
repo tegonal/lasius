@@ -57,6 +57,7 @@ class LoginStateAggregate extends AggregateRoot {
           case ub: LoggedInState => userLoggerOut(ub, userId)
           case _ => state
         }
+      case _ =>
     }
   }
 

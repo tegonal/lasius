@@ -21,7 +21,6 @@
 package models
 
 import play.api.libs.json._
-
 import play.api.mvc.WebSocket.FrameFormatter
 import reactivemongo.bson.BSONObjectID
 import julienrf.variants.Variants
@@ -29,6 +28,8 @@ import org.joda.time.Duration
 import models.BaseFormat._
 import org.joda.time.DateTime
 import scala.collection.SortedSet
+import play.api.libs.json.Json.JsValueWrapper
+import scala.util._
 
 sealed trait PersistetEvent extends Serializable
 
@@ -57,7 +58,7 @@ sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
 case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
-case class CurrentTeamTimebookings(users: Set[UserId], timeBookings: Map[UserId, Option[CurrentUserTimeBooking]]) extends OutEvent
+case class CurrentTeamTimeBookings(users: Set[UserId], timeBookings: Map[UserId, Option[CurrentUserTimeBooking]]) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
@@ -83,7 +84,34 @@ case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends 
 
 case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
 
+object CurrentTeamTimeBookings {
+  implicit val currentUserTimeBookingFormat: Format[CurrentUserTimeBooking] = Json.format[CurrentUserTimeBooking]
+  
+  implicit val timebookingMapFormat = new Format[Map[UserId, Option[CurrentUserTimeBooking]]] {
+  
+  def writes(map: Map[UserId,  Option[CurrentUserTimeBooking]]): JsValue = 
+    Json.obj(map.map{case (userId, o) =>
+      val ret:Option[(String, JsValueWrapper)] = o match {
+        case Some(x) => Some(userId.value -> currentUserTimeBookingFormat.writes(x))
+        case _ => None
+      }
+      ret
+    }.toSeq.flatten:_*)
+
+
+  def reads(jv: JsValue): JsResult[Map[UserId,  Option[CurrentUserTimeBooking]]] =
+    JsSuccess(jv.as[Map[String, JsValue]].map{case (id, v) =>
+      val bookings = currentUserTimeBookingFormat.reads(v) match {
+        case JsSuccess(x, _) => Some(x)
+        case _ => None
+      }       
+      UserId(id) -> bookings 
+    })
+  }
+}
+
 object OutEvent {
+  import CurrentTeamTimeBookings._
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
 }
 
