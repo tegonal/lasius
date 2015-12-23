@@ -75,8 +75,11 @@ define(
 
                         scope.duration = {};
                         scope.total_duration = {};
-                        currentTimeBookingService
-                            .getCurrentTimeBooking();
+//                        currentTimeBookingService
+//                            .getCurrentTimeBooking().then(function(response) {
+//                          handleCurrentUserTimeBooking(response.booking);
+//                        });
+                        currentTimeBookingService.resolveCurrentTimeBooking(true);
                         
                         favoritesService.getFavorites().then(function(favorites) {
                           scope.favorites = favorites;
@@ -98,9 +101,8 @@ define(
                             scope.result.booking.isFavorite = isFavorite( scope.result.booking);                            
                           });
                         };
-
-                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-                            event, msg) {
+                        
+                        var handleCurrentUserTimeBooking = function(msg) {
                           scope.result = msg;
                           scope.total_duration = {};
 
@@ -116,8 +118,7 @@ define(
                           }
                           
                           console.log(msg);
-                          scope.$apply();
-                        });
+                        };
                         
                         msgBus.onMsg('FavoriteRemoved', scope, function(
                             event, msg) {
@@ -230,6 +231,12 @@ define(
                             function(value) {
                               checkBooking(value);                              
                             });
+                        
+                        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+                          if (value) {
+                            handleCurrentUserTimeBooking(value);
+                          }                          
+                        });
 
                         scope.$on('$destroy', function() {
                           cancelTimer();

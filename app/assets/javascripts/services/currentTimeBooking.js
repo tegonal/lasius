@@ -22,11 +22,42 @@ define(['angular'], function (angular) {
   'use strict';
 
   var mod = angular.module('services.currentTimeBooking', []);
-  mod.factory('currentTimeBookingService', ['$http', '$location', '$q', 'playRoutes', '$log', function ($http, $location, $q, playRoutes, $log) {
+  mod.factory('currentTimeBookingService', ['$http', '$location', '$q', 'playRoutes', '$log', '$rootScope', 'msgBus', function ($http, $location, $q, playRoutes, $log, $rootScope, msgBus) {
+    var currentTimeBooking;
     
-    return {     
-      getCurrentTimeBooking: function () {
-        return playRoutes.controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking().get().then(function (response) {
+    msgBus.onMsg('CurrentUserTimeBookingEvent', $rootScope, function(
+        event, msg) {
+      currentTimeBooking = msg.booking;
+      $rootScope.$apply();
+    });
+    
+    var loadCurrentTimeBooking = function () {
+      return playRoutes.controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking().get().then(function (response) {
+        return response.data;          
+      }, function(reason) {
+        $log.debug("Failed loading document:"+reason);
+        return reason.data;
+      });
+    };
+    
+    return {
+      getCurrentTimeBooking: function() {
+        return currentTimeBooking;
+      },      
+      resolveCurrentTimeBooking: function(reload) {
+        var deferred = $q.defer();        
+        if (currentTimeBooking && reload) {
+          deferred.resolve(currentTimeBooking);
+        }
+        else {          
+          loadCurrentTimeBooking().then(function(currentTimeBookingEvent){
+            currentTimeBooking = currentTimeBookingEvent.booking;
+            deferred.resolve(currentTimeBooking);
+          });            
+        }
+      },      
+      getTeamTimeBooking: function (teamId) {        
+        return playRoutes.controllers.CurrentTeamTimeBookingsController.getTeamTimeBooking(teamId).get().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed loading document:"+reason);

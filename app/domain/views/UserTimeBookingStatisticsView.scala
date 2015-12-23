@@ -229,7 +229,7 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   }
 
   private def notifyClient(events: Seq[OutEvent]) = {
-    events map (event => ClientMessagingWebsocketActor ! (userId, event, List(userId)))
+    events map (event => ClientMessagingWebsocketActor ! (userId, event, List(userId)))    
   }
 
   private def notifyClient(event: OutEvent) = {

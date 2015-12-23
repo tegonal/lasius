@@ -22,7 +22,7 @@ define(['angular'], function(angular) {
   'use strict';
 
   var mod = angular.module('directives.lasBookingsTable', []);
-  mod.directive('lasBookingsTable', ['msgBus', 'bookingService', function(msgBus, bookingService) {
+  mod.directive('lasBookingsTable', ['currentTimeBookingService', 'bookingService', function(currentTimeBookingService, bookingService) {
     return {
       restrict: 'E',
       templateUrl: '/assets/directives/las-bookings-table-tmpl.html',
@@ -74,12 +74,10 @@ define(['angular'], function(angular) {
           return isEquals(scope.booking, bookingStub);          
         };
         
-        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-            event, msg) {
-          if (msg.userId == scope.userId) {
-            scope.booking = msg.booking;
-            scope.$apply();
-          }
+        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+          if (value) {
+            scope.booking = value.booking;
+          }                          
         });
         
       }

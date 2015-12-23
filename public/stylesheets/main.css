@@ -194,3 +194,7 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+.no_margin{
+margin:0px !important;
+}

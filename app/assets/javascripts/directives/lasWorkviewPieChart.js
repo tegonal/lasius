@@ -33,13 +33,21 @@ define(['angular'], function(angular) {
         var activeTimeout;
         var currentValue;
         var unwatchChanges;
+        
+        scope.width = function(index) {
+          return 250+index*30;
+        };
+        
+        scope.height = function(index) {          
+          return 250+index*30;
+        };               
 
         var getChartOptions = function(index){
          return {
             chart: {
                 type: 'pieChart',
-                height: 250+index*30,
-                width:250+index*30,
+                height: scope.height(index),
+                width:scope.width(index),
                 x: function(d){return d.label;},
                 y: function(d){return d.value;},               
                 showLabels: false,
@@ -174,22 +182,21 @@ define(['angular'], function(angular) {
           }, millis);
         }
         
-        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-            event, msg) {
-          
-          scope.booking = msg.booking;
-          scope.result = msg;   
-          if (scope.booking === undefined) {
-            cancelTimer();
-          }
-          else {
-            //add current duration
-            scope.result.totalByDay +=  moment().diff(msg.booking.start);   
-          }
-                                            
-          updateCharts();         
-          
-          scope.$apply();
+        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+          if (value) {
+            scope.booking = value.booking;
+            scope.result = value;
+            
+            if (scope.booking === undefined) {
+              cancelTimer();
+            }
+            else {
+              //add current duration
+              scope.result.totalByDay +=  moment().diff(value.booking.start);   
+            }
+                                              
+            updateCharts();   
+          }                          
         });
         
         function updateMoment(apply) {

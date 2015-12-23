@@ -41,6 +41,7 @@ import scala.concurrent.Await
 import akka.actor.ActorRef
 import play.api.libs.json.Json
 import actors.TagCache
+import domain.views.CurrentTeamTimeBookingsView
 
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
@@ -57,15 +58,21 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val loginHandler =  Await.result(supervisor ? LoginHandler.props, duration).asInstanceOf[ActorRef]
 
   val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
+  val currentTeamTimeBookingsView = Await.result(supervisor ? CurrentTeamTimeBookingsView.props, duration).asInstanceOf[ActorRef]
   val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
   val tagCache = Await.result(supervisor ? TagCache.props, duration).asInstanceOf[ActorRef]
-  val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]
+  val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]  
 
   override def onStart(app: Application) {
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
     if (initData.isDefined && initData.get) {
-      InitialData.init()
+      InitialData.init() map {x => 
+        currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
+      }
+    }
+    else {
+      currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize  
     }
 
     //initialite login handler

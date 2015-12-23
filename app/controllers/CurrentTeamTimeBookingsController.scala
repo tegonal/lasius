@@ -18,30 +18,41 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package repositories
+package controllers
 
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent._
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
+import play.api.mvc.Controller
 import models._
-import models.BaseFormat._
-import repositories.MongoDBCommandSet._
+import play.api.mvc.Action
+import core.Global._
+import domain.views.CurrentUserTimeBookingsView._
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.json._
+import scala.concurrent.Future
+import domain.views.CurrentTeamTimeBookingsView._
 import play.api.Logger
 
-trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
+class CurrentTeamTimeBookingsController {
+  self: Controller with Security =>
 
-  def getJiraConfigurations(): Future[Seq[JiraConfig]]
-}
-
-class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, JiraConfigId] with JiraConfigRepository {
-  def coll = db.collection[JSONCollection]("JiraConfig")
-
-  def getJiraConfigurations(): Future[Seq[JiraConfig]] = {
-    find(Json.obj()) map { configs =>
-      Logger.debug(s"Loaded configs:$configs")
-      configs.map(_._1).toSeq
-    }
+  def getTeamTimeBooking(teamId: TeamId) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        currentTeamTimeBookingsView ? GetCurrentTeamTimeBookings(teamId) map {
+          case b: CurrentTeamTimeBookings =>
+            Logger.debug(s"getCurrentTeamTimeBooking:$b")
+            Ok(Json.toJson(b))
+          case NoResultFound =>
+            Logger.debug(s"getCurrentTeamTimeBooking: NoResultFound")
+            NotFound
+          case x => 
+            Logger.debug(s"getCurrentTeamTimeBooking:$teamId => $x")
+            BadRequest
+        }
+      }
   }
 }
+
+object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent

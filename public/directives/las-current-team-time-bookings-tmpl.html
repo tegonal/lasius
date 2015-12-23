@@ -1,0 +1,31 @@
+<span class="no_margin">
+	<ui-select ng-if="user.teams.length > 1" ng-model="team"
+             theme="bootstrap">
+	    <ui-select-match placeholder="Team">{{$select.selected.name}}</ui-select-match>
+	    <ui-select-choices repeat="team in user.teams  | filter: {name: $select.search}">
+	      <div ng-bind-html="team.name | highlight: $select.search"></div>
+	    </ui-select-choices>
+  	</ui-select>
+	<table class="table">
+		<tr>
+			<th>User</th>
+			<th>Project</th>	
+			<th>Tags</th>
+		</tr>
+	    <tr ng-repeat="booking in filtered = (bookings.timeBookings | filter: {userId: '!'+user.id})" ng-class="isSame(booking.booking)?'info':''">
+	        <td>{{booking.userId}}</td>
+	        <td>
+	        	<span ng-if="booking.booking">{{booking.booking.projectId}}@{{booking.booking.categoryId}}</span>
+	        	<span ng-if="!booking.booking">no booking</span>
+	        </td>
+	        <td>
+	            <span ng-repeat="tag in booking.booking.tags" >
+			        <span style="margin-right: 3px;" class="ui-select-match-item btn btn-default btn-xs" type="button">        
+			            <span>{{tag}}</span>        
+			        </span>
+	            </span>
+	        </td>	        
+	    </tr>	    	    
+	</table>
+	<span ng-show="filtered.length === 0">There are no other team members logged in at the moment</span>
+</span>
