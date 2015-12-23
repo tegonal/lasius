@@ -167,15 +167,16 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
 
   private def notifyClient() = {
     //only notify client if time booking concerns the same day
-    val today = DateTime.now().withTimeAtStartOfDay()
-    if (!today.isAfter(state.currentDay)) {      
-      val event = currentUserTimeBookings
-      clientReceiver ! (userId, event, List(userId))
+    val today = DateTime.now.withTimeAtStartOfDay()         
+    val event = currentUserTimeBookings
       
-      //publish to the event stream as well
-      log.debug(s"CurrentTeamUserTimeBookingsView: publish to event stream $event: ${context.system}")
-      context.system.eventStream.publish(event)
+    if (!today.isAfter(state.currentDay)) {
+      clientReceiver ! (userId, event, List(userId))
     }
+      
+    //publish to the event stream as well
+    log.debug(s"CurrentTeamUserTimeBookingsView: publish to event stream $event: ${context.system}")
+    context.system.eventStream.publish(event)
   }
   
   private def currentUserTimeBookings = {
@@ -185,7 +186,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       val dailyTotal = state.dailyBookingsMap.map(_._2).foldLeft(Duration.millis(0))((a, b) => a.plus(b))
       log.debug(s"notifyClient. userId:$userId, booking:${state.booking}, day:${state.currentDay}, bookings:${state.dailyBookingsMap}, totalByBooking:$totalBySameBooking, dailyTotal:$dailyTotal, dailyTotalMillis:${dailyTotal.getMillis}")
       
-      CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, state.booking, totalBySameBooking, dailyTotal))
+      CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, state.currentDay, state.booking, totalBySameBooking, dailyTotal))
   }
 
   protected def addDailyDuration(booking: Booking, date: DateTime) = {

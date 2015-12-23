@@ -57,7 +57,7 @@ object InEvent {
 sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
-case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration)
+case class CurrentUserTimeBooking(userId: UserId, day: DateTime, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration)
 case class CurrentUserTimeBookingEvent(booking: CurrentUserTimeBooking) extends OutEvent
 case class CurrentTeamTimeBookings(teamId: TeamId, timeBookings: Seq[CurrentUserTimeBooking]) extends OutEvent
 

@@ -21,12 +21,12 @@
 package domain.views
 
 import akka.actor._
-
 import models._
 import repositories._
 import scala.concurrent.ExecutionContext.Implicits.global
 import actors._
 import scala.concurrent.duration._
+import org.joda.time.DateTime
 
 object CurrentTeamTimeBookingsView {
   
@@ -89,13 +89,17 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
          val teamBookings  = (teams.get(teamId).map {state => 
            state.copy(timeBookings = state.timeBookings + (e.booking.userId -> Some(e.booking)))
          }.getOrElse(TeamBookingState(Map(userId -> Some(e.booking)))))
-         teams = teams + (teamId -> teamBookings)
+         teams = teams + (teamId -> teamBookings)                 
          
-         val teamMembers = teamBookings.timeBookings.map(_._1)
+         log.debug(s"Updated state:$teamId - $teamBookings")
          
          //notify team
-         log.debug(s"Notify team members:$teamMembers -> $teamBookings")
-         clientReceiver ! (userId,  CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten), teamMembers.toList)
+         val today = DateTime.now.withTimeAtStartOfDay()  
+         if (!today.isAfter(e.booking.day)) {
+           val teamMembers = teamBookings.timeBookings.map(_._1)
+           log.debug(s"Notify team members:$teamMembers -> $teamBookings")
+           clientReceiver ! (userId,  CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten), teamMembers.toList)
+         }
        }
      }
    case GetCurrentTeamTimeBookings(teamId) => 

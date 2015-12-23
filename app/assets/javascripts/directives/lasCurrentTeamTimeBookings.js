@@ -37,6 +37,7 @@ define(
                     return {
                       restrict : 'E',
                       transclude : true,
+                      replace: true,
                       templateUrl : '/assets/directives/las-current-team-time-bookings-tmpl.html',
                       scope : {     
                         user : '='
@@ -59,6 +60,25 @@ define(
                             scope.bookings = msg;
                             scope.$apply();
                           }
+                        });
+                        
+                        var isEquals = function(booking, bookingStub) {
+                          if (booking === undefined || bookingStub === undefined) {
+                            return false;
+                          }
+                          return booking.categoryId === bookingStub.categoryId &&
+                            booking.projectId === bookingStub.projectId &&
+                            booking.tags.equals(bookingStub.tags);
+                        };
+                        
+                        scope.isSame = function(bookingStub) {
+                          return isEquals(scope.booking, bookingStub);          
+                        };
+                        
+                        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+                          if (value) {
+                            scope.booking = value.booking;
+                          }                          
                         });
                       }
                     };
