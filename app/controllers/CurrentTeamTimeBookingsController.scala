@@ -41,15 +41,16 @@ class CurrentTeamTimeBookingsController {
     implicit subject =>
       implicit request => {
         currentTeamTimeBookingsView ? GetCurrentTeamTimeBookings(teamId) map {
-          case b: CurrentTeamTimeBookings => 
+          case b: CurrentTeamTimeBookings =>
+            Logger.debug(s"getCurrentTeamTimeBooking:$b")
             Ok(Json.toJson(b))
-          case NoResultFound => 
+          case NoResultFound =>
+            Logger.debug(s"getCurrentTeamTimeBooking: NoResultFound")
             NotFound
           case x => 
-            Logger.debug(s"getCurrentTimeBooking:$teamId => $x")
+            Logger.debug(s"getCurrentTeamTimeBooking:$teamId => $x")
             BadRequest
         }
-        Future.successful(Ok)
       }
   }
 }

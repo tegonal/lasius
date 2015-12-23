@@ -2,7 +2,7 @@
 	<span style="position:absolute;margin-left:95px;margin-top:95px;">
 		<h3>{{progress | percentage:0 }}</h3>
 	</span>
-<div class="chart">	
+<div class="chart" ng-style="{ 'width' : width(charts.length-1), 'height': height(charts.length-1) }">	
 	<span ng-repeat="chart in charts" class="workview-chart" style="position:absolute;">
 		<nvd3 options="chartOptions[$index]" data="chart"></nvd3>    			
     </span>

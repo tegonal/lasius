@@ -48,6 +48,6 @@ class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with
   
   def findAll(): Future[Seq[User]] = {
     val sel = Json.obj()
-    find(sel, 0, 0) map (_.map(_._1).toSeq)
+    find(sel) map (_.map(_._1).toSeq)
   }
 }

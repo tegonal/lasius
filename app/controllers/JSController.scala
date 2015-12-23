@@ -44,6 +44,7 @@ object JSController extends Controller {
             ApplicationController.logout,
             ApplicationController.messagingSocket,
             CurrentUserTimeBookingsController.getCurrentTimeBooking,
+            CurrentTeamTimeBookingsController.getTeamTimeBooking,
             LatestUserTimeBookingsController.getLatestTimeBooking,
             StructureController.getCategories,
             TimeBookingController.add,

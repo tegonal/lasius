@@ -43,20 +43,21 @@ define(
                       },
                       link : function(scope, iElement, iAttrs) {                        
                         scope.$watch('team', function(team) {
-                          currentTimeBookingService.getTeamTimeBooking(team.id).then(function(response) {
+                          currentTimeBookingService.getTeamTimeBooking(team.id.$oid).then(function(response) {
                             scope.bookings = response;
                           });                            
                         }, false);
                         
                         if (scope.user.teams && scope.user.teams.length > 0) {
-                          scope.team = scope.user.teams.get(0);
+                          scope.team = scope.user.teams[0];
                         }
                         
                         msgBus.onMsg('CurrentTeamTimeBookings', scope, function(
                             event, msg) {
-                          if (scope.team && msg.teamId === scope.team.id) {
+                          if (scope.team && msg.teamId.$oid === scope.team.id.$oid) {
                             //update
                             scope.bookings = msg;
+                            scope.$apply();
                           }
                         });
                       }

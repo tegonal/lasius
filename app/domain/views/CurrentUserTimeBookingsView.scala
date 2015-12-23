@@ -173,6 +173,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with Ac
       clientReceiver ! (userId, event, List(userId))
       
       //publish to the event stream as well
+      log.debug(s"CurrentTeamUserTimeBookingsView: publish to event stream $event: ${context.system}")
       context.system.eventStream.publish(event)
     }
   }

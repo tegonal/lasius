@@ -21,17 +21,19 @@
 package domain.views
 
 import akka.actor._
+
 import models._
 import repositories._
 import scala.concurrent.ExecutionContext.Implicits.global
-import actors.ClientReceiverComponent
-import actors.DefaultClientReceiverComponent
+import actors._
+import scala.concurrent.duration._
 
 object CurrentTeamTimeBookingsView {
   
   case class TeamBookingState(timeBookings: Map[UserId, Option[CurrentUserTimeBooking]])
   case class GetCurrentTeamTimeBookings(teamId: TeamId)
   case object NoResultFound
+  case object Initialize
   
   def props: Props = Props(classOf[DefaultCurrentTeamTimeBookingsView])
 }
@@ -47,30 +49,46 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
   var user2Teams: Map[UserId, Seq[TeamId]] = Map()
     
   override def preStart() = {
-    context.system.eventStream.subscribe(self, classOf[CurrentUserTimeBooking])
-    loadInitialTeams()
+    log.debug(s"CurrentTeamTimeBookingsView: preStart, register as listener, ${context.system}")
+    context.system.eventStream.subscribe(self, classOf[OutEvent])
+  }
+  
+  override def postStop() {
+    context.system.eventStream.unsubscribe(this.self, classOf[OutEvent])
+    super.postStop()
   }
   
   private def loadInitialTeams() = {
+    log.debug(s"loadInitialTeams")
     userRepository.findAll() map { users =>
-      val userMap = users.map { user =>
-        user.teams.map(t => (t.id, user.id))
-      }.flatten
-      
-      teams = userMap.groupBy(_._1).map{case (t, v) => (t, TeamBookingState(v.map(x => (x._2, None)).toMap))}
-      user2Teams = userMap.groupBy(_._2).map{case (t, v) => (t, v.map(_._1))}
+      log.debug(s"findAllUsers:$users")
+      if (users.length > 0) {      
+        val userMap = users.map { user =>
+          user.teams.map(t => (t.id, user.id))
+        }.flatten
+        
+        teams = userMap.groupBy(_._1).map{case (t, v) => (t, TeamBookingState(v.map(x => (x._2, None)).toMap))}
+        user2Teams = userMap.groupBy(_._2).map{case (t, v) => (t, v.map(_._1))}
+        log.debug(s"loadInitialTeams: $teams")
+      }
+      else {
+        context.system.scheduler.scheduleOnce(1 second)(self ! Initialize)
+      }
     }
   }
   
   val receive:Receive = {
-   case e:CurrentUserTimeBooking =>
-     val userId = e.userId
-     user2Teams.get(e.userId).map { userTeams => 
+   case Initialize => 
+      loadInitialTeams()
+   case e:CurrentUserTimeBookingEvent =>
+     val userId = e.booking.userId
+     log.debug(s"CurrentTeamTimeBookingsView: received $e")
+     user2Teams.get(e.booking.userId).map { userTeams => 
        //store latest event in map of team
        userTeams.map{ teamId => 
          val teamBookings  = (teams.get(teamId).map {state => 
-           state.copy(timeBookings = state.timeBookings + (e.userId -> Some(e)))
-         }.getOrElse(TeamBookingState(Map(userId -> Some(e)))))
+           state.copy(timeBookings = state.timeBookings + (e.booking.userId -> Some(e.booking)))
+         }.getOrElse(TeamBookingState(Map(userId -> Some(e.booking)))))
          teams = teams + (teamId -> teamBookings)
          
          val teamMembers = teamBookings.timeBookings.map(_._1)
@@ -82,11 +100,16 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
      }
    case GetCurrentTeamTimeBookings(teamId) => 
      //get current team time bookings by user
+     log.debug(s"GetCurrenTeamTimebookings:$teamId")
      val s = sender
      teams.get(teamId).map { teamBookings => 
+       log.debug(s"GetCurrenTeamTimebookings:$teamId -> $teamBookings")
        s ! CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten)
      }.getOrElse {
+       log.debug(s"GetCurrenTeamTimebookings:$teamId -> NoResultsFound")
        s ! NoResultFound
      }
-  }
+   case e => 
+    log.debug(s"received unknown event: $e")
+  }  
 }

@@ -67,7 +67,12 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   override def onStart(app: Application) {
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
     if (initData.isDefined && initData.get) {
-      InitialData.init()
+      InitialData.init() map {x => 
+        currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
+      }
+    }
+    else {
+      currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize  
     }
 
     //initialite login handler
