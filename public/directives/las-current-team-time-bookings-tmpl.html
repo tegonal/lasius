@@ -11,6 +11,7 @@
 			<th>User</th>
 			<th>Project</th>	
 			<th>Tags</th>
+			<th></th>
 		</tr>
 	    <tr ng-repeat="booking in filtered = (bookings.timeBookings | filter: {userId: '!'+user.id})" ng-class="isSame(booking.booking)?'info':''">
 	        <td>{{booking.userId}}</td>
@@ -24,7 +25,8 @@
 			            <span>{{tag}}</span>        
 			        </span>
 	            </span>
-	        </td>	        
+	        </td>	  
+	        <td><button type="button" class="btn btn-xs" ng-hide="!booking.booking || isSame(booking.booking)" ng-click="startBooking(booking.booking)"><span class="glyphicon glyphicon-play-circle"></span></button></td>      
 	    </tr>	    	    
 	</table>
 	<span ng-show="filtered.length === 0">There are no other team members logged in at the moment</span>

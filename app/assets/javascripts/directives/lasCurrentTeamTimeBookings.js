@@ -30,10 +30,11 @@ define(
               [
                   '$log',
                   'MY_CONFIG',
+                  'bookingService', 
                   'currentTimeBookingService',                  
                   'msgBus',
                   'moment',
-                  function($log, MY_CONFIG, currentTimeBookingService, msgBus, moment) {
+                  function($log, MY_CONFIG, bookingService, currentTimeBookingService, msgBus, moment) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -73,6 +74,19 @@ define(
                         
                         scope.isSame = function(bookingStub) {
                           return isEquals(scope.booking, bookingStub);          
+                        };
+                        
+                        scope.startBooking = function(booking) {
+                          bookingService.start(booking.categoryId,
+                              booking.projectId, booking.tags).then(function() {
+                            // assign dummy booking that row gets selected
+                            // directly
+                            scope.booking = {
+                              projectId : booking.projectId,
+                              categoryId : booking.categoryId,
+                              tags : booking.tags
+                            };
+                          });
                         };
                         
                         scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
