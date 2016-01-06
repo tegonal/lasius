@@ -27,6 +27,8 @@ import services.JiraConfiguration
 import services.OAuthAuthentication
 import actors.scheduler.jira.JiraTagParseScheduler
 import actors.scheduler.jira.JiraTagParseScheduler._
+import play.api.Play
+import core.LoginHandler.InitializeUserViews
 
 object PluginHandler {
   def props(): Props = Props(classOf[DefaultPluginHandler])
@@ -57,6 +59,18 @@ trait PluginHandler extends Actor with ActorLogging {
   
   def initialize = {
     initializeJiraPlugin
+    initializeUserViews
+  }
+  
+  private def initializeUserViews = {
+    val initializeViews = Play.current.configuration.getBoolean("lasius.persistence.on_startup.initialize_views").getOrElse(false)
+    log.debug(s"initializeUserViews:$initializeViews")
+    if (initializeViews) {
+      userRepository.findAll() map { users =>
+        log.debug(s"findAllUsers:$users")
+        users.map(user => Global.loginHandler ! InitializeUserViews(user.id))
+      }
+    }
   }
   
   def initializeJiraPlugin = {

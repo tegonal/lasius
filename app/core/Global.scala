@@ -81,7 +81,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
     //start pluginhandler
     Logger.debug(s"Start pluginHandler:$pluginHandler")
     pluginHandler ! PluginHandler.Startup
-    
+        
     ()
   }
 
