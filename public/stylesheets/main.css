@@ -1,11 +1,11 @@
-body {  
+body {
   padding-left: 20px;
 }
 
 .main_nav {
 	background-color: #e7e7e7;
 	padding-bottom:0px;
-	padding-top:10px;	
+	padding-top:10px;
 }
 
 .booking {
@@ -22,7 +22,7 @@ body {
 }
 
 .align_center {
-	text-align: center;	
+	text-align: center;
 }
 .current_booking_content {
 }
@@ -50,7 +50,7 @@ body {
 }
 
 .animate-if.ng-leave,
-.animate-if.ng-enter.ng-enter-active {   
+.animate-if.ng-enter.ng-enter-active {
    height: 200px;
 }
 
@@ -62,11 +62,11 @@ body {
 }
 
 .main_content{
-    margin-top: 380px;   
+    margin-top: 380px;
 }
 
 .main_content_closed {
-	margin-top: 130px;  	
+	margin-top: 130px;
 }
 
 .show-fade {
@@ -106,7 +106,7 @@ body {
 .avatar -big:before {
     vertical-align: middle;
     padding: 0 10px 0 0;
-    vertical-align: -40%;    
+    vertical-align: -40%;
 }
 
 /* dropdown menu stuff */
@@ -168,6 +168,7 @@ body {
 .footer {
   position: absolute;
   bottom: 0;
+  left: 0;
   width: 100%;
   /* Set the fixed height of the footer here */
   height: 60px;
@@ -182,7 +183,7 @@ body {
 body > .container {
   padding: 60px 15px 0;
 }
-.container .text-muted {
+.container .text-muted, .container-fluid .text-muted {
   margin: 20px 0;
 }
 
