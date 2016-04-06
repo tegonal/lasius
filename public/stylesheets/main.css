@@ -199,3 +199,11 @@ code {
 .no_margin{
 margin:0px !important;
 }
+
+.footer .connected {
+  color: #28AF00;
+}
+
+.footer .disconnected {
+  color: #FD6464;
+}

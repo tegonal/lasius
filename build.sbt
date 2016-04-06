@@ -64,7 +64,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "nvd3-community" % "1.7.0",
   "org.webjars" % "d3js" % "3.5.10",
   "org.webjars" % "angular-nvd3" % "0.1.1",
-  "org.webjars.bower" % "angular-datepicker" % "1.0.12"
+  "org.webjars.bower" % "angular-datepicker" % "1.0.12",
+  "org.webjars" % "font-awesome" % "4.5.0"
 )
 
 routesImport ++= Seq(
