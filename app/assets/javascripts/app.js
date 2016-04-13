@@ -103,12 +103,15 @@ define(['angular',
                                          'services.alert',
                                          'services.latestTimeBookings']);
   
+  mod.constant('moment', require('moment-timezone'));
+  
   //declare constants
   mod.constant("MY_CONFIG", {
     "DATE_FORMAT": "dd.MM.yyyy",
     "DATE_PATTERN": "DDMMYYYYHHmm",
     "FULL_DATE_PATTERN": "DDMMYYYYHHmmss",
-    "MILLIS_PER_HOUR": 1000*60*60
+    "MILLIS_PER_HOUR": 1000*60*60,
+    "TIMEZONE": "Europe/Zurich"
   });
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
@@ -175,10 +178,6 @@ define(['angular',
   
   mod.run(function(amMoment) {
     amMoment.changeLocale('de');
-  });
-  
-  mod.constant('angularMomentConfig', {
-    preprocess: 'utc' // optional
   });
   
   return mod;

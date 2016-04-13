@@ -74,7 +74,8 @@
       'angular-sanitize': ['angular'],
       'ui.select': ['angular', 'bootstrap', 'bootstrap-select', 'angular-sanitize'],
       'moment': [],
-      'angular-moment': ['angular', 'moment'],
+      'moment-timezone': [],
+      'angular-moment': ['angular', 'moment', 'moment-timezone'],
       'd3': { exports: 'd3' },
       'nvd3': {
         exports: 'nv',
@@ -99,6 +100,7 @@
       'angular-sanitize': ['../lib/angular-sanitize/angular-sanitize'],
       'ui.select': ['../lib/angular-ui-select/select'],
       'moment': ['../lib/momentjs/moment', '../lib/momentjs/locale/de'],
+      'moment-timezone': ['../lib/moment-timezone/builds/moment-timezone-with-data.min'],
       'angular-moment': ['../lib/angular-moment/angular-moment'],
       'd3': ['../lib/d3js/d3'],
       'nvd3': ['../lib/nvd3/nv.d3'],
