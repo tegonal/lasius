@@ -1,7 +1,6 @@
 [![Build Status](https://travis-ci.org/tegonal/lasius.svg?branch=master)](https://travis-ci.org/tegonal/lasius)
 
-Lasius
-=================================
+# Lasius
 
 Lasius is a simple online time booking and tracking platform inspired by hamster and aims to provided 
 an easy interface to book your daily work time on different projects/tasks.
