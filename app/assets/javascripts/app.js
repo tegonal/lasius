@@ -176,9 +176,10 @@ define(['angular',
     clientMessageService.start();
   }]);
   
-  mod.run(function(amMoment) {
+  mod.run(['amMoment', 'moment', 'MY_CONFIG', function(amMoment, moment, MY_CONFIG) {
+	moment.tz.setDefault(MY_CONFIG.TIMEZONE);
     amMoment.changeLocale('de');
-  });
+  }]);
   
   return mod;
 });

@@ -32,7 +32,7 @@ define(['angular'], function(angular) {
     
     $scope.format = MY_CONFIG.DATE_FORMAT;
     
-    $scope.day = new Date();
+    $scope.day = moment();
     
     $scope.dateOptions = {
         formatYear: 'yyyy',
@@ -42,10 +42,10 @@ define(['angular'], function(angular) {
     
     $scope.ok = function () {
       //merge dates with current selected day
-      var start = moment($scope.booking.start);
-      var end = moment($scope.booking.end);
-      $scope.booking.start = moment($scope.day).hours(start.hours()).minutes(start.minutes()).seconds(0).milliseconds(0).toDate();
-      $scope.booking.end = moment($scope.day).hours(end.hours()).minutes(end.minutes()).seconds(0).milliseconds(0).toDate();
+      var start = moment.tz($scope.booking.start, MY_CONFIG.TIMEZONE);
+      var end = moment.tz($scope.booking.end, MY_CONFIG.TIMEZONE);
+      $scope.booking.start = start.seconds(0).milliseconds(0).toDate();
+      $scope.booking.end = end.seconds(0).milliseconds(0).toDate();
       
       $modalInstance.close($scope.booking);
     };

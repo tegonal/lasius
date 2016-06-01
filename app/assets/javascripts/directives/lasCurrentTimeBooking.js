@@ -185,8 +185,8 @@ define(
 
                         function updateTime(momentInstance, apply) {
                           scope.duration.moment = (scope.result.booking.end === undefined)?
-                              moment().tz(MY_CONFIG.TIMEZONE).subtract(momentInstance):
-                              moment(scope.result.booking.end.tz(MY_CONFIG.TIMEZONE)).subtract(momentInstance);
+                              moment().subtract(momentInstance):
+                              moment(scope.result.booking.end).subtract(momentInstance);
                               
                           if (scope.result.totalBySameBooking) {
                             scope.total_duration.moment = moment(scope.duration.moment).add(moment.duration(scope.result.totalBySameBooking));
