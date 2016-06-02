@@ -61,8 +61,8 @@ define(['angular'], function (angular) {
         });
       },
       addTimeBooking: function (booking) {
-        var start = moment(booking.start).format(MY_CONFIG.DATE_PATTERN);
-        var end = moment(booking.end).format(MY_CONFIG.DATE_PATTERN);
+        var start = moment.tz(booking.start, MY_CONFIG.TIMEZONE).format(MY_CONFIG.DATE_PATTERN);
+        var end = moment.tz(booking.end, MY_CONFIG.TIMEZONE).format(MY_CONFIG.DATE_PATTERN);
         
         var tagStrings = [];
         angular.forEach(booking.tags, function(value, key) {

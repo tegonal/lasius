@@ -81,7 +81,7 @@ define(
                               .startOf('day'), moment(booking.start));
                           var end = moment.min(scope.range.to.endOf('day'),
                               moment(booking.end));
-                          return moment.duration(end).subtract(start).asHours();
+                          return moment.duration(end.diff(start)).asHours();
                         };
 
                         scope.sameDay = function(booking) {
