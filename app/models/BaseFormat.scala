@@ -33,6 +33,8 @@ import reactivemongo.bson.BSONDateTime
 import reactivemongo.bson.BSONHandler
 import org.joda.time.DateTimeFieldType
 import scala.util.Try
+import java.net.URL
+import java.net.URI
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
@@ -47,6 +49,18 @@ object BaseFormat {
   def idformat[I <: BaseBSONObjectId](implicit fact: Factory[BSONObjectID, I]) = new BSONObjectIdTypedIdFormat[I]
   def idformat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f: Format[I1], ff2: Format[I2]) = new CompositeIdTypedIdFormat[I, I1, I2]
 
+  implicit object URIFormat extends Format[URI] {
+    def writes(uri: URI): JsValue = {
+      JsString(uri.toURL().toExternalForm())
+    }
+    def reads(json: JsValue): JsResult[URI] = json match {
+      case JsString(x) => {
+        JsSuccess(new URI(x))
+      }
+      case _ => JsError("Expected URI as JsString")
+    }
+  }
+  
   implicit val durationFormat: Format[Duration] = new Format[Duration] {
     def reads(json: JsValue): JsResult[Duration] = json match {
 
@@ -57,6 +71,24 @@ object BaseFormat {
     }
 
     def writes(duration: Duration): JsValue = JsNumber(duration.getMillis)
+  }
+  
+  implicit val urlFormat: Format[URL] = new Format[URL] {
+    def reads(json: JsValue): JsResult[URL] = json match {
+
+      case JsString(url) => {
+        try {
+          JsSuccess(new URL(url))
+        }
+        catch {
+          case e:Throwable => 
+            JsError(s"couldn't parse url:$url, $e")
+        }
+      }
+      case _ => JsError(s"Unexpected JSON value $json")
+    }
+
+    def writes(url: URL): JsValue = JsString(url.toString)
   }
 
   implicit object BSONDateTimeHandler extends BSONHandler[BSONDateTime, DateTime] {
@@ -80,8 +112,10 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
           JsError(s"Unexpected JSON value $json")
       }
     }
-    case JsObject(Seq((_, oid))) =>
-      reads(oid)
+    case JsObject(maps) =>
+      maps.get("$oid").map { value =>
+        reads(value)
+      }.getOrElse(JsError(s"Unexpected JSON value $maps"))
     case _ => JsError(s"Unexpected JSON value $json")
   }
 }
@@ -89,9 +123,9 @@ class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factor
 class CompositeIdTypedIdFormat[I <: CompositeBaseId[I1, I2], I1, I2](implicit fact: (I1, I2) => I, f1: Format[I1], f2: Format[I2]) extends Format[I] {
   def reads(json: JsValue): JsResult[I] = json match {
     case JsObject(values) => {
-      Json.fromJson[I1](values(0)._2) match {
+      Json.fromJson[I1](values.toSeq(0)._2) match {
         case JsSuccess(i1, _) =>
-          Json.fromJson[I2](values(1)._2) match {
+          Json.fromJson[I2](values.toSeq(1)._2) match {
             case JsSuccess(i2, _) =>
               JsSuccess(fact(i1, i2))
             case _ => JsError(s"Unexpected JSON value $json")

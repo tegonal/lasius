@@ -33,7 +33,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
       val booking = Booking(BookingId("b1"), start, None, userId, categoryId, projectId, Seq(tagId1, tagId2))
 
-      val state = CurrentUserTimeBooking(userId, Some(booking), None, Duration.ZERO)
+      val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, Some(booking), None, Duration.ZERO))
 
       probe.send(actorRef, UserTimeBookingStarted(booking))
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
@@ -70,7 +70,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
 
       val newBooking = booking.copy(start = newStart)
-      val state = CurrentUserTimeBooking(userId, Some(newBooking), None, Duration.ZERO)
+      val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, Some(newBooking), None, Duration.ZERO))
       there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
     }
   }
@@ -94,7 +94,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
       val booking = Booking(BookingId("b1"), start, Some(end), userId, categoryId, projectId, Seq(tagId1, tagId2))
 
-      val state = CurrentUserTimeBooking(userId, None, None, duration)
+      val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, None, None, duration))
 
       probe.send(actorRef, UserTimeBookingStopped(booking))
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
@@ -104,7 +104,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       //edit time booking
       val newDuration = Duration.standardHours(4)
       //expect new duration of current booking, without booking in progress
-      val newState = CurrentUserTimeBooking(userId, None, None, newDuration)
+      val newState = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, None, None, newDuration))
 
       val newStart = start.minusHours(2)
       probe.send(actorRef, UserTimeBookingEdited(booking, newStart, end))

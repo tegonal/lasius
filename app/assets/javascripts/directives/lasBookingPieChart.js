@@ -29,30 +29,49 @@ define(['angular'], function(angular) {
       scope:  {
         userId:'=',
         source:'=',
-        range:'='
+        range:'=',
+        height:'=',
+        width:'='
       },
       link: function(scope, iElement, iAttrs) {
-        
-        scope.xFunction = function(){
-          return function(d) {
-              return d.label;
-          };
-        };
-        scope.yFunction = function(){
-          return function(d) { 
-            return d.value; 
-          };
-        };
-        
 
-        scope.toolTipContentFunction = function(){
-          return function(key, x, y, e, graph) {
-              //transfer into a readable format
-              var time = (y.value / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
-              return  '<h3>' + key + '</h3>' +
-                    '<p>' + time + ' hours</p>';
-          };
+        scope.chartOptions = {
+            chart: {
+                type: 'pieChart',
+                height: scope.height,
+                width:scope.width,
+                x: function(d){return d.label;},
+                y: function(d){return d.value;},               
+                showLabels: true,
+                duration: 500,
+                labelThreshold: 0.01,
+                growOnHover:true,
+                noData:'No Statistics found!',                
+                labelType: 'percent',
+                tooltips:true,
+                margin: {
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  left: 0
+                },
+                pie: {
+                  valueFormat: function(n) {
+                    var time = (n / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
+                    return time + ' hours';
+                  }
+                },
+                legend: {
+                    margin: {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0
+                    }
+                }
+            }
         };
+
         
         var load = function(range) {
           if (range === undefined || range.from === undefined) {
@@ -70,13 +89,7 @@ define(['angular'], function(angular) {
             function(value){
               load(value);                              
             }, true);
-        
-        scope.callbackFunction = function(){
-          return function(chart){
-              console.log('inner callback function', chart);
-          };
-        };
-        
+               
         msgBus.onMsg('UserTimeBookingByCategoryEntryAdded', scope, function(
             event, msg) {
           if (scope.source==='category' && scope.userId === msg.booking.userId && scope.range.from.unix() === moment(msg.booking.start).startOf('day').unix()) {

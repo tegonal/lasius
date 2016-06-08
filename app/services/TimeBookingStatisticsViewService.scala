@@ -32,10 +32,11 @@ import org.joda.time.DateTime
 import akka.actor.Props
 import services.UserService.StartUserTimeBookingView
 import domain.views.UserTimeBookingStatisticsView
+import domain.views.UserTimeBookingStatisticsView.Ack
 
 object TimeBookingStatisticsViewService {
 
-  def props: Props = Props(new TimeBookingStatisticsViewService)
+  def props: Props = Props(classOf[TimeBookingStatisticsViewService])
 }
 
 class TimeBookingStatisticsViewService extends UserService[StartUserTimeBookingView] {
@@ -43,6 +44,7 @@ class TimeBookingStatisticsViewService extends UserService[StartUserTimeBookingV
   import domain.UserTimeBookingAggregate._
 
   def processCommand: Receive = {
+    case Ack =>
     case cmd: StartUserTimeBookingView =>
       log.debug(s"TimeBookingHistoryViewService -> processCommand:$cmd")
       processAggregateCommand(cmd.userId, cmd)

@@ -74,13 +74,14 @@
       'angular-sanitize': ['angular'],
       'ui.select': ['angular', 'bootstrap', 'bootstrap-select', 'angular-sanitize'],
       'moment': [],
-      'angular-moment': ['angular', 'moment'],
+      'moment-timezone': [],
+      'angular-moment': ['angular', 'moment', 'moment-timezone'],
       'd3': { exports: 'd3' },
       'nvd3': {
         exports: 'nv',
         deps: ['d3']
       }, 
-      'angularjs-nvd3-directives' : ['angular', 'nvd3', 'd3'],
+      'angular-nvd3' : ['angular', 'nvd3', 'd3'],
       'angular-datepicker': ['angular']
     },
     paths: {
@@ -99,10 +100,11 @@
       'angular-sanitize': ['../lib/angular-sanitize/angular-sanitize'],
       'ui.select': ['../lib/angular-ui-select/select'],
       'moment': ['../lib/momentjs/moment', '../lib/momentjs/locale/de'],
+      'moment-timezone': ['../lib/moment-timezone/builds/moment-timezone-with-data.min'],
       'angular-moment': ['../lib/angular-moment/angular-moment'],
       'd3': ['../lib/d3js/d3'],
       'nvd3': ['../lib/nvd3/nv.d3'],
-      'angularjs-nvd3-directives': ['../lib/angularjs-nvd3-directives/angularjs-nvd3-directives'],
+      'angular-nvd3': ['../ext/angular-nvd3'],
       'angular-datepicker': ['../lib/angular-datepicker/dist/index']
     }
   });
@@ -115,7 +117,7 @@
   // Load the app. This is kept minimal so it doesn't need much updating.
   require(['angular', 'angular-cookies', 'angular-route', 'jquery', 'bootstrap', 
            'angular-ui-bootstrap', 'angular-sanitize', 'ui.select', 'angular-translate', 
-           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angular-animate', 'angularjs-nvd3-directives', 'angular-datepicker', './app'],
+           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angular-animate', 'angular-nvd3', 'angular-datepicker', './app'],
     function (angular) {
       angular.bootstrap(document, ['app']);
     }

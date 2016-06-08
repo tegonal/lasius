@@ -21,6 +21,7 @@
 package domain
 
 import actor.ClientReceiverComponentMock
+
 import scala.concurrent.duration._
 import akka.actor._
 import com.typesafe.config.ConfigFactory
@@ -51,11 +52,13 @@ import org.specs2.execute.Result
 import repositories._
 import repositories.UserBookingHistoryRepositoryComponent
 import scala.concurrent._
+import play.api.test._
 
 class UserTimeBookingAggregateSpec extends Specification with Mockito {
 
   "UserTimeBookingAggregate RemoveBooking" should {
     "remove existing booking" in new PersistentActorTestScope {
+      implicit val context = scala.concurrent.ExecutionContext.Implicits.global
       val probe = TestProbe()
       val stream = TestProbe()
       val userId = UserId("noob")

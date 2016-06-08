@@ -35,6 +35,8 @@ object LoginHandler {
     eventStream.subscribe(ref, classOf[UserLoggedIn])
     eventStream.subscribe(ref, classOf[UserLoggedOut])
   }
+  
+  case class InitializeUserViews(userId:UserId)
 
   def props: Props = Props(new LoginHandler)
 }
@@ -43,16 +45,19 @@ class LoginHandler extends Actor with ActorLogging {
 
   import domain.UserTimeBookingAggregate._
   import domain.LoginStateAggregate._
+  import LoginHandler._
   import services.UserService._
 
   val receive: Receive = {
+    case InitializeUserViews(userId) =>
+      initializeUserViews(userId)
     case UserLoggedIn(userId) =>
-      handleLoggedIn(userId)
+      initializeUserViews(userId)
     case UserLoggedOut(userId) =>
       handleLoggedOut(userId)
   }
 
-  def handleLoggedIn(userId: UserId) = {
+  def initializeUserViews(userId: UserId) = {
     log.debug(s"user logged in:$userId, start persistentViews")
     //initialize persistentviews
     currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)

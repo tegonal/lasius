@@ -82,7 +82,9 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
     val newHistory = (state.history + stub).toSeq.sorted(ordering).take(maxInternalHistory).toSet
     val newStartTimeMap = state.startTimeMap + (stub -> booking.start)
     state = state.copy(history = newHistory, startTimeMap = newStartTimeMap)
-    notifyClient()
+    if (DateTime.now().withTimeAtStartOfDay().isBefore(booking.start)) {
+      notifyClient()
+    }
   }
 
   private def notifyClient() = {

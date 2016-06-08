@@ -21,7 +21,6 @@
 package models
 
 import play.api.libs.json._
-
 import play.api.mvc.WebSocket.FrameFormatter
 import reactivemongo.bson.BSONObjectID
 import julienrf.variants.Variants
@@ -29,6 +28,8 @@ import org.joda.time.Duration
 import models.BaseFormat._
 import org.joda.time.DateTime
 import scala.collection.SortedSet
+import play.api.libs.json.Json.JsValueWrapper
+import scala.util._
 
 sealed trait PersistetEvent extends Serializable
 
@@ -56,7 +57,9 @@ object InEvent {
 sealed trait OutEvent
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
-case class CurrentUserTimeBooking(userId: UserId, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration) extends OutEvent
+case class CurrentUserTimeBooking(userId: UserId, day: DateTime, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration)
+case class CurrentUserTimeBookingEvent(booking: CurrentUserTimeBooking) extends OutEvent
+case class CurrentTeamTimeBookings(teamId: TeamId, timeBookings: Seq[CurrentUserTimeBooking]) extends OutEvent
 
 case class UserTimeBookingHistoryEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
@@ -80,7 +83,11 @@ case class FavoriteRemoved(userId: UserId, bookingStub: BookingStub) extends Out
 
 case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends OutEvent
 
+case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
+
 object OutEvent {
+  implicit val currentUserTimeBookingFormat: Format[CurrentUserTimeBooking] = Json.format[CurrentUserTimeBooking]
+  
   implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
 }
 

@@ -21,15 +21,43 @@
 package controllers
 
 import play.api.mvc.Controller
-import repositories.UserBookingHistoryRepositoryComponent
-import org.joda.time.DateTime
-import models.UserId
-import repositories.MongoUserBookingHistoryRepositoryComponent
+import repositories._
+import org.joda.time._
 import play.api.mvc.Action
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Logger
-import models.FreeUser
+import models._
+import utils.StringUtils._
+import org.joda.time.format.DateTimeFormat
+import java.text.DecimalFormat
+
+object CSVHelper {
+  val CSV_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
+
+  def format(date: DateTime) =
+    DateTimeFormat.forPattern(CSV_DATETIME_FORMAT).print(date)
+
+  def timeDiff(from: DateTime, to: DateTime) = {
+    val minutes: Double = Minutes.minutesBetween(from, to).getMinutes()
+    new DecimalFormat("0.00").format(minutes / 60);
+  }
+
+  implicit class CSVBookingWrapper(val booking: Booking) {
+
+    def toCSV = Seq(booking.projectId.value.quote,
+      booking.categoryId.value.quote,
+      booking.tags.toCSV(t => t.value).quote,
+      format(booking.start),
+      booking.end.map(format(_)).getOrElse(""),
+      booking.comment.quote,
+      timeDiff(booking.start, booking.end.get).quote).mkString(",")
+  }
+
+  implicit class CSVSeqWrapper[A](val seq: Seq[A]) {
+    def toCSV(f: A => String) = seq.map(t => f(t)).mkString(",")
+  }
+}
 
 class TimeBookingHistoryController {
   self: Controller with UserBookingHistoryRepositoryComponent with Security =>
@@ -42,6 +70,24 @@ class TimeBookingHistoryController {
         }
       }
   }
+
+  def exportTimeBookingHistory(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        import controllers.CSVHelper._
+
+        bookingHistoryRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
+          val headers = Seq("Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
+          val content = bookings.map(_.toCSV).mkString("\n");
+          val csv = headers + "\n" + content;
+
+          Ok(csv).withHeaders(
+            "Content-Type" -> "text/csv",
+            "Content-Disposition" -> s"attachment; filename=export.csv");
+        }
+      }
+  }
 }
 
-object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent
+object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent {
+}

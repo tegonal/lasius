@@ -35,6 +35,7 @@ import mongo.EmbedMongo.WithMongo
 
 @RunWith(classOf[JUnitRunner])
 class UserRepositorySpec extends EmbedMongo {
+  sequential =>
   val repository = new UserMongoRepository
   "UserRepository findByEmail" should {
     "find user by email" in new WithMongo {

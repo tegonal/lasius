@@ -26,7 +26,9 @@ var userRoles = {
 define(['angular', 
         './routes',
         './filters',
+        './directives/lasFooter',
         './directives/lasCurrentTimeBooking',
+        './directives/lasCurrentTeamTimeBookings',
         './directives/lasBooking',
         './directives/lasBookingHistory',
         './directives/lasBookingPieChart',
@@ -64,15 +66,17 @@ define(['angular',
 
   var mod = angular.module('app', ['ngRoute',
                                    'ngSanitize',
-                                   'nvd3ChartDirectives',
                                    'ngAnimate',
                                    'angularMoment',
                                    'ui.select',
                                    'ui.bootstrap',
                                    'datePicker',
-                                    'routes',
-                                         'filters',
+                                   'nvd3',
+                                    'routes',                                        
+                                    'filters',
+                                         'directives.lasFooter',
                                          'directives.lasCurrentTimeBooking',
+                                         'directives.lasCurrentTeamTimeBookings',
                                          'directives.lasBooking',
                                          'directives.lasBookingHistory',
                                          'directives.lasBookingPieChart',
@@ -99,12 +103,15 @@ define(['angular',
                                          'services.alert',
                                          'services.latestTimeBookings']);
   
+  mod.constant('moment', require('moment-timezone'));
+  
   //declare constants
   mod.constant("MY_CONFIG", {
     "DATE_FORMAT": "dd.MM.yyyy",
     "DATE_PATTERN": "DDMMYYYYHHmm",
     "FULL_DATE_PATTERN": "DDMMYYYYHHmmss",
-    "MILLIS_PER_HOUR": 1000*60*60
+    "MILLIS_PER_HOUR": 1000*60*60,
+    "TIMEZONE": "Europe/Zurich"
   });
   
   mod.factory('msgBus', ['$rootScope', function($rootScope) {
@@ -135,7 +142,7 @@ define(['angular',
     }]);
   }]);
   
-  mod.factory('httpErrorInterceptor', ['$q', '$rootScope', '$timeout', 'alertService', function($q, $rootScope, $timeout, alertService) {
+  mod.factory('httpErrorInterceptor', ['$q', '$rootScope', '$timeout', '$location', 'alertService', function($q, $rootScope, $timeout, $location, alertService) {
     return {
       response: function (response) {
         return response || $q.when(response);
@@ -145,7 +152,14 @@ define(['angular',
         var status = rejection.status || {};
         var data = rejection.data || {};
         $rootScope.$removeAlert = alertService.removeAlert($rootScope);
-        alertService.addAlert($rootScope, $timeout, 'error', status + ': ' + data);
+        if (status === 401) {
+          //is unauthorized, redirect to login page
+          alertService.addAlert($rootScope, $timeout, 'info', 'Redirect to login page');
+          $location.path('/login');
+        }
+        else {
+          alertService.addAlert($rootScope, $timeout, 'error', status + ': ' + data);
+        }
 
         return $q.reject(rejection);
       }
@@ -162,13 +176,10 @@ define(['angular',
     clientMessageService.start();
   }]);
   
-  mod.run(function(amMoment) {
+  mod.run(['amMoment', 'moment', 'MY_CONFIG', function(amMoment, moment, MY_CONFIG) {
+	moment.tz.setDefault(MY_CONFIG.TIMEZONE);
     amMoment.changeLocale('de');
-  });
-  
-  mod.constant('angularMomentConfig', {
-    preprocess: 'utc' // optional
-  });
+  }]);
   
   return mod;
 });

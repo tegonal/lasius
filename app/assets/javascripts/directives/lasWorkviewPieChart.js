@@ -34,29 +34,51 @@ define(['angular'], function(angular) {
         var currentValue;
         var unwatchChanges;
         
-        scope.xFunction = function(){
-          return function(d) {
-              return d.label;
-          };
-        };
-        scope.yFunction = function(){
-          return function(d) { 
-            return d.value; 
-          };
+        scope.width = function(index) {
+          return 250+index*30;
         };
         
-        scope.toolTipContentFunction = function(){
-          return function(key, x, y, e, graph) {
-              //transfer into a readable format
-              var time = (y.value / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
-              return  '<h3>' + key + '</h3>' +
-                    '<p>' + time + ' hours</p>';
-          };
+        scope.height = function(index) {          
+          return 250+index*30;
+        };               
+
+        var getChartOptions = function(index){
+         return {
+            chart: {
+                type: 'pieChart',
+                height: scope.height(index),
+                width:scope.width(index),
+                x: function(d){return d.label;},
+                y: function(d){return d.value;},               
+                showLabels: false,
+                showLegend: false,
+                donutRatio: 0.65,
+                donut:true,
+                duration: 500,              
+                labelType: 'percent',
+                tooltips:true,
+                margin: margin(index, 30),
+                pie: {
+                  valueFormat: function(n) {
+                    var time = (n / MY_CONFIG.MILLIS_PER_HOUR).toFixed(1); 
+                    return time + ' hours';
+                  }
+                },
+                legend: {
+                    margin: {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0
+                    }
+                }
+            }
+         };
         };
         
         var pattern = 'DDMMYYYYHHmmss';
         
-        scope.margin = function(index, offset) {
+        var margin = function(index, offset) {
           return {
             left:-index*offset,
             top:-index*offset,
@@ -67,9 +89,11 @@ define(['angular'], function(angular) {
         
         var limit = moment.duration(8, 'hours').asMilliseconds();
         scope.charts = [];
+        scope.chartOptions = [];
         
         var updateCharts = function() {          
           var numberOfCharts = Math.ceil(scope.result.totalByDay / limit);
+          
           
           //calculate percentage
           scope.progress = scope.result.totalByDay / limit;
@@ -84,14 +108,22 @@ define(['angular'], function(angular) {
                                  value: 0
                                }
                                ];
+          //recalculate missing chart options
+          for (var i = scope.chartOptions.length; i < numberOfCharts; i++) { 
+            scope.chartOptions.push(getChartOptions(i));
+          }
+          
+          if (scope.charts.length > numberOfCharts) {
+            scope.charts = scope.charts.slice(0, numberOfCharts);
+          }
           
           //push 100% workload charts
-          for (var i = scope.charts.length; i < numberOfCharts-1; i++) { 
-            scope.charts.push(fullChartData.slice(0));
+          for (i = scope.charts.length; i < numberOfCharts-1; i++) { 
+            scope.charts.push(fullChartData.slice(0));           
           }
           //set chart-2 to 100%
           if (scope.charts.length > 1 && scope.charts[numberOfCharts-2][0].value != 100) {
-            scope.charts[numberOfCharts-2] = fullChartData.slice(0);              
+            scope.charts[numberOfCharts-2] = fullChartData.slice(0);  
           }
           
           //push rest
@@ -123,7 +155,7 @@ define(['angular'], function(angular) {
                                                 value: open
                                               }
                                               ];
-          }
+          }                   
         };
         
         
@@ -150,22 +182,21 @@ define(['angular'], function(angular) {
           }, millis);
         }
         
-        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-            event, msg) {
-          
-          scope.booking = msg.booking;
-          scope.result = msg;   
-          if (scope.booking === undefined) {
-            cancelTimer();
-          }
-          else {
-            //add current duration
-            scope.result.totalByDay +=  moment().diff(msg.booking.start);   
-          }
-                                            
-          updateCharts();         
-          
-          scope.$apply();
+        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+          if (value) {
+            scope.booking = value.booking;
+            scope.result = value;
+            
+            if (scope.booking === undefined) {
+              cancelTimer();
+            }
+            else {
+              //add current duration
+              scope.result.totalByDay +=  moment().diff(value.booking.start);   
+            }
+                                              
+            updateCharts();   
+          }                          
         });
         
         function updateMoment(apply) {

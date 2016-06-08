@@ -29,7 +29,15 @@ define(['angular'], function (angular) {
         return playRoutes.controllers.TimeBookingHistoryController.getTimeBookingHistory(from, to).get().then(function (response) {
           return response.data;          
         }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
+          $log.debug("Failed loading bookings:"+reason);
+          return reason.data;
+        });
+      },
+      exportTimeBookingHistory: function (from, to) {
+        return playRoutes.controllers.TimeBookingHistoryController.exportTimeBookingHistory(from, to).get().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed exporting bookings:"+reason);
           return reason.data;
         });
       },
@@ -37,7 +45,7 @@ define(['angular'], function (angular) {
         return playRoutes.controllers.TimeBookingController.remove(bookingId).delete().then(function (response) {
           return response.data;          
         }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
+          $log.debug("Failed removing booking:"+reason);
           return reason.data;
         });
       },
@@ -48,13 +56,13 @@ define(['angular'], function (angular) {
         return playRoutes.controllers.TimeBookingController.edit(booking.id, start, end).post().then(function (response) {
           return response.data;          
         }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
+          $log.debug("Failed editing booking:"+reason);
           return reason.data;
         });
       },
       addTimeBooking: function (booking) {
-        var start = moment(booking.start).format(MY_CONFIG.DATE_PATTERN);
-        var end = moment(booking.end).format(MY_CONFIG.DATE_PATTERN);
+        var start = moment.tz(booking.start, MY_CONFIG.TIMEZONE).format(MY_CONFIG.DATE_PATTERN);
+        var end = moment.tz(booking.end, MY_CONFIG.TIMEZONE).format(MY_CONFIG.DATE_PATTERN);
         
         var tagStrings = [];
         angular.forEach(booking.tags, function(value, key) {
@@ -64,7 +72,7 @@ define(['angular'], function (angular) {
         return playRoutes.controllers.TimeBookingController.add(booking.project.categoryId, booking.project.project.id, tagStrings, start, end, booking.comment).post().then(function (response) {
           return response.data;          
         }, function(reason) {
-          $log.debug("Failed loading document:"+reason);
+          $log.debug("Failed adding time booking:"+reason);
           return reason.data;
         });
       }

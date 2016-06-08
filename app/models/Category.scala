@@ -21,10 +21,12 @@
 package models
 
 import reactivemongo.bson.BSONObjectID
-
 import com.tegonal.play.json._
 import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
+import julienrf.variants.Variants
+import java.net.URI
+import models.BaseFormats._
 
 case class TagId(value: String) extends StringBaseId
 case class ProjectId(value: String) extends StringBaseId
@@ -40,12 +42,28 @@ object TagId {
   implicit val idFormat: Format[TagId] = Json.idformat[TagId](TagId.apply _)
 }
 
-case class Tag(id: TagId) extends BaseEntity[TagId]
+sealed trait BaseTag {
+  val id: TagId
+}
+case class Tag(id: TagId) extends BaseEntity[TagId] with BaseTag
+case class JiraIssueTag(id: TagId, baseUrl: String, summary:Option[String], 
+    url:URI, projectKey:String) extends BaseEntity[TagId] with BaseTag 
+case class JiraVersionTag(id: TagId, configId: JiraConfigId, projectKey:String) extends BaseEntity[TagId] with BaseTag
+
 case class Project(id: ProjectId, tags: Seq[Tag]) extends BaseEntity[ProjectId]
 case class Category(id: CategoryId, projects: Seq[Project]) extends BaseEntity[CategoryId]
 
-object Tag {
-  implicit val tagFormat: Format[Tag] = Json.format[Tag]
+object JiraIsseTag{ 
+  implicit val issueTagFormat: Format[JiraIssueTag]  = Json.format[JiraIssueTag]
+}
+object JiraVersionTag{ 
+  implicit val issueVersionFormat: Format[JiraVersionTag]  = Json.format[JiraVersionTag]
+}
+object Tag{
+  implicit val tagFormat: Format[Tag]  = Json.format[Tag]
+}
+object BaseTag {
+  implicit val baseTagFormat: Format[BaseTag]  = Variants.format[BaseTag]("type")  
 }
 
 object Project {

@@ -28,14 +28,19 @@ define(
           .directive(
               'lasBookingHistory',
               [ 
-                  '$modal',
+                  '$uibModal',
                   '$log',
+                  '$document',
+                  '$timeout',
                   'MY_CONFIG',
                   'bookingHistoryService',
                   'bookingService',
+                  'currentTimeBookingService',
                   'msgBus',
                   'moment',
-                  function($modal, $log, MY_CONFIG, bookingHistoryService, bookingService,
+                  function($uibModal, $log, $document, $timeout, MY_CONFIG, bookingHistoryService, 
+                      bookingService,
+                      currentTimeBookingService,
                       msgBus, moment) {
                     return {
                       restrict : 'E',
@@ -76,7 +81,7 @@ define(
                               .startOf('day'), moment(booking.start));
                           var end = moment.min(scope.range.to.endOf('day'),
                               moment(booking.end));
-                          return moment.duration(end).subtract(start).asHours();
+                          return moment.duration(end.diff(start)).asHours();
                         };
 
                         scope.sameDay = function(booking) {
@@ -108,6 +113,43 @@ define(
                                 removeBooking(bookingId);
                               });
                         };
+                        
+                        var downloadCSVFile = function(filename, csv, charset) {
+                          var defCharset = charset || "utf-8";
+                          var blob = new Blob([csv], {
+                            type: "text/csv;charset="+ defCharset + ";"
+                          });
+
+                          if (window.navigator.msSaveOrOpenBlob) {
+                            navigator.msSaveBlob(blob, filename);
+                          } else {
+
+                            var downloadLink = angular.element('<a></a>');
+                            downloadLink.attr('href', window.URL.createObjectURL(blob));
+                            downloadLink.attr('download', filename);
+                            downloadLink.attr('target', '_blank');
+
+                            $document.find('body').append(downloadLink);
+                            $timeout(function () {
+                              downloadLink[0].click();
+                              downloadLink.remove();
+                            }, null);
+                          }
+                        };
+                        
+                        scope.exportTimeBookings = function() {
+                          var range = scope.range;
+                          if (range === undefined || range.from === undefined) {
+                            return;
+                          }
+                          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+                          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
+
+                          bookingHistoryService.exportTimeBookingHistory(from, to)
+                              .then(function(csv) {
+                                downloadCSVFile('export.csv', csv);
+                              });
+                        };                                              
 
                         var startBooking = function(booking) {
                           bookingService.start(booking.categoryId,
@@ -201,7 +243,7 @@ define(
                         };
                         
                         scope.showAddBooking = function() {
-                          var modalInstance = $modal.open({
+                          var modalInstance = $uibModal.open({
                             animation: true,
                             templateUrl: '/assets/dialogs/add-booking.html',
                             controller: 'AddBookingCtrl'
@@ -258,10 +300,10 @@ define(
                               }
                             });
 
-                        msgBus.onMsg('CurrentUserTimeBooking', scope, function(
-                            event, msg) {
-                          scope.booking = msg.booking;
-                          scope.$apply();
+                        scope.$watch(currentTimeBookingService.getCurrentTimeBooking, function(value) {
+                          if (value) {
+                            scope.booking = value.booking;
+                          }                          
                         });
                       }
                     };

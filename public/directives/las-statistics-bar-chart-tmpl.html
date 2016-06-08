@@ -1,20 +1,7 @@
 <div class="booking-tag-stats">
 
 <div class="chart" >
-	<nvd3-multi-bar-chart data="statistics" x="xFunction()" y="yFunction()" 
-	   showLegend="true" noData="No Statistics found!"
-	   width="{{width}}" height="{{height}}" interactive="true" showValues="true"
-            margin="{top: 50, right: 50, bottom: 50, left: 50}"
-            showXAxis="true"
-            showYAxis="true"
-            stacked="true"
-            reduceXTicks="false"            
-            tooltips="true"
-            tooltipcontent="toolTipContentFunction()"
-            yAxisTickFormat="yAxisFunction()"
-            xAxisTickFormat="xAxisFunction()">
-    	<svg></svg>
-    </nvd3-multi-bar-chart>
+	<nvd3 options="chartOptions" data="statistics"></nvd3>    		
 </div>
 
 </div>

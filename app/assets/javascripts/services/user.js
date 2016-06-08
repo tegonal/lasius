@@ -23,7 +23,7 @@ define(['angular'], function (angular) {
 
   var mod = angular.module('services.user', ['ngCookies']);
   mod.factory('userService', ['$http', '$location', '$q', 'playRoutes', '$cookies', '$log', function ($http, $location, $q, playRoutes, $cookies, $log) {
-    var user, token = $cookies['XSRF-TOKEN'];
+    var user, token = $cookies.get('XSRF-TOKEN');
     
     return {
       login: function (email, password) {
@@ -33,6 +33,7 @@ define(['angular'], function (angular) {
           return playRoutes.controllers.UsersController.authUser().get().then(function (response) {
             user = response.data;
             $log.info("Login succeeded:"+user);
+            $cookies.put('XSRF-TOKEN', token);
             return user;          
           });
           }, function(reason) {
@@ -48,7 +49,7 @@ define(['angular'], function (angular) {
       },
       loggedOut: function () {
         // Logout on server in a real app
-        delete $cookies['XSRF-TOKEN'];        
+        $cookies.remove('XSRF-TOKEN');        
         token = undefined;
         user = undefined;
         $location.$$search = {}; // clear token & token signature
@@ -56,6 +57,7 @@ define(['angular'], function (angular) {
       },
       resolveUser: function() {
         /* If the token is assigned, check that the token is still valid on the server */
+        $log.info("resolveUser:"+token);
         var deferred = $q.defer();        
         if (user) {
           deferred.resolve(user);
@@ -65,13 +67,13 @@ define(['angular'], function (angular) {
           playRoutes.controllers.UsersController.authUser().get()
             .success(function (data) {
               $log.info('Welcome back, ' + data.docsafeUserId);
-              user = data;
+              user = data;              
               deferred.resolve(user);
             })
             .error(function () {
               $log.info('Token no longer valid, please log in.');
               token = undefined;
-              delete $cookies['XSRF-TOKEN'];          
+              $cookies.remove('XSRF-TOKEN');          
               deferred.reject("Token invalid");
             });
         }
