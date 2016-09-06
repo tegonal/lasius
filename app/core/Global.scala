@@ -42,11 +42,13 @@ import akka.actor.ActorRef
 import play.api.libs.json.Json
 import actors.TagCache
 import domain.views.CurrentTeamTimeBookingsView
+import akka.stream.ActorMaterializer
 
 
 object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
 
-  val system = ActorSystem("lasius-actor-system")
+  implicit val system = ActorSystem("lasius-actor-system")
+  implicit val materializer = ActorMaterializer()
   val systemUser = UserId("lasius-system")
   val supervisor = system.actorOf(LasiusSupervisorActor.props)
   val executionContext = system.dispatcher

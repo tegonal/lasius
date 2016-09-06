@@ -1,4 +1,4 @@
-import play.PlayImport.PlayKeys._
+import play.sbt.PlayImport.PlayKeys._
 
 name := """lasius"""
 
@@ -18,12 +18,18 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+
 val akkaVs = "2.3.14"
+val reactiveMongoVer = "0.11.14"
+val kamonV = "0.6.2"
+
+routesGenerator := StaticRoutesGenerator
 
 libraryDependencies ++= Seq(
-  "org.reactivemongo" %% "play2-reactivemongo" % "0.11.7.play24",
+  "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVer,
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
-  "org.julienrf" %% "play-json-variants" % "1.0.0",
+  "org.julienrf" %% "play-json-variants" % "1.1.0",
   "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVs,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVs,  
   "com.typesafe.akka" %% "akka-testkit" % akkaVs % "test", 
@@ -35,17 +41,17 @@ libraryDependencies ++= Seq(
   "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.0.5" % "test",
   //Akka monitoring  
   "org.aspectj" % "aspectjweaver" % "1.8.7",
-  "io.kamon" %% "kamon-core" % "0.3.5",  
-  "io.kamon" %% "kamon-statsd" % "0.3.5",
-  "io.kamon" %% "kamon-play" % "0.3.5",
-  "io.kamon" %% "kamon-system-metrics" % "0.3.5",
-  "io.kamon" %% "kamon-log-reporter"   % "0.3.5",
+  "io.kamon" %% "kamon-core" % kamonV,  
+  "io.kamon" %% "kamon-statsd" % kamonV,
+  "io.kamon" %% "kamon-play-25" % kamonV,
+  "io.kamon" %% "kamon-system-metrics" % kamonV,
+  "io.kamon" %% "kamon-log-reporter"   % kamonV,
   "com.typesafe.play.plugins" %% "play-statsd" % "2.3.0",
   "com.github.melrief" %% "purecsv" % "0.0.4",
   "com.chuusai" %% "shapeless" % "2.2.5",
   cache,
   ws,
-  specs2,
+  specs2 % Test,
   // WebJars (i.e. client-side) dependencies
   "org.webjars" % "requirejs" % "2.1.20",
   "org.webjars" % "underscorejs" % "1.8.3",

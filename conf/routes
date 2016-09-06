@@ -10,7 +10,7 @@ GET      /jsroutes.js                           controllers.JSController.jsRoute
 
 # Core Application routes
 POST     /login                                 controllers.ApplicationController.login(email: String, password: String)
-GET      /messagingSocket                       controllers.ApplicationController.messagingSocket()
+GET      /messagingSocket                       controllers.ApplicationController.messagingSocket
 POST     /logout                                controllers.ApplicationController.logout()
 
 # Users
