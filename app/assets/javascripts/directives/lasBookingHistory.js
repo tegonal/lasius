@@ -38,10 +38,11 @@ define(
                   'currentTimeBookingService',
                   'msgBus',
                   'moment',
+                  'lodash',
                   function($uibModal, $log, $document, $timeout, MY_CONFIG, bookingHistoryService, 
                       bookingService,
                       currentTimeBookingService,
-                      msgBus, moment) {
+                      msgBus, moment, lodash) {
                     return {
                       restrict : 'E',
                       transclude : true,
@@ -62,8 +63,14 @@ define(
                           bookingHistoryService.getTimeBookingHistory(from, to)
                               .then(function(bookings) {
                                 scope.bookings = bookings;
+                                
+                                scope.availableTags = lodash.flatten(bookings.map(function(booking) { return booking.tags}));
                               });
                         };
+                        
+                        scope.filter = {
+                            tags: ''
+                        }
                         
                         scope.bookingForm = {
                             start:'',

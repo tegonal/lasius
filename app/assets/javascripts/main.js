@@ -76,6 +76,7 @@
       'moment': [],
       'moment-timezone': [],
       'angular-moment': ['angular', 'moment', 'moment-timezone'],
+      'ng-lodash': ['angular'],
       'd3': { exports: 'd3' },
       'nvd3': {
         exports: 'nv',
@@ -105,7 +106,8 @@
       'd3': ['../lib/d3js/d3'],
       'nvd3': ['../lib/nvd3/nv.d3'],
       'angular-nvd3': ['../ext/angular-nvd3'],
-      'angular-datepicker': ['../lib/angular-datepicker/dist/index']
+      'angular-datepicker': ['../lib/angular-datepicker/dist/index'],
+      'ng-lodash': ['../lib/ng-lodash/build/ng-lodash']
     }
   });
 
