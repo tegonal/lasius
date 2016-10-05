@@ -45,6 +45,7 @@
   
   <logger name="r.c.a" level="INFO" />
   <logger name="akka.persistence.inmemory.journal" level="INFO" />
+  <logger name="akka.contrib.persistence.mongodb" level="INFO" />
 
   <root level="INFO">
     <appender-ref ref="ASYNCSTDOUT" />

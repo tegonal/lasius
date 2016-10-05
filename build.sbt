@@ -8,7 +8,7 @@ lazy val jiraScalaApi = RootProject(uri("git://github.com/toggm/play-scala-jira-
 
 lazy val root = (project in file(".")).dependsOn(jiraScalaApi).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 resolvers += "Tegonal releases" at "https://github.com/tegonal/tegonal-mvn/raw/master/releases/"
 
@@ -20,8 +20,8 @@ resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-val akkaVs = "2.3.14"
-val reactiveMongoVer = "0.11.14"
+val akkaVs = "2.4.11"
+val reactiveMongoVer = "0.11.11"
 val kamonV = "0.6.2"
 
 routesGenerator := StaticRoutesGenerator
@@ -30,10 +30,10 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVer,
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.1.0",
-  "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVs,
+  "com.typesafe.akka" %% "akka-persistence" % akkaVs,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVs,  
   "com.typesafe.akka" %% "akka-testkit" % akkaVs % "test", 
-  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "0.4.2", 
+  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "1.3.1", 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
   "io.kamon" %% "kamon-log-reporter"   % kamonV,
   "com.typesafe.play.plugins" %% "play-statsd" % "2.3.0",
   "com.github.melrief" %% "purecsv" % "0.0.4",
-  "com.chuusai" %% "shapeless" % "2.2.5",
+  "com.chuusai" %% "shapeless" % "2.3.0",
   cache,
   ws,
   specs2 % Test,
