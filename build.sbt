@@ -20,9 +20,9 @@ resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-val akkaVs = "2.4.11"
-val reactiveMongoVer = "0.11.11"
-val kamonV = "0.6.2"
+val akkaVs = "2.4.14"
+val reactiveMongoVer = "0.11.14"
+val kamonV = "0.6.3"
 
 routesGenerator := StaticRoutesGenerator
 
@@ -30,15 +30,17 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVer,
   "com.tegonal" %% "play-json-typedid" % "1.0.1",
   "org.julienrf" %% "play-json-variants" % "1.1.0",
-  "com.typesafe.akka" %% "akka-persistence" % akkaVs,
+  "com.typesafe.akka" %% "akka-persistence" % akkaVs  withSources(),
+  "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVs  withSources(),  
   "com.typesafe.akka" %% "akka-slf4j" % akkaVs,  
   "com.typesafe.akka" %% "akka-testkit" % akkaVs % "test", 
-  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "1.3.1", 
+  "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "1.3.6" withSources(),
+  "com.github.scullxbones" %% "akka-persistence-mongo-common" % "1.3.6" withSources(), 
   //reativemongo based connector for persistent akka  
   "org.mindrot" % "jbcrypt" % "0.3m",
   "com.github.athieriot" %% "specs2-embedmongo" % "0.7.0" % "test",
-  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.1" % "test",
-  "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.0.5" % "test",
+  "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.5" % "test",
+  "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.16" % "test",
   //Akka monitoring  
   "org.aspectj" % "aspectjweaver" % "1.8.7",
   "io.kamon" %% "kamon-core" % kamonV,  
@@ -47,8 +49,8 @@ libraryDependencies ++= Seq(
   "io.kamon" %% "kamon-system-metrics" % kamonV,
   "io.kamon" %% "kamon-log-reporter"   % kamonV,
   "com.typesafe.play.plugins" %% "play-statsd" % "2.3.0",
-  "com.github.melrief" %% "purecsv" % "0.0.4",
-  "com.chuusai" %% "shapeless" % "2.3.0",
+  "com.github.melrief" %% "purecsv" % "0.0.6",
+  "com.chuusai" %% "shapeless" % "2.3.2",
   cache,
   ws,
   specs2 % Test,
