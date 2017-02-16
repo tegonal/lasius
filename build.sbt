@@ -55,26 +55,26 @@ libraryDependencies ++= Seq(
   ws,
   specs2 % Test,
   // WebJars (i.e. client-side) dependencies
-  "org.webjars" % "requirejs" % "2.1.20",
+  "org.webjars" % "requirejs" % "2.3.2",
   "org.webjars" % "underscorejs" % "1.8.3",
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars.bower" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
   "org.webjars" % "angularjs" % "1.4.8" exclude("org.webjars", "jquery"),
   "org.webjars" % "angular-ui-bootstrap" % "0.14.3",
-  "org.webjars" % "angular-translate" % "2.7.2",
-  "org.webjars" % "angular-translate-loader-static-files" % "2.6.1-1",
-  "org.webjars.bower" % "angular-dragdrop" % "1.0.12",
-  "org.webjars.bower" % "bootstrap-select" % "1.7.5",
-  "org.webjars" % "angular-ui-select" % "0.13.1",
+  "org.webjars" % "angular-translate" % "2.13.1",
+  "org.webjars" % "angular-translate-loader-static-files" % "2.13.1",
+  "org.webjars.bower" % "angular-dragdrop" % "1.0.13",
+  "org.webjars.bower" % "bootstrap-select" % "1.12.2",
+  "org.webjars" % "angular-ui-select" % "0.19.6",
   "org.webjars.bower" % "angular-sanitize" % "1.4.8",
   "org.webjars.bower" % "angular-moment" % "1.0.0-beta.5",
-  "org.webjars.bower" % "momentjs" % "2.12.0",
-  "org.webjars.bower" % "moment-timezone" % "0.5.3",
+  "org.webjars.bower" % "momentjs" % "2.17.1",
+  "org.webjars.bower" % "moment-timezone" % "0.5.11",
   "org.webjars" % "nvd3-community" % "1.7.0",
   "org.webjars" % "d3js" % "3.5.10",
   "org.webjars" % "angular-nvd3" % "0.1.1",
-  "org.webjars.bower" % "angular-datepicker" % "1.0.12",
-  "org.webjars" % "font-awesome" % "4.5.0"
+  "org.webjars.bower" % "angular-datepicker" % "2.0.3",
+  "org.webjars" % "font-awesome" % "4.7.0"
 )
 
 routesImport ++= Seq(
