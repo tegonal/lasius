@@ -20,7 +20,7 @@ resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-val akkaVs = "2.4.14"
+val akkaVs = "2.4.17"
 val reactiveMongoVer = "0.11.14"
 val kamonV = "0.6.3"
 
