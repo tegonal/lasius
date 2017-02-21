@@ -20,36 +20,11 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
-
-import models.BaseFormat._
-import com.tegonal.play.json._
 import play.api.libs.json._
-import com.tegonal.play.json.TypedId._
-import org.joda.time.DateTime
-import scala.beans.BeanInfo
-
-case class BookingId(value: String) extends StringBaseId
-
-object BookingId {
-  implicit val idFormat: Format[BookingId] = Json.idformat[BookingId](BookingId.apply _)
-}
 
 @SerialVersionUID(1241414)
-case class BookingStub(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId])
+case class ApplicationConfig(title: String, instance:String, ssl: Boolean)
 
-object BookingStub {
-  implicit val bookingStubFormat: Format[BookingStub] = Json.format[BookingStub]
-}
-
-@SerialVersionUID(1241414)
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], comment: Option[String] = None) extends BaseEntity[BookingId] {
-
-  def createStub: BookingStub = {
-    BookingStub(categoryId, projectId, tags)
-  }
-}
-
-object Booking {
-  implicit val bookingFormat = Json.format[Booking]
+object ApplicationConfig {
+  implicit val appConfigFormat: Format[ApplicationConfig] = Json.format[ApplicationConfig]
 }

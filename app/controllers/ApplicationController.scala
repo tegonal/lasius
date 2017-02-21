@@ -45,6 +45,16 @@ class ApplicationController {
   self: Controller with SecurityRepositoryComponent with Security =>
     
     implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
+    
+    lazy val appConfig = loadApplicationConfig()
+    lazy val playConfig = Play.current.configuration
+    
+    private def loadApplicationConfig() = {     
+      val ssl = playConfig.getBoolean("lasius.use_ssl").getOrElse(false)
+      val title = playConfig.getString("lasius.title").getOrElse("Lasius")
+      val instance = playConfig.getString("lasius.instance").getOrElse("Dev")
+      ApplicationConfig(instance, title, ssl)
+    }
 
   def index = Action {
     Ok(views.html.index())
@@ -126,6 +136,11 @@ class ApplicationController {
 
     Future.successful(Ok.discardingCookies(DiscardingCookie(name = AuthTokenCookieKey)))
   }
+  
+  /**
+   * Load application config
+   */
+  def config = Future.successful(Ok(Json.toJson(appConfig)))
 }
 
 object ApplicationController extends ApplicationController
