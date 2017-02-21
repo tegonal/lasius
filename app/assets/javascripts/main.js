@@ -105,7 +105,7 @@
       'd3': ['../lib/d3js/d3'],
       'nvd3': ['../lib/nvd3/nv.d3'],
       'angular-nvd3': ['../ext/angular-nvd3'],
-      'angular-datepicker': ['../lib/angular-datepicker/dist/index']
+      'angular-datepicker': ['../lib/angular-datepicker/dist/angular-datepicker']
     }
   });
 
