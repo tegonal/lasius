@@ -82,7 +82,7 @@
         deps: ['d3']
       }, 
       'angular-nvd3' : ['angular', 'nvd3', 'd3'],
-      'angular-datepicker': ['angular']
+      'angular-datepicker': ['angular', 'moment', 'angular-moment']
     },
     paths: {
       'requirejs': ['../lib/requirejs/require'],
@@ -116,8 +116,8 @@
 
   // Load the app. This is kept minimal so it doesn't need much updating.
   require(['angular', 'angular-cookies', 'angular-route', 'jquery', 'bootstrap', 
-           'angular-ui-bootstrap', 'angular-sanitize', 'ui.select', 'angular-translate', 
-           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angular-animate', 'angular-nvd3', 'angular-datepicker', './app'],
+           'angular-translate-loader-static-files', 'moment', 'angular-moment', 'angular-animate', 'angular-nvd3', 'angular-datepicker', './app',
+           'angular-ui-bootstrap', 'angular-sanitize', 'ui.select', 'angular-translate'], 
     function (angular) {
       angular.bootstrap(document, ['app']);
     }
