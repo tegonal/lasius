@@ -23,7 +23,7 @@ define(['angular'], function (angular) {
   
   
   var mod = angular.module('services.messages', ['ngCookies']);
-  mod.factory('clientMessageService', ['$http', '$location', '$q', '$interval', 'playRoutes', '$rootScope', 'msgBus', 'userService', 'Auth', function ($http, $location, $q, $interval, playRoutes, $rootScope, msgBus, userService, Auth) {
+  mod.factory('clientMessageService', ['$http', '$location', '$q', '$interval', 'playRoutes', '$rootScope', 'msgBus', 'userService', 'Auth', 'appConfigService', function ($http, $location, $q, $interval, playRoutes, $rootScope, msgBus, userService, Auth, appConfigService) {
     
     var send = function(eventType, eventData) {
       //append type to event data
@@ -122,14 +122,16 @@ define(['angular'], function (angular) {
               userService.getUser,
               function() {
                 Auth.isLoggedIn().then(function(loggedIn) {
-                  if (loggedIn) {          
-                    console.log('registering websocket');          
-                    var wsUrl = playRoutes.controllers.ApplicationController.messagingSocket().webSocketUrl(); // add param true to force wss://
-                    //append token to websocket url because normal http headers can't get controlled
-                    var securedUrl = wsUrl+ "?auth="+userService.getToken();
-                    if (!(angular.isDefined($rootScope.messagingSocket))) {
-                      $rootScope.messagingSocket = openWebSocket(securedUrl);
-                    }
+                  if (loggedIn) { 
+                    appConfigService.resolveConfig().then(function(config) {
+                      console.log('registering websocket', config.ssl);          
+                      var wsUrl = playRoutes.controllers.ApplicationController.messagingSocket().webSocketUrl(config.ssl); // add param true to force wss://
+                      //append token to websocket url because normal http headers can't get controlled
+                      var securedUrl = wsUrl+ "?auth="+userService.getToken();
+                      if (!(angular.isDefined($rootScope.messagingSocket))) {
+                        $rootScope.messagingSocket = openWebSocket(securedUrl);
+                      }
+                    });                    
                   }
                 });
             });

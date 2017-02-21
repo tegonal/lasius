@@ -18,19 +18,34 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-define(['angular'], function(angular) {
+define(['angular'], function (angular) {
   'use strict';
 
-  var LoginCtrl = function($q, $log, $scope, $rootScope, appConfigService) {
-    appConfigService.resolveConfig().then(function(config) {
-      $scope.appConfig = config;
-    });
-  };
+  var mod = angular.module('services.appConfig');
+  mod.factory('appConfigService', ['$q', 'playRoutes', '$log', function ($q, playRoutes,$log) {
+    var config;
+    
+    return {
+      resolveConfig: function() {
+        var deferred = $q.defer();        
+        if (config) {
+          deferred.resolve(config);
+        }
+        else {
+          $log.info('Load application config...');
+          playRoutes.controllers.ApplicationController.config().get().then(function (response) {
+              config = response.data;              
+              deferred.resolve(config);
+            });            
+        }
+        
+        return deferred.promise;
+      },
+      getConfig: function () {
+        return config;        
+      }
+    };
+  }]);
   
-  LoginCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', 'appConfigService'];  
-
-  return {
-    LoginCtrl: LoginCtrl
-  };
-
+  return mod;
 });

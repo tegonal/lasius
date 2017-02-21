@@ -21,11 +21,15 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment, userService, Auth) {
+  var DashboardCtrl = function($q, $log, $scope, $rootScope, $animate, $document, moment, userService, Auth, appConfigService) {
         
     $scope.bookingRange = {};    
     $scope.statisticRange = {};    
     $scope.currentBookingOn = true;
+    
+    appConfigService.resolveConfig().then(function(config) {
+      $scope.appConfig = config;
+    });
     
     $scope.$watch(function() {
       return userService.getUser();
