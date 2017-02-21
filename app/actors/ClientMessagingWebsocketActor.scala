@@ -48,7 +48,7 @@ trait DefaultClientReceiverComponent extends ClientReceiverComponent {
 }
 
 object ClientMessagingWebsocketActor extends ClientReceiver {
-  def props(out: ActorRef, userId: UserId) = Props(new ClientMessagingWebsocketActor(out, userId))
+  def props(userId: UserId)(out: ActorRef) = Props(new ClientMessagingWebsocketActor(out, userId))
   var actors: Map[String, ActorRef] = Map()
 
   /**

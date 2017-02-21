@@ -38,9 +38,13 @@ import repositories.MongoSecurityRepositoryComponent
 import domain.LoginStateAggregate
 import java.util.UUID
 import play.api.cache.Cache
+import play.api.libs.streams._
+import play.api.mvc.WebSocket.MessageFlowTransformer
 
 class ApplicationController {
   self: Controller with SecurityRepositoryComponent with Security =>
+    
+    implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
 
   def index = Action {
     Ok(views.html.index())
@@ -49,14 +53,14 @@ class ApplicationController {
   /**
    * Provide access to actor based messaging websocket
    */
-  def messagingSocket = WebSocket.tryAcceptWithActor[InEvent, OutEvent] { implicit request =>
+  def messagingSocket = WebSocket.acceptOrResult[InEvent, OutEvent] { implicit request =>
     Future.successful(checkToken() match {
       case Right(result) =>
         Logger.warn(s"Coudln't Websocket for client ${result.header} - ${result.body}")
         Left(result)
-      case Left(subject) => Right({ out =>
+      case Left(subject) => Right({ 
         Logger.debug(s"Create Websocket for client ${subject.userId}")
-        ClientMessagingWebsocketActor.props(out, subject.userId)
+        ActorFlow.actorRef(ClientMessagingWebsocketActor.props(subject.userId))
       })
     })
   }

@@ -69,7 +69,7 @@ define(['angular',
                                    'ngAnimate',
                                    'angularMoment',
                                    'ui.select',
-                                   'ui.bootstrap',
+                                   'ui.bootstrap',                                   
                                    'datePicker',
                                    'nvd3',
                                     'routes',                                        
@@ -103,7 +103,7 @@ define(['angular',
                                          'services.alert',
                                          'services.latestTimeBookings']);
   
-  mod.constant('moment', require('moment-timezone'));
+  mod.constant('moment', require('moment-timezone'));  
   
   //declare constants
   mod.constant("MY_CONFIG", {
