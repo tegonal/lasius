@@ -69,7 +69,7 @@ define(['angular'], function(angular) {
     };
   };
   
-  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment', 'userService', 'Auth'];  
+  DashboardCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', '$animate', '$document', 'moment', 'userService', 'Auth', 'appConfigService'];  
 
   return {
     DashboardCtrl: DashboardCtrl

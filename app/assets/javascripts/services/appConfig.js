@@ -21,7 +21,7 @@
 define(['angular'], function (angular) {
   'use strict';
 
-  var mod = angular.module('services.appConfig');
+  var mod = angular.module('services.appConfig', []);
   mod.factory('appConfigService', ['$q', 'playRoutes', '$log', function ($q, playRoutes,$log) {
     var config;
     

@@ -53,7 +53,7 @@ class ApplicationController {
       val ssl = playConfig.getBoolean("lasius.use_ssl").getOrElse(false)
       val title = playConfig.getString("lasius.title").getOrElse("Lasius")
       val instance = playConfig.getString("lasius.instance").getOrElse("Dev")
-      ApplicationConfig(instance, title, ssl)
+      ApplicationConfig(title, instance, ssl)
     }
 
   def index = Action {
@@ -140,7 +140,9 @@ class ApplicationController {
   /**
    * Load application config
    */
-  def config = Future.successful(Ok(Json.toJson(appConfig)))
+  def config = Action.async {
+    Future.successful(Ok(Json.toJson(appConfig)))
+  }
 }
 
 object ApplicationController extends ApplicationController
