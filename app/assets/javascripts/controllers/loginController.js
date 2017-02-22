@@ -21,10 +21,13 @@
 define(['angular'], function(angular) {
   'use strict';
 
-  var LoginCtrl = function($q, $log, $scope, $rootScope) {
+  var LoginCtrl = function($q, $log, $scope, $rootScope, appConfigService) {
+    appConfigService.resolveConfig().then(function(config) {
+      $scope.appConfig = config;
+    });
   };
   
-  LoginCtrl.$inject = ['$q', '$log', '$scope', '$rootScope'];  
+  LoginCtrl.$inject = ['$q', '$log', '$scope', '$rootScope', 'appConfigService'];  
 
   return {
     LoginCtrl: LoginCtrl

@@ -18,38 +18,34 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package models
+define(['angular'], function (angular) {
+  'use strict';
 
-import reactivemongo.bson.BSONObjectID
-
-import models.BaseFormat._
-import com.tegonal.play.json._
-import play.api.libs.json._
-import com.tegonal.play.json.TypedId._
-import org.joda.time.DateTime
-import scala.beans.BeanInfo
-
-case class BookingId(value: String) extends StringBaseId
-
-object BookingId {
-  implicit val idFormat: Format[BookingId] = Json.idformat[BookingId](BookingId.apply _)
-}
-
-@SerialVersionUID(1241414)
-case class BookingStub(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId])
-
-object BookingStub {
-  implicit val bookingStubFormat: Format[BookingStub] = Json.format[BookingStub]
-}
-
-@SerialVersionUID(1241414)
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], comment: Option[String] = None) extends BaseEntity[BookingId] {
-
-  def createStub: BookingStub = {
-    BookingStub(categoryId, projectId, tags)
-  }
-}
-
-object Booking {
-  implicit val bookingFormat = Json.format[Booking]
-}
+  var mod = angular.module('services.appConfig', []);
+  mod.factory('appConfigService', ['$q', 'playRoutes', '$log', function ($q, playRoutes,$log) {
+    var config;
+    
+    return {
+      resolveConfig: function() {
+        var deferred = $q.defer();        
+        if (config) {
+          deferred.resolve(config);
+        }
+        else {
+          $log.info('Load application config...');
+          playRoutes.controllers.ApplicationController.config().get().then(function (response) {
+              config = response.data;              
+              deferred.resolve(config);
+            });            
+        }
+        
+        return deferred.promise;
+      },
+      getConfig: function () {
+        return config;        
+      }
+    };
+  }]);
+  
+  return mod;
+});

@@ -17,15 +17,14 @@
 * You should have received a copy of the GNU General Public License along     *
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
-\*                                                                          */
+\*                                                                           */
 package models
 
 import play.api.libs.json._
 
-
 @SerialVersionUID(1241414)
-case class ApplicationConfig(ssl: Boolean)
+case class ApplicationConfig(title: String, instance:String, ssl: Boolean)
 
 object ApplicationConfig {
-  implicit val applicationConfigFormat: Format[ApplicationConfig] = Json.format[ApplicationConfig]
+  implicit val appConfigFormat: Format[ApplicationConfig] = Json.format[ApplicationConfig]
 }

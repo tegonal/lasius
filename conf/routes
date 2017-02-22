@@ -5,6 +5,9 @@
 # Home page
 GET      /                                      controllers.ApplicationController.index
 
+# Load Application config
+GET      /config                                controllers.ApplicationController.config
+
 # JavaScript routes object
 GET      /jsroutes.js                           controllers.JSController.jsRoutes()
 

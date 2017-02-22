@@ -53,7 +53,8 @@ define(['angular',
         './services/user',
         './services/auth',
         './services/alert',
-        './services/latestTimeBookings'],
+        './services/latestTimeBookings',
+        './services/appConfig'],
     function(angular) {
   'use strict';
   
@@ -101,7 +102,8 @@ define(['angular',
                                          'services.user',
                                          'services.auth',
                                          'services.alert',
-                                         'services.latestTimeBookings']);
+                                         'services.latestTimeBookings',
+                                         'services.appConfig']);
   
   mod.constant('moment', require('moment-timezone'));  
   

@@ -43,6 +43,7 @@ object JSController extends Controller {
             ApplicationController.login,
             ApplicationController.logout,
             ApplicationController.messagingSocket,
+            ApplicationController.config,
             CurrentUserTimeBookingsController.getCurrentTimeBooking,
             CurrentTeamTimeBookingsController.getTeamTimeBooking,
             LatestUserTimeBookingsController.getLatestTimeBooking,

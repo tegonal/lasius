@@ -45,6 +45,16 @@ class ApplicationController {
   self: Controller with SecurityRepositoryComponent with Security =>
     
     implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
+    
+    lazy val appConfig = loadApplicationConfig()
+    lazy val playConfig = Play.current.configuration
+    
+    private def loadApplicationConfig() = {     
+      val ssl = playConfig.getBoolean("lasius.use_ssl").getOrElse(false)
+      val title = playConfig.getString("lasius.title").getOrElse("Lasius")
+      val instance = playConfig.getString("lasius.instance").getOrElse("Dev")
+      ApplicationConfig(title, instance, ssl)
+    }
 
   def index = Action {
     Ok(views.html.index())
@@ -125,6 +135,13 @@ class ApplicationController {
     ClientMessagingWebsocketActor ! (subject.userId, UserLoggedOut(subject.userId), List(subject.userId))
 
     Future.successful(Ok.discardingCookies(DiscardingCookie(name = AuthTokenCookieKey)))
+  }
+  
+  /**
+   * Load application config
+   */
+  def config = Action.async {
+    Future.successful(Ok(Json.toJson(appConfig)))
   }
 }
 
