@@ -28,10 +28,8 @@ import play.api.Logger
 import org.joda.time._
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
-import repositories.MongoUserBookingStatisticsRepositoryComponent
-import repositories.BookingStatisticRepository
+import repositories._
 import scala.concurrent.Future
-import repositories.BookingByCategoryRepository
 import utils.DateTimeUtils._
 import play.api.mvc.Result
 
@@ -44,8 +42,7 @@ trait TimeBookingStatisticsController {
         Logger.debug(s"getAggregatedStatistics, source:$source, userId:${subject.userId}, from:$from, to:$to")
         source match {
           case "tag" => getAggregatedStatisticsBySource[BookingByTag, BookingByTagId, TagId](bookingByTagRepository, b => b.tagId, from, to)
-          case "category" => getAggregatedStatisticsBySource[BookingByCategory, BookingByCategoryId, CategoryId](bookingByCategoryRepository, b => b.categoryId, from, to)
-          case "project" => getAggregatedStatisticsBySource[BookingByProject, BookingByProjectId, ProjectId](bookingByProjectRepository, b => b.projectId, from, to)
+          case "taggroup" => getAggregatedStatisticsBySource[BookingByTagGroup, BookingByTagGroupId, TagGroupId](bookingByTagGroupRepository, b => b.tagGroupId, from, to)
           case _ => Future.successful(BadRequest)
         }
       }
@@ -74,8 +71,7 @@ trait TimeBookingStatisticsController {
         }
         source match {
           case "tag" => getStatisticsBySource[BookingByTag, BookingByTagId, TagId](bookingByTagRepository, b => b.tagId, from, to, range)
-          case "category" => getStatisticsBySource[BookingByCategory, BookingByCategoryId, CategoryId](bookingByCategoryRepository, b => b.categoryId, from, to, range)
-          case "project" => getStatisticsBySource[BookingByProject, BookingByProjectId, ProjectId](bookingByProjectRepository, b => b.projectId, from, to, range)
+          case "taggroup" => getStatisticsBySource[BookingByTagGroup, BookingByTagGroupId, TagGroupId](bookingByTagGroupRepository, b => b.tagGroupId, from, to, range)
           case _ => Future.successful(BadRequest)
         }
       }

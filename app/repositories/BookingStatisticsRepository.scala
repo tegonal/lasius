@@ -43,10 +43,7 @@ trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tego
   def subtract(model: M)(implicit writes: Writes[I]): Future[Boolean]
 }
 
-trait BookingByProjectRepository extends BookingStatisticRepository[BookingByProject, BookingByProjectId] {
-}
-
-trait BookingByCategoryRepository extends BookingStatisticRepository[BookingByCategory, BookingByCategoryId] {
+trait BookingByTagGroupRepository extends BookingStatisticRepository[BookingByTagGroup, BookingByTagGroupId] {
 }
 
 trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, BookingByTagId] {
@@ -78,19 +75,11 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
   def getUniqueContraint(model: M): JsObject
 }
 
-class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[BookingByProject, BookingByProjectId] with BookingByProjectRepository {
-  def coll = db.collection[JSONCollection]("BookingByProject")
-
-  def getUniqueContraint(model: BookingByProject): JsObject = {
-    Json.obj("userId" -> model.userId, "day" -> model.day, "projectId" -> model.projectId)
-  }
-}
-
-class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[BookingByCategory, BookingByCategoryId] with BookingByCategoryRepository {
+class BookingByTagGroupMongoRepository extends BookingStatisticMongoRepository[BookingByTagGroup, BookingByTagGroupId] with BookingByTagGroupRepository {
   def coll = db.collection[JSONCollection]("BookingByCategory")
 
-  def getUniqueContraint(model: BookingByCategory): JsObject = {
-    Json.obj("userId" -> model.userId, "day" -> model.day, "categoryId" -> model.categoryId)
+  def getUniqueContraint(model: BookingByTagGroup): JsObject = {
+    Json.obj("userId" -> model.userId, "day" -> model.day, "tagGroupId" -> model.tagGroupId)
   }
 }
 

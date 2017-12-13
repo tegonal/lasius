@@ -204,12 +204,29 @@ object Binders {
       }).mkString("&")
     }
   }
+  
+  implicit def bindableSet[T: QueryStringBindable] = new QueryStringBindable[Set[T]] {
+    def bind(key: String, params: Map[String, Seq[String]]) = Some(Right(bindSet[T](key, params)))
+    def unbind(key: String, values: Set[T]) = unbindSet(key, values)
+
+    private def bindSet[T: QueryStringBindable](key: String, params: Map[String, Seq[String]]): Set[T] = {
+      (for {
+        values <- params.get(key).toList
+        rawValue <- values
+        splitValue <- rawValue.split(",")
+        bound <- implicitly[QueryStringBindable[T]].bind(key, Map(key -> Seq(splitValue)))
+        value <- bound.right.toOption
+      } yield value).toSet
+    }
+
+    private def unbindSet[T: QueryStringBindable](key: String, values: Iterable[T]): String = {
+      (for (value <- values) yield {
+        implicitly[QueryStringBindable[T]].unbind(key, value)
+      }).mkString("&")
+    }
+  }
 
   implicit def UserIdPathBindable(implicit stringBinder: PathBindable[String]) = stringBaseIdPathBindable[models.UserId](stringBinder, UserId.apply _)
-  implicit def ProjectIdPathBindable(implicit stringBinder: PathBindable[String]) = stringBaseIdPathBindable[ProjectId](stringBinder, ProjectId.apply _)
-  implicit def ProjectIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = stringBaseIdQueryStringBinder[ProjectId](stringBinder, ProjectId.apply _)
-  implicit def CategoryIdPathBindable(implicit stringBinder: PathBindable[String]) = stringBaseIdPathBindable[CategoryId](stringBinder, CategoryId.apply _)
-  implicit def CategoryIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = stringBaseIdQueryStringBinder[CategoryId](stringBinder, CategoryId.apply _)
   implicit def BookingIdPathBindable(implicit stringBinder: PathBindable[String]) = stringBaseIdPathBindable[BookingId](stringBinder, BookingId.apply _)
   implicit def BookingIdIdStringBaseIdQueryStringBinder(implicit stringBinder: QueryStringBindable[String]) = stringBaseIdQueryStringBinder[BookingId](stringBinder, BookingId.apply _)
   implicit def TagIdPathBindable(implicit stringBinder: PathBindable[String]) = stringBaseIdPathBindable[TagId](stringBinder, TagId.apply _)

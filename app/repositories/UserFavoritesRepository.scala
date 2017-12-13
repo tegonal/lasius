@@ -32,7 +32,7 @@ import repositories.MongoDBCommandSet._
 trait UserFavoritesRepository extends BaseRepository[UserFavorites, UserId] {
   def getByUser(userId: UserId): Future[UserFavorites]
 
-  def addFavorite(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]): Future[UserFavorites]
+  def addFavorite(userId: UserId, tags: Set[TagId]): Future[UserFavorites]
 
   def removeFavorite(userId: UserId, bookingStub: BookingStub): Future[UserFavorites]
 }
@@ -46,8 +46,8 @@ class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavor
     }
   }
 
-  def addFavorite(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]): Future[UserFavorites] = {
-    val stub = BookingStub(categoryId, projectId, tags)
+  def addFavorite(userId: UserId, tags: Set[TagId]): Future[UserFavorites] = {
+    val stub = BookingStub(tags)
     val modifier = Json.obj("favorites" -> stub)
     findById(userId) flatMap {
       case Some(favorites) => update(Json.obj("id" -> userId), Json.obj(AddToSet -> modifier), true) map {

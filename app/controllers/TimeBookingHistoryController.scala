@@ -45,8 +45,7 @@ object CSVHelper {
 
   implicit class CSVBookingWrapper(val booking: Booking) {
 
-    def toCSV = Seq(booking.projectId.value.quote,
-      booking.categoryId.value.quote,
+    def toCSV = Seq(      
       booking.tags.toCSV(t => t.value).quote,
       format(booking.start),
       booking.end.map(format(_)).getOrElse(""),
@@ -56,6 +55,10 @@ object CSVHelper {
 
   implicit class CSVSeqWrapper[A](val seq: Seq[A]) {
     def toCSV(f: A => String) = seq.map(t => f(t)).mkString(",")
+  }
+  
+  implicit class CSVSetWrapper[A](val set: Set[A]) {
+    def toCSV(f: A => String) = set.map(t => f(t)).mkString(",")
   }
 }
 
@@ -77,7 +80,7 @@ class TimeBookingHistoryController {
         import controllers.CSVHelper._
 
         bookingHistoryRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-          val headers = Seq("Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
+          val headers = Seq("Tags", "Start", "End", "Comment", "Amount").mkString(",")
           val content = bookings.map(_.toCSV).mkString("\n");
           val csv = headers + "\n" + content;
 

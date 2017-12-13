@@ -29,18 +29,15 @@ import java.net.URI
 import models.BaseFormats._
 
 case class TagId(value: String) extends StringBaseId
-case class ProjectId(value: String) extends StringBaseId
-case class CategoryId(value: String) extends StringBaseId
+case class TagGroupId(value: String) extends StringBaseId
 
-object CategoryId {
-  implicit val idFormat: Format[CategoryId] = Json.idformat[CategoryId](CategoryId.apply _)
-}
-object ProjectId {
-  implicit val idFormat: Format[ProjectId] = Json.idformat[ProjectId](ProjectId.apply _)
-}
 object TagId {
   implicit val idFormat: Format[TagId] = Json.idformat[TagId](TagId.apply _)
 }
+object TagGroupId {
+  implicit val idFormat: Format[TagGroupId] = Json.idformat[TagGroupId](TagGroupId.apply _)
+}
+
 
 sealed trait BaseTag {
   val id: TagId
@@ -49,9 +46,7 @@ case class Tag(id: TagId) extends BaseEntity[TagId] with BaseTag
 case class JiraIssueTag(id: TagId, baseUrl: String, summary:Option[String], 
     url:URI, projectKey:String) extends BaseEntity[TagId] with BaseTag 
 case class JiraVersionTag(id: TagId, configId: JiraConfigId, projectKey:String) extends BaseEntity[TagId] with BaseTag
-
-case class Project(id: ProjectId, tags: Seq[Tag]) extends BaseEntity[ProjectId]
-case class Category(id: CategoryId, projects: Seq[Project]) extends BaseEntity[CategoryId]
+case class TagGroup(id: TagGroupId, tags: Set[TagId]) extends BaseEntity[TagGroupId]
 
 object JiraIsseTag{ 
   implicit val issueTagFormat: Format[JiraIssueTag]  = Json.format[JiraIssueTag]
@@ -62,14 +57,9 @@ object JiraVersionTag{
 object Tag{
   implicit val tagFormat: Format[Tag]  = Json.format[Tag]
 }
+object TagGroup{
+  implicit val tagGroupFormat: Format[TagGroup]  = Json.format[TagGroup]
+}
 object BaseTag {
   implicit val baseTagFormat: Format[BaseTag]  = Variants.format[BaseTag]("type")  
-}
-
-object Project {
-  implicit val projectFormat: Format[Project] = Json.format[Project]
-}
-
-object Category {
-  implicit val categoryFormat: Format[Category] = Json.format[Category]
 }

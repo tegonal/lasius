@@ -36,11 +36,11 @@ import scala.concurrent.Future
 class TimeBookingController {
   self: Controller with Security =>
 
-  def start(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
+  def start(tags: Set[TagId], start: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        Logger.debug(s"TimeBokingController -> start - userId:${subject.userId}, projectId: $projectId, tags:$tags, start:$start")
-        timeBookingManagerService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
+        Logger.debug(s"TimeBokingController -> start - userId:${subject.userId}, tags:$tags, start:$start")
+        timeBookingManagerService ! StartBooking(subject.userId, tags, start)
         Future.successful(Ok)
       }
   }
@@ -93,10 +93,10 @@ class TimeBookingController {
       }
   }
 
-  def add(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime, comment: Option[String]) = HasRole(FreeUser, parse.empty) {
+  def add(tags: Set[TagId], start: DateTime, end: DateTime, comment: Option[String]) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! AddBooking(subject.userId, categoryId, projectId, tags, start, end, comment)
+        timeBookingManagerService ! AddBooking(subject.userId, tags, start, end, comment)
         Future.successful(Ok)
       }
   }

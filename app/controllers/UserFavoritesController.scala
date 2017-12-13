@@ -40,21 +40,21 @@ class UserFavoritesController {
       }
   }
 
-  def addFavorite(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = HasRole(FreeUser, parse.empty) {
+  def addFavorite(tags: Set[TagId]) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        userFavoritesRepository.addFavorite(subject.userId, categoryId, projectId, tags) map { favorites =>
-          ClientMessagingWebsocketActor ! (subject.userId, FavoriteAdded(subject.userId, BookingStub(categoryId, projectId, tags)), List(subject.userId))
+        userFavoritesRepository.addFavorite(subject.userId, tags) map { favorites =>
+          ClientMessagingWebsocketActor ! (subject.userId, FavoriteAdded(subject.userId, BookingStub(tags)), List(subject.userId))
           Ok(Json.toJson(favorites))
         }
       }
   }
 
-  def removeFavorite(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId]) = HasRole(FreeUser, parse.empty) {
+  def removeFavorite(tags: Set[TagId]) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        userFavoritesRepository.removeFavorite(subject.userId, BookingStub(categoryId, projectId, tags)) map { favorites =>
-          ClientMessagingWebsocketActor ! (subject.userId, FavoriteRemoved(subject.userId, BookingStub(categoryId, projectId, tags)), List(subject.userId))
+        userFavoritesRepository.removeFavorite(subject.userId, BookingStub(tags)) map { favorites =>
+          ClientMessagingWebsocketActor ! (subject.userId, FavoriteRemoved(subject.userId, BookingStub(tags)), List(subject.userId))
           Ok(Json.toJson(favorites))
         }
       }

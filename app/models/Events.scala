@@ -66,16 +66,13 @@ case class UserTimeBookingHistoryEntryAdded(booking: Booking) extends OutEvent
 case class UserTimeBookingHistoryEntryRemoved(bookingId: BookingId) extends OutEvent
 case class UserTimeBookingHistoryEntryChanged(booking: Booking) extends OutEvent
 
-case class UserTimeBookingByProjectEntryCleaned(userId: UserId) extends OutEvent
-case class UserTimeBookingByCategoryEntryCleaned(userId: UserId) extends OutEvent
+case class UserTimeBookingByTagGroupEntryCleaned(userId: UserId) extends OutEvent
 case class UserTimeBookingByTagEntryCleaned(userId: UserId) extends OutEvent
 
-case class UserTimeBookingByProjectEntryAdded(booking: BookingByProject) extends OutEvent
-case class UserTimeBookingByCategoryEntryAdded(booking: BookingByCategory) extends OutEvent
+case class UserTimeBookingByTagGroupEntryAdded(booking: BookingByTagGroup) extends OutEvent
 case class UserTimeBookingByTagEntryAdded(booking: BookingByTag) extends OutEvent
 
-case class UserTimeBookingByProjectEntryRemoved(booking: BookingByProject) extends OutEvent
-case class UserTimeBookingByCategoryEntryRemoved(booking: BookingByCategory) extends OutEvent
+case class UserTimeBookingByTagGroupEntryRemoved(booking: BookingByTagGroup) extends OutEvent
 case class UserTimeBookingByTagEntryRemoved(booking: BookingByTag) extends OutEvent
 
 case class FavoriteAdded(userId: UserId, bookingStub: BookingStub) extends OutEvent

@@ -18,38 +18,40 @@
 * with this program. If not, see http://www.gnu.org/licenses/                 *
 *                                                                             *
 \*                                                                           */
-package models
+package repositories
 
-import reactivemongo.bson.BSONObjectID
+import play.api.libs.concurrent.Execution.Implicits._
 
-import models.BaseFormat._
-import com.tegonal.play.json._
+import scala.concurrent._
+import play.modules.reactivemongo.json.collection.JSONCollection
+import play.modules.reactivemongo.json.BSONFormats._
 import play.api.libs.json._
-import com.tegonal.play.json.TypedId._
+import models._
+import play.api.Logger
 import org.joda.time.DateTime
-import scala.beans.BeanInfo
+import repositories.MongoDBCommandSet._
+import reactivemongo.core.commands.LastError
+import akka.actor.Actor
 
-case class BookingId(value: String) extends StringBaseId
-
-object BookingId {
-  implicit val idFormat: Format[BookingId] = Json.idformat[BookingId](BookingId.apply _)
+trait TagGroupRepository extends BaseRepository[TagGroup, TagGroupId] with PersistentUserViewRepository[TagGroup, TagGroupId] {
+  /**
+   * Find all tag groups which are part of the provided set of tags (is a subset of)
+   */
+  def findByTags(tags: Set[TagId]): Future[Traversable[TagGroup]]
 }
 
-@SerialVersionUID(1241414)
-case class BookingStub(tags: Set[TagId])
+class TagGroupMongoRepository extends BaseReactiveMongoRepository[TagGroup, TagGroupId] with TagGroupRepository
+  with MongoPeristentUserViewRepository[TagGroup, TagGroupId] {
+  def coll = db.collection[JSONCollection]("TagGroup")
 
-object BookingStub {
-  implicit val bookingStubFormat: Format[BookingStub] = Json.format[BookingStub]
-}
-
-@SerialVersionUID(1241414)
-case class Booking(id: BookingId, start: DateTime, end: Option[DateTime], userId: UserId, tags: Set[TagId], comment: Option[String] = None) extends BaseEntity[BookingId] {
-
-  def createStub: BookingStub = {
-    BookingStub(tags)
+  def findByTags(tags: Set[TagId]): Future[Traversable[TagGroup]] = {
+    /*
+     * In MongoDb, for array field:
+     * "$in:[...]" means "intersection" or "any element in",
+     * "$all:[...]" means "subset" or "contain",
+     * "$elemMatch:{...}" means "any element match"
+     * "$not:{$elemMatch:{$nin:[...]}}" means "superset" or "in"    
+    */
+    find(Json.obj("$not" -> Json.obj("$$elemMatch" -> Json.obj("$nin" -> tags)))) map (_.map(_._1))
   }
-}
-
-object Booking {
-  implicit val bookingFormat = Json.format[Booking]
 }

@@ -21,14 +21,13 @@
 package repositories
 
 trait UserBookingStatisticsRepositoryComponent {
-
-  val bookingByProjectRepository: BookingByProjectRepository
-  val bookingByCategoryRepository: BookingByCategoryRepository
+  val bookingByTagGroupRepository: BookingByTagGroupRepository
   val bookingByTagRepository: BookingByTagRepository
+  val tagGroupRepository: TagGroupRepository
 }
 
 trait MongoUserBookingStatisticsRepositoryComponent extends UserBookingStatisticsRepositoryComponent {
-  val bookingByProjectRepository = new BookingByProjectMongoRepository
-  val bookingByCategoryRepository = new BookingByCategoryMongoRepository
+  val bookingByTagGroupRepository = new BookingByTagGroupMongoRepository
   val bookingByTagRepository = new BookingByTagMongoRepository
+  val tagGroupRepository = new TagGroupMongoRepository
 }

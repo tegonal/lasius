@@ -23,13 +23,13 @@ GET      /authuser                              controllers.UsersController.auth
 GET      /assets/*file                          controllers.Assets.at(path="/public", file)
 
 # TimeBooking
-POST     /mylasius/bookings/start                           controllers.TimeBookingController.start(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
+POST     /mylasius/bookings/start                           controllers.TimeBookingController.start(tags:Set[models.TagId], start:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 POST     /mylasius/bookings/:bookingId/stop                 controllers.TimeBookingController.stop(bookingId:models.BookingId, end:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 POST     /mylasius/bookings/:bookingId/pause                controllers.TimeBookingController.pause(bookingId:models.BookingId, time:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 POST     /mylasius/bookings/:bookingId/resume               controllers.TimeBookingController.resume(bookingId:models.BookingId, time:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 POST     /mylasius/bookings/:bookingId/changeStart          controllers.TimeBookingController.changeStart(bookingId:models.BookingId, newStart:org.joda.time.DateTime ?= org.joda.time.DateTime.now())
 DELETE   /mylasius/bookings/:bookingId   					controllers.TimeBookingController.remove(bookingId:models.BookingId)
-POST     /mylasius/bookings              					controllers.TimeBookingController.add(categoryId: models.CategoryId, projectId: models.ProjectId, tags:Seq[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime, comment:Option[String])
+POST     /mylasius/bookings              					controllers.TimeBookingController.add(tags:Set[models.TagId], start:org.joda.time.DateTime, end:org.joda.time.DateTime, comment:Option[String])
 POST     /mylasius/bookings/:bookingId                		controllers.TimeBookingController.edit(bookingId:models.BookingId, start:org.joda.time.DateTime, end:org.joda.time.DateTime)
 
 # TimeBookingHistory
@@ -54,8 +54,8 @@ GET      /mylasius/stats/range                  controllers.TimeBookingStatistic
 
 # Favorites
 GET      /mylasius/favorites	                controllers.UserFavoritesController.getFavorites()
-POST     /mylasius/favorites                    controllers.UserFavoritesController.addFavorite(categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
-DELETE   /mylasius/favorites                    controllers.UserFavoritesController.removeFavorite(categoryId: models.CategoryId, projectId: models.ProjectId, tags: Seq[models.TagId])
+POST     /mylasius/favorites                    controllers.UserFavoritesController.addFavorite(tags: Set[models.TagId])
+DELETE   /mylasius/favorites                    controllers.UserFavoritesController.removeFavorite(tags: Set[models.TagId])
 
 # Static
 # ~~~~

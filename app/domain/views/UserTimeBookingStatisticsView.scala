@@ -39,6 +39,7 @@ import actors.ClientReceiverComponent
 import actors.DefaultClientReceiverComponent
 import play.api.Logger
 import scala.concurrent.duration._
+import scala.concurrent.Future
 
 object UserTimeBookingStatisticsView {
 
@@ -63,11 +64,8 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>
       log.debug(s"UserTimeBookingStatisticsView -> initialize")
-      bookingByProjectRepository.deleteByUser(userId)
-      notifyClient(UserTimeBookingByProjectEntryCleaned(userId))
-
-      bookingByCategoryRepository.deleteByUser(userId)
-      notifyClient(UserTimeBookingByCategoryEntryCleaned(userId))
+      bookingByTagGroupRepository.deleteByUser(userId)
+      notifyClient(UserTimeBookingByTagGroupEntryCleaned(userId))
 
       bookingByTagRepository.deleteByUser(userId)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
@@ -117,65 +115,61 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
     sender ! Ack
   }
 
-  protected def storeDurations(durations: Seq[OperatorEntity[_, _]]) = {
-    durations map {
+  protected def storeDurations(durations: Future[Seq[OperatorEntity[_, _]]]) = {
+    durations map { _ map {
       _ match {
-        case b: BookingByCategory =>
-          bookingByCategoryRepository.add(b)
-        case b: BookingByProject =>
-          bookingByProjectRepository.add(b)
+        case b: BookingByTagGroup =>
+          bookingByTagGroupRepository.add(b)
         case b: BookingByTag =>
           bookingByTagRepository.add(b)
         case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }
     }
+    }
   }
 
-  protected def removeDurations(durations: Seq[OperatorEntity[_, _]]) = {
-    durations map {
+  protected def removeDurations(durations: Future[Seq[OperatorEntity[_, _]]]) = {
+    durations map { _.map {
       _ match {
-        case b: BookingByCategory =>
-          bookingByCategoryRepository.subtract(b)
-        case b: BookingByProject =>
-          bookingByProjectRepository.subtract(b)
+        case b: BookingByTagGroup =>
+          bookingByTagGroupRepository.subtract(b)
         case b: BookingByTag =>
           bookingByTagRepository.subtract(b)
         case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }
     }
+    }
   }
 
-  protected def getEventsDurations(durations: Seq[_], add: Boolean): Seq[OutEvent] = {
+  protected def getEventsDurations(durations: Future[Seq[_]], add: Boolean): Future[Seq[OutEvent]] = {
     if (add) {
-      durations map {
+      durations map { _ map {
         _ match {
-          case b: BookingByCategory =>
-            Some(UserTimeBookingByCategoryEntryAdded(b))
-          case b: BookingByProject =>
-            Some(UserTimeBookingByProjectEntryAdded(b))
+          case b: BookingByTagGroup =>
+            Some(UserTimeBookingByTagGroupEntryAdded(b))
           case b: BookingByTag =>
             Some(UserTimeBookingByTagEntryAdded(b))
           case _ => None
         }
       } flatten
+      }
     } else {
-      durations map {
+      durations map { _ map {
         _ match {
-          case b: BookingByCategory =>
-            Some(UserTimeBookingByCategoryEntryRemoved(b))
-          case b: BookingByProject =>
-            Some(UserTimeBookingByProjectEntryRemoved(b))
+          case b: BookingByTagGroup =>
+            Some(UserTimeBookingByTagGroupEntryRemoved(b))
           case b: BookingByTag =>
             Some(UserTimeBookingByTagEntryRemoved(b))
           case _ => None
         }
       } flatten
+      }
     }
   }
 
-  protected def calculatDurations(booking: Booking): Seq[OperatorEntity[_, _]] = {
+  protected def calculatDurations(booking: Booking): Future[Seq[OperatorEntity[_, _]]] = {
     //split booking by dates
     val startDate = booking.start
     val startDateStartOfDay = startDate.withTimeAtStartOfDay
@@ -185,51 +179,50 @@ class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with 
     val daysBetween = Days.daysBetween(startDateStartOfDay, endDateStartOfDay).getDays()
 
     if (endDate.isBefore(startDate)) {
-      Seq()
+      Future.successful(Seq())
     } else {
-
-      //handle if start and end date are within same day
-      if (daysBetween == 0) {
-        val duration = new Interval(startDate, endDate).toDuration()
-        getDurations(booking, startDateStartOfDay, duration)
-      } else {
-        //extract duration at start date
-        val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
-
-        val startDurations = getDurations(booking, startDateStartOfDay, startDuration)
-
-        //extract whole day for duration inbetween start and end date
-        val inBetweenDurations = if (daysBetween > 1) {
-          for {
-            dayDiff <- 1 to daysBetween - 1
-          } yield {
-            val date = startDateStartOfDay.plusDays(dayDiff)
-
-            val dayDuration = Duration.standardDays(1)
-            getDurations(booking, date, dayDuration)
-          }
+      tagGroupRepository.findByTags(booking.tags) map { tagGroups =>
+        //handle if start and end date are within same day
+        if (daysBetween == 0) {
+          val duration = new Interval(startDate, endDate).toDuration()
+          getDurations(booking, startDateStartOfDay, duration, tagGroups)
         } else {
-          Seq()
+          //extract duration at start date
+          val startDuration = Duration.standardDays(1).minus(new Interval(startDateStartOfDay, startDate).toDuration())
+  
+          val startDurations = getDurations(booking, startDateStartOfDay, startDuration, tagGroups) 
+  
+            //extract whole day for duration inbetween start and end date
+            val inBetweenDurations = if (daysBetween > 1) {
+              for {
+                dayDiff <- 1 to daysBetween - 1
+              } yield {
+                val date = startDateStartOfDay.plusDays(dayDiff)
+    
+                val dayDuration = Duration.standardDays(1)
+                getDurations(booking, date, dayDuration, tagGroups)
+              }
+            } else {
+              Seq()
+            } 
+            //extract duration on end date      
+            val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
+            val endDurations = getDurations(booking, endDateStartOfDay, endDuration, tagGroups) 
+            (startDurations ++ inBetweenDurations.flatten) ++ endDurations
         }
-
-        //extract duration on end date      
-        val endDuration = new Interval(endDateStartOfDay, endDate).toDuration()
-        val endDurations = getDurations(booking, endDateStartOfDay, endDuration)
-
-        (startDurations ++ inBetweenDurations.flatten) ++ endDurations
       }
 
     }
   }
 
-  private def getDurations(booking: Booking, day: DateTime, duration: Duration): Seq[OperatorEntity[_, _]] = {
-    Seq(BookingByCategory(BookingByCategoryId(), booking.userId, day, booking.categoryId, duration),
-      BookingByProject(BookingByProjectId(), booking.userId, day, booking.projectId, duration)) ++
-      booking.tags.map(tagId => BookingByTag(BookingByTagId(), booking.userId, day, tagId, duration))
+  private def getDurations(booking: Booking, day: DateTime, duration: Duration, tagGroups: Traversable[TagGroup]): Seq[OperatorEntity[_, _]] = {
+    val bookingsByTag = booking.tags.map(tagId => BookingByTag(BookingByTagId(), booking.userId, day, tagId, duration)).toSeq
+    val bookingsByTagGroup = tagGroups.map ( group => BookingByTagGroup(BookingByTagGroupId(), booking.userId, day, group.id, duration))
+    bookingsByTag ++ bookingsByTagGroup
   }
 
-  private def notifyClient(events: Seq[OutEvent]) = {
-    events map (event => ClientMessagingWebsocketActor ! (userId, event, List(userId)))    
+  private def notifyClient(events: Future[Seq[OutEvent]]) = {
+    events map (_ map (event => ClientMessagingWebsocketActor ! (userId, event, List(userId))))    
   }
 
   private def notifyClient(event: OutEvent) = {

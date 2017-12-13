@@ -38,16 +38,10 @@ trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   def duration(duration: Duration): E
 }
 
-case class BookingByProjectId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
+case class BookingByTagGroupId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 
-object BookingByProjectId {
-  implicit val idFormat: Format[BookingByProjectId] = BaseFormat.idformat[BookingByProjectId](BookingByProjectId.apply _)
-}
-
-case class BookingByCategoryId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
-
-object BookingByCategoryId {
-  implicit val idFormat: Format[BookingByCategoryId] = BaseFormat.idformat[BookingByCategoryId](BookingByCategoryId.apply _)
+object BookingByTagGroupId {
+  implicit val idFormat: Format[BookingByTagGroupId] = BaseFormat.idformat[BookingByTagGroupId](BookingByTagGroupId.apply _)
 }
 
 case class BookingByTagId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
@@ -56,36 +50,20 @@ object BookingByTagId {
   implicit val idFormat: Format[BookingByTagId] = BaseFormat.idformat[BookingByTagId](BookingByTagId.apply _)
 }
 
-case class BookingByProject(_id: BookingByProjectId, userId: UserId, day: DateTime, projectId: ProjectId, duration: Duration) extends OperatorEntity[BookingByProjectId, BookingByProject] {
+case class BookingByTagGroup(_id: BookingByTagGroupId, userId: UserId, day: DateTime, tagGroupId: TagGroupId, duration: Duration) extends OperatorEntity[BookingByTagGroupId, BookingByTagGroup] {
   val id = _id
 
-  def invert: BookingByProject = {
-    BookingByProject(id, userId, day, projectId, Duration.ZERO.minus(duration))
+  def invert: BookingByTagGroup = {
+    BookingByTagGroup(id, userId, day, tagGroupId, Duration.ZERO.minus(duration))
   }
 
-  def duration(duration: Duration): BookingByProject = {
+  def duration(duration: Duration): BookingByTagGroup = {
     copy(duration = duration)
   }
 }
 
-object BookingByProject {
-  implicit val bookingByProjectFormat = Json.format[BookingByProject]
-}
-
-case class BookingByCategory(_id: BookingByCategoryId, userId: UserId, day: DateTime, categoryId: CategoryId, duration: Duration) extends OperatorEntity[BookingByCategoryId, BookingByCategory] {
-  val id = _id
-
-  def invert: BookingByCategory = {
-    BookingByCategory(id, userId, day, categoryId, Duration.ZERO.minus(duration))
-  }
-
-  def duration(duration: Duration): BookingByCategory = {
-    copy(duration = duration)
-  }
-}
-
-object BookingByCategory {
-  implicit val bookingByCategoryFormat = Json.format[BookingByCategory]
+object BookingByTagGroup {
+  implicit val bookingByTagGroupFormat = Json.format[BookingByTagGroup]
 }
 
 case class BookingByTag(_id: BookingByTagId, userId: UserId, day: DateTime, tagId: TagId, duration: Duration) extends OperatorEntity[BookingByTagId, BookingByTag] {
