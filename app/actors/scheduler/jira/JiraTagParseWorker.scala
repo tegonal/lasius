@@ -36,7 +36,7 @@ import actors.TagCache.TagsUpdated
 import scala.reflect.runtime.universe._
 
 object JiraTagParseWorker {
-  def props(config: JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth:JiraAuthentication, projectId:ProjectId): Props = Props(classOf[JiraTagParseWorker], config, settings, projectSettings, auth, projectId)
+  def props(config: JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth:JiraAuthentication, tagGroupId:TagGroupId): Props = Props(classOf[JiraTagParseWorker], config, settings, projectSettings, auth, projectId)
   
   case object StartParsing 
   case object Parse
@@ -46,7 +46,7 @@ class MyJiraApiServiceImpl(override val config:JiraConfiguration) extends JiraAp
   override val ws: WSClient = WS.client
 }
 
-class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, implicit val auth:JiraAuthentication, projectId:ProjectId) extends Actor with ActorLogging {
+class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, implicit val auth:JiraAuthentication, tagGroupId:TagGroupId) extends Actor with ActorLogging {
   import JiraTagParseWorker._
   
   var cancellable: Option[Cancellable] = None
@@ -72,7 +72,7 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
         
         //assemble jira issuetag
         val tags = result.map(toJiraIssueTag)
-        tagCache ! TagsUpdated[JiraIssueTag](projectId, tags)
+        tagCache ! TagsUpdated[JiraIssueTag](tagGroupId, tags)
         
         //handle new parsed issue keys
       }.andThen{
@@ -111,7 +111,7 @@ class JiraTagParseWorker(config:JiraConfiguration, settings:JiraSettings, projec
   }
   
   def issues(offset:Int, max:Int) = {
-    log.debug(s"Parse issues projectId=${projectId.value}, project=${projectSettings.jiraProjectKey}, offset:$offset, max:$max")
+    log.debug(s"Parse issues tagGroupId=${tagGroupId.value}, project=${projectSettings.jiraProjectKey}, offset:$offset, max:$max")
     val query = projectSettings.jql.getOrElse(defaultJql)
     jiraApiService.findIssues(query, Some(offset), Some(max), fields=Some("summary"))
   }

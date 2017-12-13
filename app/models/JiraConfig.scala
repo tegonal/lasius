@@ -28,7 +28,7 @@ import play.api.libs.json._
 case class JiraConfigId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 case class JiraSettings(checkFrequency: Long)
 case class ProjectSettings(jiraProjectKey:String, maxResults:Option[Int] = None, jql:Option[String]=None)
-case class ProjectMapping(projectId: ProjectId, settings:ProjectSettings)
+case class ProjectMapping(tagGroupId: TagGroupId, settings:ProjectSettings)
 case class JiraAuth(consumerKey:String, 
     privateKey:String, 
     accessToken:String)

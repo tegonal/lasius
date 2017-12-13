@@ -46,9 +46,9 @@ class MongoPeristentUserViewRepositorySpec extends EmbedMongo {
 
       //initialize
       val f = for {
-        id1 <- repository.insert(Booking(BookingId("b1"), DateTime.now(), None, user1, CategoryId("c1"), ProjectId("p1"), Seq()))
-        id2 <- repository.insert(Booking(BookingId("b2"), DateTime.now(), None, user1, CategoryId("c2"), ProjectId("p2"), Seq()))
-        id3 <- repository.insert(Booking(BookingId("b3"), DateTime.now(), None, user2, CategoryId("c3"), ProjectId("p3"), Seq()))
+        id1 <- repository.insert(Booking(BookingId("b1"), DateTime.now(), None, user1, Set()))
+        id2 <- repository.insert(Booking(BookingId("b2"), DateTime.now(), None, user1, Set()))
+        id3 <- repository.insert(Booking(BookingId("b3"), DateTime.now(), None, user2, Set()))
       } yield {
         Seq(id1, id2, id3)
       }

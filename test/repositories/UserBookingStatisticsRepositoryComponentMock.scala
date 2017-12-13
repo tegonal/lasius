@@ -26,7 +26,7 @@ import org.specs2.mock.Mockito
 class UserBookingStatisticsRepositoryComponentMockClass extends UserBookingStatisticsRepositoryComponentMock
 
 trait UserBookingStatisticsRepositoryComponentMock extends UserBookingStatisticsRepositoryComponent with Mockito {
-  val bookingByProjectRepository: BookingByProjectRepository = mock[BookingByProjectRepository]
-  val bookingByCategoryRepository: BookingByCategoryRepository = mock[BookingByCategoryRepository]
+  val tagGroupRepository: TagGroupRepository = mock[TagGroupRepository]
   val bookingByTagRepository: BookingByTagRepository = mock[BookingByTagRepository]
+  val bookingByTagGroupRepository: BookingByTagGroupRepository = mock[BookingByTagGroupRepository]
 }

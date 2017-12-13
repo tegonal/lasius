@@ -38,8 +38,7 @@ case class User(
   lastName: String,
   active: Boolean,
   role: Role,
-  teams: Seq[Team],
-  categories: Seq[Category]) extends BaseEntity[UserId]
+  teams: Seq[Team]) extends BaseEntity[UserId]
 
 object User {
   implicit val userFormat = Json.format[User]

@@ -44,7 +44,7 @@ import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder
 import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder
 import de.flapdoodle.embed.process.io.progress.LoggingProgressListener
 import org.specs2.mutable.BeforeAfter
-import play.modules.reactivemongo.ReactiveMongoPlugin
+import play.modules.reactivemongo.ReactiveMongoApi
 import play.api.test.PlayRunners
 import play.api.Play
 import de.flapdoodle.embed.mongo.config.processlistener.IMongoProcessListener
@@ -52,8 +52,9 @@ import mongo.EmbedMongo.MongoConfig
 import org.specs2.specification.core.Fragments
 import org.specs2.specification.Step
 import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder
+import org.specs2.specification.BeforeAfterAll
 
-trait EmbedMongo extends Specification {
+trait EmbedMongo extends Specification with BeforeAfterAll {
   sequential =>
 
   private lazy val rnd = new scala.util.Random
@@ -61,6 +62,7 @@ trait EmbedMongo extends Specification {
   private lazy val port = range(rnd.nextInt(range length))
 
   implicit val executionContext = ExecutionContext.Implicits.global
+  // lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
 
   lazy val nodes = List(s"localhost:$port")
 
@@ -84,23 +86,22 @@ trait EmbedMongo extends Specification {
   lazy val runtime = MongodStarter.getInstance(runtimeConfig)
   lazy val mongodExecutable = runtime.prepare(mongodConfig)
 
-  def start = {
+  def start() = {
     logger.info(s"Start mongo on port:${port}")
     val proc = mongodExecutable.start
     logger.info(s"Started mongo on port:${port}:${proc.isProcessRunning()}")
   }
 
-  def stop = {
+  def stop() = {
     logger.info(s"Stop mongo on port:${port}")
     mongodExecutable.stop
     logger.info(s"Stopped mongo on port:${port}")
   }
 
   implicit val config = MongoConfig(port)
-
-  override def map(fragments: => Fragments) = {
-    step(start) ^ fragments ^ step(stop)
-  }
+  
+  override def beforeAll() = start()
+  override def afterAll() = stop()
 }
 
 object EmbedMongo {

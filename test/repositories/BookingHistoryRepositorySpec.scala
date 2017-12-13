@@ -48,7 +48,7 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
     val user = UserId("user1")
 
     //initialize
-    val b = Booking(BookingId("b1"), start, Some(end), user, CategoryId("c1"), ProjectId("p1"), Seq())
+    val b = Booking(BookingId("b1"), start, Some(end), user, Set())
 
     val f = for {
       id <- repository.insert(b)

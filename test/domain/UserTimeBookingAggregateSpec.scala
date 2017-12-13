@@ -66,7 +66,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
       system.eventStream.subscribe(stream.ref, classOf[Any])
 
-      val booking = Booking(BookingId("1"), DateTime.now(), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val booking = Booking(BookingId("1"), DateTime.now(), None, userId, Set())
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(booking)))
 
@@ -110,15 +110,14 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
-      val newBooking = Booking(BookingId("2"), DateTime.now, None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, Set(TagId("tag1")))
+      val newBooking = Booking(BookingId("2"), DateTime.now, None, userId, Set(TagId("tag2")))
       val closedBooking = currentBooking.copy(end = Some(newBooking.start))
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
 
       //execute
-      probe.send(actorRef, StartBooking(userId, newBooking.categoryId, newBooking.projectId,
-        newBooking.tags, newBooking.start))
+      probe.send(actorRef, StartBooking(userId, newBooking.tags, newBooking.start))
 
       //verify
       probe.expectMsg(UserTimeBooking(userId, Seq(closedBooking)))
@@ -127,16 +126,12 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
           bookings must haveSize(2)
           bookings(0) must beEqualTo(closedBooking)
           bookings(1).start must beEqualTo(newBooking.start)
-          bookings(1).categoryId must beEqualTo(newBooking.categoryId)
-          bookings(1).projectId must beEqualTo(newBooking.projectId)
           bookings(1).tags must beEqualTo(newBooking.tags)
       }
       stream.expectMsg(UserTimeBookingStopped(closedBooking))
       stream.expectMsgPF() {
         case UserTimeBookingStarted(booking) =>
           booking.start must beEqualTo(newBooking.start)
-          booking.categoryId must beEqualTo(newBooking.categoryId)
-          booking.projectId must beEqualTo(newBooking.projectId)
           booking.tags must beEqualTo(newBooking.tags)
       }
 
@@ -152,28 +147,23 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val newBooking = Booking(BookingId("2"), DateTime.now, None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val newBooking = Booking(BookingId("2"), DateTime.now, None, userId, Set(TagId("tag1")))
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq()))
 
       //execute
-      probe.send(actorRef, StartBooking(userId, newBooking.categoryId, newBooking.projectId,
-        newBooking.tags, newBooking.start))
+      probe.send(actorRef, StartBooking(userId, newBooking.tags, newBooking.start))
 
       //verify
       probe.expectMsgPF() {
         case UserTimeBooking(userId, bookings) =>
           bookings must haveSize(1)
           bookings(0).start must beEqualTo(newBooking.start)
-          bookings(0).categoryId must beEqualTo(newBooking.categoryId)
-          bookings(0).projectId must beEqualTo(newBooking.projectId)
           bookings(0).tags must beEqualTo(newBooking.tags)
       }
       stream.expectMsgPF() {
         case UserTimeBookingStarted(booking) =>
           booking.start must beEqualTo(newBooking.start)
-          booking.categoryId must beEqualTo(newBooking.categoryId)
-          booking.projectId must beEqualTo(newBooking.projectId)
           booking.tags must beEqualTo(newBooking.tags)
       }
     }
@@ -188,7 +178,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[UserTimeBookingRemoved])
-      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, Set(TagId("tag1")))
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
 
@@ -211,7 +201,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, Set(TagId("tag1")))
       var date = DateTime.now
       val closedBooking = currentBooking.copy(end = Some(date))
 
@@ -236,7 +226,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val actorRef = system.actorOf(UserTimeBookingAggregateMock.props(userId, component))
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), DateTime.now.minusHours(2), None, userId, Set(TagId("tag1")))
       var date = DateTime.now.plusHours(2)
       val closedBooking = currentBooking.copy(end = Some(date))
 
@@ -266,7 +256,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val end = DateTime.now()
       val start = end.minusHours(2)
       val newStart = start.minusHours(2)
-      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, Set(TagId("tag1")))
       val modifiedBooking = currentBooking.copy(start = newStart)
 
       component.bookingHistoryRepository.updateTimeBooking(isEq(currentBooking.id), isEq(newStart), isEq(end)) returns Future.successful(true)
@@ -295,7 +285,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val newStart = start.minusHours(4)
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val currentBooking = Booking(BookingId("1"), start, None, userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), start, None, userId, Set(TagId("tag1")))
       val adjustedBooking = currentBooking.copy(start = newStart)
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
@@ -319,7 +309,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val newStart = start.minusHours(4)
 
       system.eventStream.subscribe(stream.ref, classOf[Any])
-      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, CategoryId("cat"), ProjectId("proj"), Seq())
+      val currentBooking = Booking(BookingId("1"), start, Some(end), userId, Set(TagId("tag1")))
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
 

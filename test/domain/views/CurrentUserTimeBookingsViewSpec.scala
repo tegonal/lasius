@@ -25,13 +25,11 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
       val day = DateTime.parse("2000-01-01")
       val start = DateTime.now().minusHours(2)
-      val categoryId = CategoryId("cat")
-      val projectId = ProjectId("proj")
       val tagId1 = TagId("tag1")
       val tagId2 = TagId("tag2")
       val duration = Duration.standardHours(2)
 
-      val booking = Booking(BookingId("b1"), start, None, userId, categoryId, projectId, Seq(tagId1, tagId2))
+      val booking = Booking(BookingId("b1"), start, None, userId, Set(tagId1, tagId2))
 
       val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, Some(booking), None, Duration.ZERO))
 
@@ -52,14 +50,12 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
       val day = DateTime.parse("2000-01-01")
       val start = DateTime.now().minusHours(2)
-      val categoryId = CategoryId("cat")
-      val projectId = ProjectId("proj")
       val tagId1 = TagId("tag1")
       val tagId2 = TagId("tag2")
       val duration = Duration.standardHours(2)
       val newStart = start.minusHours(2)
 
-      val booking = Booking(BookingId("b1"), start, None, userId, categoryId, projectId, Seq(tagId1, tagId2))
+      val booking = Booking(BookingId("b1"), start, None, userId, Set(tagId1, tagId2))
 
       //first start booking
       probe.send(actorRef, UserTimeBookingStarted(booking))
@@ -86,13 +82,11 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       val day = DateTime.parse("2000-01-01")
       val end = DateTime.now()
       val start = end.minusHours(2)
-      val categoryId = CategoryId("cat")
-      val projectId = ProjectId("proj")
       val tagId1 = TagId("tag1")
       val tagId2 = TagId("tag2")
       val duration = Duration.standardHours(2)
 
-      val booking = Booking(BookingId("b1"), start, Some(end), userId, categoryId, projectId, Seq(tagId1, tagId2))
+      val booking = Booking(BookingId("b1"), start, Some(end), userId, Set(tagId1, tagId2))
 
       val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, None, None, duration))
 

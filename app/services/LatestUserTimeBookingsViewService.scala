@@ -26,7 +26,6 @@ import akka.actor.ActorRef
 import domain.UserTimeBookingAggregate
 import akka.actor.Terminated
 import models.UserId
-import models.ProjectId
 import models.TagId
 import org.joda.time.DateTime
 import akka.actor.Props

@@ -20,6 +20,8 @@
 \*                                                                           */
 package controllers
 
+import scala.concurrent._
+import scala.concurrent.duration._
 import scala.concurrent.Future
 import play.api.mvc._
 import play.api.test._
@@ -37,14 +39,13 @@ import controllers.ApplicationController._
 import play.cache.Cache
 import scala.concurrent.ExecutionContext
 import org.mockito.internal.stubbing.answers.DoesNothing
-import scala.concurrent._
-import scala.concurrent.duration._
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.mock.Mockito
+import org.specs2.time.NoTimeConversions
 
 @RunWith(classOf[JUnitRunner])
-class SecuritySpec extends Specification with Results with Mockito {
+class SecuritySpec extends Specification with Results with Mockito with NoTimeConversions {
   sequential =>
   "HasToken" should {
 
@@ -57,7 +58,7 @@ class SecuritySpec extends Specification with Results with Mockito {
       }.apply(request)
 
       //return results
-      Await.ready(result, 2 seconds)
+      Await.ready(result, 2.seconds)
     }
 
     "Fail if token is missing in cookie" in new WithApplication {

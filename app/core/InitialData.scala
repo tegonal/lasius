@@ -39,45 +39,12 @@ object InitialData extends MongoBasicRepositoryComponent {
 
   def initializeUsers() = {
     val team = Team(TeamId(), "Team1")
-    val structure = createStructure()
-    val structure2 = createStructure2()
 
     val passwordHash = BCrypt.hashpw("noob", BCrypt.gensalt())
-    userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser, Seq(team), structure))
+    userRepository.insert(User(UserId("noob"), "noob@test.com", passwordHash, "Demo", "User", true, FreeUser, Seq(team)))
 
     val passwordHash2 = BCrypt.hashpw("demo", BCrypt.gensalt())
-    userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team), structure2))
+    userRepository.insert(User(UserId("demo"), "demo@test.com", passwordHash2, "Demo", "User2", true, FreeUser, Seq(team)))
     
-  }
-
-  def createStructure() = {
-    Seq(Category(CategoryId("Projects"),
-      Seq(Project(ProjectId("Lasius"),
-        Seq(Tag(TagId("LS-1")),
-          Tag(TagId("LS-2")))),
-        Project(ProjectId("Sirius"),
-          Seq(Tag(TagId("SI-1")),
-            Tag(TagId("SI-2")))),
-        Project(ProjectId("Apus"),
-          Seq(Tag(TagId("AP-1")),
-            Tag(TagId("AP-2")))))), Category(CategoryId("Administration"),
-      Seq(Project(ProjectId("Marketing"),
-        Seq(Tag(TagId("Sales")),
-          Tag(TagId("Cold Aquisition")))),
-        Project(ProjectId("KnowHow"), Nil),
-        Project(ProjectId("Others"), Nil))))
-  }
-
-  def createStructure2() = {
-    Seq(Category(CategoryId("Projects"),
-      Seq(Project(ProjectId("Lasius"),
-        Seq(Tag(TagId("LS-1")),
-          Tag(TagId("LS-2")))),
-        Project(ProjectId("MPI"),
-          Seq(Tag(TagId("MPI-1")),
-            Tag(TagId("MPI-2")))))),
-      Category(CategoryId("Sales"),
-        Seq(Project(ProjectId("Aquisition"),
-          Seq(Tag(TagId("Div")))))))
   }
 }
