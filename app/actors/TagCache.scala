@@ -29,9 +29,9 @@ import scala.reflect.ClassTag
 
 object TagCache {  
   
-  case class GetTags(projectId: ProjectId)
-  case class CachedTags(projectId: ProjectId, tags: Set[BaseTag])
-  case class TagsUpdated[X <: BaseTag](projectId: ProjectId, tags: Set[X])(implicit m : Manifest[X]) {
+  case class GetTags()
+  case class CachedTags(tags: Set[BaseTag])
+  case class TagsUpdated[X <: BaseTag](tagGroupId: TagGroupId, tags: Set[X])(implicit m : Manifest[X]) {
      val manifest = m
   }  
   
@@ -46,37 +46,36 @@ trait TagCache extends Actor with ActorLogging {
     import TagCache._
     import scala.reflect.runtime.universe._    
     
-    var tagCache:Map[ProjectId, Map[Manifest[_], Set[BaseTag]]] = Map()
+    var tagCache:Option[Map[Manifest[_], Set[BaseTag]]] = None
   
   val receive: Receive = {
-    case t @ TagsUpdated(projectId, tags) =>      
-      adjustCache(t.manifest, projectId, tags)
-    case GetTags(projectId) => {
-      val tags = tagCache.get(projectId).map{map => map.map(_._2).toSet.flatten        
+    case t @ TagsUpdated(tagGroupId, tags) =>      
+      adjustCache(t.manifest, tagGroupId, tags)
+    case GetTags() => {
+      val tags = tagCache.map{map => map.map(_._2).toSet.flatten        
       }.getOrElse(Set())
-      sender ! CachedTags(projectId, tags)
+      sender ! CachedTags(tags)
     }     
   }
         
     
-    def adjustCache[T <: BaseTag: TypeTag](typ: Manifest[T], projectId:ProjectId, tags: Set[BaseTag]) = {
+    def adjustCache[T <: BaseTag: TypeTag](typ: Manifest[T], tagGroupId:TagGroupId, tags: Set[BaseTag]) = {
       // Needed to allow V to be inferred in Case1 resolution (ie. map sand pairApply)
       implicit object MS extends (Manifest ~?> Set)      
       
-      val currentMap = tagCache.get(projectId)
-      val current = currentMap.map(_.get(typ).getOrElse(Set())).getOrElse(Set())
+      val current = tagCache.map(_.get(typ).getOrElse(Set())).getOrElse(Set())
       
       val diff = calcDiff(current, tags)
       
       //notify client
       log.debug(s"TagCache changed:$diff")
       tagCache = diff.map{ case (removed, added) => 
-        val msg = TagCacheChanged(projectId, removed, added)
+        val msg = TagCacheChanged(tagGroupId, removed, added)
         clientReceiver broadcast (Global.systemUser, msg)        
       
         //update cache
-        val newMap = currentMap.map(_ + (typ -> tags)).getOrElse(Map())
-        tagCache + (projectId -> newMap)
+        val newMap = tagCache.map(_ + (typ -> tags)).getOrElse(Map())
+        Some(newMap)
       }.getOrElse(tagCache)
     }
     

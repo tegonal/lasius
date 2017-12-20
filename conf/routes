@@ -45,9 +45,6 @@ GET		/mylasius/teams/:teamId/current			controllers.CurrentTeamTimeBookingsContro
 # LatestUserTimeBookings
 GET		/mylasius/latest						controllers.LatestUserTimeBookingsController.getLatestTimeBooking(maxHistory:Int?=5)
 
-# StructureController
-GET      /mylasius/structure                    controllers.StructureController.getCategories()
-
 # Statistics
 GET      /mylasius/stats/aggregated             controllers.TimeBookingStatisticsController.getAggregatedStatistics(source: String, from:org.joda.time.DateTime, to:org.joda.time.DateTime)
 GET      /mylasius/stats/range                  controllers.TimeBookingStatisticsController.getStatistics(source: String, from:org.joda.time.DateTime, to:org.joda.time.DateTime)

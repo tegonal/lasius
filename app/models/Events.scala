@@ -80,7 +80,7 @@ case class FavoriteRemoved(userId: UserId, bookingStub: BookingStub) extends Out
 
 case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends OutEvent
 
-case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
+case class TagCacheChanged(tagGroupId: TagGroupId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
 
 object OutEvent {
   implicit val currentUserTimeBookingFormat: Format[CurrentUserTimeBooking] = Json.format[CurrentUserTimeBooking]

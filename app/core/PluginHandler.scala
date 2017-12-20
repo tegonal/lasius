@@ -85,7 +85,7 @@ trait PluginHandler extends Actor with ActorLogging {
         
         config.projects.map { proj =>
           log.debug(s"Start parsing for the following configuration:$jiraConfig - $proj")
-          jiraTagParseScheduler ! StartScheduler(jiraConfig, config.settings, proj.settings, auth, proj.projectId)
+          jiraTagParseScheduler ! StartScheduler(jiraConfig, config.settings, proj.settings, auth, proj.tagGroupId)
         }
       }
     }

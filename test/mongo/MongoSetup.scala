@@ -33,13 +33,11 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig
 import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
 import reactivemongo.api.MongoDriver
-import java.util.logging.Logger
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Around
 import org.specs2.execute.AsResult
 import org.specs2.execute.Result
 import de.flapdoodle.embed.process.io.Processors
-import java.util.logging.Level
 import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder
 import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder
 import de.flapdoodle.embed.process.io.progress.LoggingProgressListener
@@ -53,55 +51,19 @@ import org.specs2.specification.core.Fragments
 import org.specs2.specification.Step
 import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder
 import org.specs2.specification.BeforeAfterAll
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import de.flapdoodle.embed.process.io.Slf4jLevel
 
-trait EmbedMongo extends Specification with BeforeAfterAll {
-  sequential =>
-
+trait EmbedMongo extends Specification with EmbedConnection {
   private lazy val rnd = new scala.util.Random
   private lazy val range = 12000 to 12999
   private lazy val port = range(rnd.nextInt(range length))
-
-  implicit val executionContext = ExecutionContext.Implicits.global
-  // lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
-
-  lazy val nodes = List(s"localhost:$port")
-
-  lazy val mongodConfig = new MongodConfigBuilder()
-    .version(Version.Main.PRODUCTION)
-    .net(new Net(port, Network.localhostIsIPv6()))
-    .build
-
-  lazy val logger = Logger.getLogger(getClass().getName());
-
-  lazy val processOutput = new ProcessOutput(Processors.logTo(logger, Level.FINEST), Processors.logTo(logger,
-    Level.FINEST), Processors.named("[console>]", Processors.logTo(logger, Level.FINEST)));
-
-  lazy val runtimeConfig: IRuntimeConfig = new RuntimeConfigBuilder()
-    .defaultsWithLogger(Command.MongoD, logger)
-    .processOutput(processOutput)
-    .artifactStore(new ExtractedArtifactStoreBuilder()
-      .defaults(Command.MongoD))
-    .build;
-
-  lazy val runtime = MongodStarter.getInstance(runtimeConfig)
-  lazy val mongodExecutable = runtime.prepare(mongodConfig)
-
-  def start() = {
-    logger.info(s"Start mongo on port:${port}")
-    val proc = mongodExecutable.start
-    logger.info(s"Started mongo on port:${port}:${proc.isProcessRunning()}")
-  }
-
-  def stop() = {
-    logger.info(s"Stop mongo on port:${port}")
-    mongodExecutable.stop
-    logger.info(s"Stopped mongo on port:${port}")
-  }
-
-  implicit val config = MongoConfig(port)
   
-  override def beforeAll() = start()
-  override def afterAll() = stop()
+  implicit val executionContext = ExecutionContext.Implicits.global
+  
+  override def embedConnectionPort = port
+  implicit val config = MongoConfig(port)
 }
 
 object EmbedMongo {
@@ -109,13 +71,16 @@ object EmbedMongo {
 
   class WithMongo(implicit val config: MongoConfig) extends Around with Scope {
 
+    println(s"WithMongo:$config")
+    
     lazy val dbName = BSONObjectID.generate.stringify
 
-    lazy val logger = Logger.getLogger(getClass().getName());
+    lazy val logger = LoggerFactory.getLogger(getClass().getName());
 
     override def around[T: AsResult](t: => T): Result = {
+      println(s"around:$t")
       val port = config.port;
-      logger.warning(s"Execute test with mongodb on port:${port}")
+      logger.warn(s"Execute test with mongodb on port:${port}")
       implicit lazy val app = FakeApplication(additionalConfiguration =
         Map(
           ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
@@ -123,7 +88,7 @@ object EmbedMongo {
           ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port}")),
           ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
 
-      logger.warning("Run with application:" + app)
+      logger.warn("Run with application:" + app)
       AsResult(running(app)(t))
     }
   }

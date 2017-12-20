@@ -215,7 +215,6 @@ object UserMock {
     "lastname",
     true,
     role,
-    Seq(),
     Seq())
 }
 

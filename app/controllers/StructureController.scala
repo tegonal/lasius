@@ -39,34 +39,9 @@ import actors.TagCache.CachedTags
 class StructureController extends UserHelper {
   self: Controller with BasicRepositoryComponent with Security =>
 
-  case class ProjectContainer(project: Project, categoryId: CategoryId, name: String, tagCache:Seq[BaseTag])
-
-  object ProjectContainer {
-    implicit val projContFormat: Format[ProjectContainer] = Json.format[ProjectContainer]
-  }
-
-  def getCategories() = HasRole(FreeUser, parse.empty) {    
-    implicit subject =>
-      implicit request =>
-        withUser(BadRequest("No user found for login")) { user =>
-          //invert relationship from category to project
-          Future.sequence(for {
-            cat <- user.categories
-            proj <- cat.projects            
-          } yield {
-            for {
-              tags <- getTags(proj.id)
-            } yield {            
-              //remove reference to projects
-              ProjectContainer(proj, cat.id, s"${proj.id.value}@${cat.id.value}", (tags ++ proj.tags).toSeq.sortBy(_.id.value))
-            }
-          }) map(p => Ok(Json.toJson(p)))
-        }
-  }
-  
-  def getTags(projectId: ProjectId): Future[Set[BaseTag]] = {
+  def getTags(): Future[Set[BaseTag]] = {
         implicit val timeout = Timeout(5 seconds) // needed for `?` below
-        val future = Global.tagCache ? GetTags(projectId)
+        val future = Global.tagCache ? GetTags()
         future.map{ result =>
           val tagResult = result.asInstanceOf[CachedTags]
           

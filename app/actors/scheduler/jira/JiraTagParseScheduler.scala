@@ -34,7 +34,7 @@ import models._
 object JiraTagParseScheduler {
   def props = Props(classOf[JiraTagParseScheduler])
   
-  case class StartScheduler(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth: JiraAuthentication, projectId: ProjectId)
+  case class StartScheduler(config:JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth: JiraAuthentication, tagGroupId: TagGroupId)
   case class StopScheduler(uuid:UUID)
   case object StopAllSchedulers
   case class SchedulerStarted(uuid: UUID)
@@ -50,10 +50,10 @@ class JiraTagParseScheduler extends Actor with ActorLogging {
     }
   
   val receive: Receive = {
-    case StartScheduler(config, settings, projectSettings, auth, projectId) =>
-      log.error(s"StartScheduler: $config, $auth, $projectId, ${projectSettings.jiraProjectKey}")
+    case StartScheduler(config, settings, projectSettings, auth, tagGroupId) =>
+      log.error(s"StartScheduler: $config, $auth, $tagGroupId, ${projectSettings.jiraProjectKey}")
       val uuid = UUID.randomUUID
-      val ref = context.actorOf(JiraTagParseWorker.props(config, settings, projectSettings, auth, projectId))
+      val ref = context.actorOf(JiraTagParseWorker.props(config, settings, projectSettings, auth, tagGroupId))
       workers += uuid -> ref
       ref ! StartParsing
       sender ! SchedulerStarted(uuid)

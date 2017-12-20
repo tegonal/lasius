@@ -36,7 +36,7 @@ import actors.TagCache.TagsUpdated
 import scala.reflect.runtime.universe._
 
 object JiraTagParseWorker {
-  def props(config: JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth:JiraAuthentication, tagGroupId:TagGroupId): Props = Props(classOf[JiraTagParseWorker], config, settings, projectSettings, auth, projectId)
+  def props(config: JiraConfiguration, settings:JiraSettings, projectSettings: ProjectSettings, auth:JiraAuthentication, tagGroupId:TagGroupId): Props = Props(classOf[JiraTagParseWorker], config, settings, projectSettings, auth, tagGroupId)
   
   case object StartParsing 
   case object Parse

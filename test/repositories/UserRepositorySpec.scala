@@ -40,7 +40,7 @@ class UserRepositorySpec extends EmbedMongo {
   "UserRepository findByEmail" should {
     "find user by email" in new WithMongo {
       val email = "email"
-      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
+      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq())
 
       //initialize
       val f = for {
@@ -56,7 +56,7 @@ class UserRepositorySpec extends EmbedMongo {
     }
     "find none" in new WithMongo {
       val email = "email"
-      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq(), Seq())
+      val user = User(UserId("user"), email, "pwd", "firstname", "lastname", true, FreeUser, Seq())
 
       //initialize
       val f = for {

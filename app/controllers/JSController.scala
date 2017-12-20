@@ -47,7 +47,6 @@ object JSController extends Controller {
             CurrentUserTimeBookingsController.getCurrentTimeBooking,
             CurrentTeamTimeBookingsController.getTeamTimeBooking,
             LatestUserTimeBookingsController.getLatestTimeBooking,
-            StructureController.getCategories,
             TimeBookingController.add,
             TimeBookingController.changeStart,
             TimeBookingController.edit,
