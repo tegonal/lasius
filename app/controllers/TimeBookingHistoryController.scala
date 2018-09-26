@@ -45,7 +45,8 @@ object CSVHelper {
 
   implicit class CSVBookingWrapper(val booking: Booking) {
 
-    def toCSV = Seq(booking.projectId.value.quote,
+    def toCSV = Seq(booking.userId.value.quote,
+      booking.projectId.value.quote,
       booking.categoryId.value.quote,
       booking.tags.toCSV(t => t.value).quote,
       format(booking.start),
@@ -61,6 +62,16 @@ object CSVHelper {
 
 class TimeBookingHistoryController {
   self: Controller with UserBookingHistoryRepositoryComponent with Security =>
+  def getTimeBookingHistoryByRange(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        Logger.debug(s"getTimeBookingHistory from:$from, to:$to")
+        bookingHistoryRepository.findByRange(from, to) map { bookings =>
+          Ok(Json.toJson(bookings))
+        }
+      }
+  }
+    
   def getTimeBookingHistory(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
@@ -77,7 +88,24 @@ class TimeBookingHistoryController {
         import controllers.CSVHelper._
 
         bookingHistoryRepository.findByUserIdAndRange(subject.userId, from, to) map { bookings =>
-          val headers = Seq("Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
+          val headers = Seq("User", "Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
+          val content = bookings.map(_.toCSV).mkString("\n");
+          val csv = headers + "\n" + content;
+
+          Ok(csv).withHeaders(
+            "Content-Type" -> "text/csv",
+            "Content-Disposition" -> s"attachment; filename=export.csv");
+        }
+      }
+  }
+  
+  def exportTimeBookingHistoryByRange(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
+    implicit subject =>
+      implicit request => {
+        import controllers.CSVHelper._
+
+        bookingHistoryRepository.findByRange(from, to) map { bookings =>
+          val headers = Seq("User", "Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
           val content = bookings.map(_.toCSV).mkString("\n");
           val csv = headers + "\n" + content;
 

@@ -149,7 +149,21 @@ define(
                               .then(function(csv) {
                                 downloadCSVFile('export.csv', csv);
                               });
-                        };                                              
+                        };
+                        
+                        scope.exportTimeBookingsByRange = function() {
+                          var range = scope.range;
+                          if (range === undefined || range.from === undefined) {
+                            return;
+                          }
+                          var from = range.from.format(MY_CONFIG.DATE_PATTERN);
+                          var to = range.to.format(MY_CONFIG.DATE_PATTERN);
+
+                          bookingHistoryService.exportTimeBookingHistoryByRange(from, to)
+                              .then(function(csv) {
+                                downloadCSVFile('export_all.csv', csv);
+                              });
+                        };
 
                         var startBooking = function(booking) {
                           bookingService.start(booking.categoryId,

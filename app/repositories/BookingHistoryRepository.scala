@@ -34,6 +34,8 @@ import reactivemongo.core.commands.LastError
 import akka.actor.Actor
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
+  def findByRange(from: DateTime, to: DateTime): Future[Traversable[Booking]]
+  
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
 
   def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean]
@@ -44,6 +46,15 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
   with MongoPeristentUserViewRepository[Booking, BookingId] {
   def coll = db.collection[JSONCollection]("BookingHistory")
 
+  def findByRange(from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
+    val sel = Json.obj(
+      And -> Json.arr(
+        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
+        Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
+    Logger.debug(s"findByUserAndRange:$sel")
+    find(sel) map (_.map(_._1))
+  }
+  
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
     val sel = Json.obj("userId" -> userId,
       And -> Json.arr(

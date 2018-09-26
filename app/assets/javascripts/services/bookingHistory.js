@@ -33,8 +33,24 @@ define(['angular'], function (angular) {
           return reason.data;
         });
       },
+      getTimeBookingHistoryByRange: function (from, to) {
+        return playRoutes.controllers.TimeBookingHistoryController.getTimeBookingHistoryByRange(from, to).get().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed loading bookings:"+reason);
+          return reason.data;
+        });
+      },
       exportTimeBookingHistory: function (from, to) {
         return playRoutes.controllers.TimeBookingHistoryController.exportTimeBookingHistory(from, to).get().then(function (response) {
+          return response.data;          
+        }, function(reason) {
+          $log.debug("Failed exporting bookings:"+reason);
+          return reason.data;
+        });
+      },
+      exportTimeBookingHistoryByRange: function (from, to) {
+        return playRoutes.controllers.TimeBookingHistoryController.exportTimeBookingHistoryByRange(from, to).get().then(function (response) {
           return response.data;          
         }, function(reason) {
           $log.debug("Failed exporting bookings:"+reason);
