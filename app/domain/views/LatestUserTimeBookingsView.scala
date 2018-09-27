@@ -64,7 +64,7 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
     case e: UserTimeBookingStartTimeChanged =>
       sender ! Ack
     case e: UserTimeBookingAdded =>
-      if (getStartTime(state.history.last).isBefore(e.booking.start)) {
+      if (!state.history.isEmpty && getStartTime(state.history.last).isBefore(e.booking.start)) {
         addBooking(e.booking)
       }
     case e: UserTimeBookingRemoved =>
