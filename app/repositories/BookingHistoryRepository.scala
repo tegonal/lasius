@@ -34,9 +34,7 @@ import reactivemongo.core.commands.LastError
 import akka.actor.Actor
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
-  def findByRange(from: DateTime, to: DateTime): Future[Traversable[Booking]]
-  
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]]
+  def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]]
 
   def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean]
 
@@ -46,20 +44,20 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
   with MongoPeristentUserViewRepository[Booking, BookingId] {
   def coll = db.collection[JSONCollection]("BookingHistory")
 
-  def findByRange(from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
-    val sel = Json.obj(
-      And -> Json.arr(
-        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
-        Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
-    Logger.debug(s"findByUserAndRange:$sel")
-    find(sel) map (_.map(_._1))
-  }
-  
-  def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
-    val sel = Json.obj("userId" -> userId,
-      And -> Json.arr(
-        Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
-        Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from))))
+  def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
+    val startEnd = Json.arr(
+      Json.obj("start" -> Json.obj(LowerOrEqualsThan -> to)),
+      Json.obj("end" -> Json.obj(GreaterOrEqualsThan -> from)))
+    val sel = userId map { id =>
+      Json.obj(
+        "userId" -> id,
+        And -> startEnd)
+    } getOrElse {
+      Json.obj(
+        "userId" -> Json.obj("$exists" -> true, "$ne" -> JsNull),
+        And -> startEnd)
+    }
+
     Logger.debug(s"findByUserAndRange:$sel")
     find(sel) map (_.map(_._1))
   }
