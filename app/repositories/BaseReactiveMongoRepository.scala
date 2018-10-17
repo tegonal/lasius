@@ -63,8 +63,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]]
 
   def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean]
-
-  //def update(obj: T)(implicit fact: ID => JsValueWrapper): Future[LastError]
+  
+  def removeById(id: ID)(implicit fact: ID => JsValueWrapper, ctx: ExecutionContext): Future[Boolean]
 }
 
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
@@ -103,6 +103,14 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
     val json = format.writes(obj).as[JsObject]
     coll.remove(json) map (_.ok)
+  }
+  
+  def removeById(id: ID)(implicit fact: ID => JsValueWrapper, ctx: ExecutionContext): Future[Boolean] = {
+    coll.remove(Json.obj("id" -> id)) map { result =>
+      println(s"### ok ${result.ok}, ${result.n} ${result}")
+      
+      result.ok
+    }
   }
 
   def insert(t: T)(implicit ctx: ExecutionContext): Future[BSONObjectID] = {

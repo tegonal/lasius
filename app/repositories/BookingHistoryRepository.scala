@@ -32,12 +32,14 @@ import org.joda.time.DateTime
 import repositories.MongoDBCommandSet._
 import reactivemongo.core.commands.LastError
 import akka.actor.Actor
+import reactivemongo.bson.BSONObjectID
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
   def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]]
 
   def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean]
-
+  
+  def endTimeBooking(booking: Booking): Future[Boolean]
 }
 
 class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking, BookingId] with BookingHistoryRepository
@@ -64,7 +66,16 @@ class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking,
 
   def updateTimeBooking(bookingId: BookingId, from: DateTime, to: DateTime): Future[Boolean] = {
     Logger.debug(s"updateTimeBooking[$bookingId]: $from - $to")
-    update(Json.obj("id" -> bookingId), Json.obj(Set -> Json.obj("start" -> from, "end" -> to)))
+    update(Json.obj("id" -> bookingId), Json.obj(Set -> Json.obj("start" -> from, "end" -> to)), false)
   }
-
+  
+  def endTimeBooking(booking: Booking): Future[Boolean] = {
+    findById(booking.id) flatMap { maybeBooking =>
+      maybeBooking map  { existingBooking =>
+        update(Json.obj("id" -> booking.id), Json.obj(Set -> Json.obj("start" -> booking.start, "end" -> booking.end.get)), false)
+      } getOrElse {
+        insert(booking) map (_ => true)
+      }
+    }
+  }
 }

@@ -73,7 +73,7 @@ define(
 
                         scope.totalDiff = function(booking) {
                           return moment.duration(booking.end).subtract(
-                              booking.start).asHours();
+                              booking.start).asMinutes() / 60.0;
                         };
 
                         scope.dayDiff = function(booking) {
@@ -81,7 +81,8 @@ define(
                               .startOf('day'), moment(booking.start));
                           var end = moment.min(scope.range.to.endOf('day'),
                               moment(booking.end));
-                          return moment.duration(end.diff(start)).asHours();
+                          return end.diff(start, 'minutes', true) / 60.0;
+                          // return moment.duration(end.diff(start)).asMinutes() / 60.0;
                         };
 
                         scope.sameDay = function(booking) {
