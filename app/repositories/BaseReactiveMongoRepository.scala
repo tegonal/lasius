@@ -107,8 +107,6 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   
   def removeById(id: ID)(implicit fact: ID => JsValueWrapper, ctx: ExecutionContext): Future[Boolean] = {
     coll.remove(Json.obj("id" -> id)) map { result =>
-      println(s"### ok ${result.ok}, ${result.n} ${result}")
-      
       result.ok
     }
   }

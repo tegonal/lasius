@@ -40,8 +40,8 @@ object CSVHelper {
     DateTimeFormat.forPattern(CSV_DATETIME_FORMAT).print(date)
 
   def timeDiff(from: DateTime, to: DateTime) = {
-    val minutes: Double = Minutes.minutesBetween(from, to).getMinutes()
-    new DecimalFormat("0.00").format(minutes / 60);
+    val diff = to.getMillis - from.getMillis
+    new DecimalFormat("0.00").format(diff / 3600000.0);
   }
 
   implicit class CSVBookingWrapper(val booking: Booking) {

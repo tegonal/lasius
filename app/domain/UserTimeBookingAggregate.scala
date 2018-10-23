@@ -75,7 +75,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   import UserTimeBookingAggregate._
   import AggregateRoot._
 
-  log.error(s"UserTimeBookingAggregate: created $userId")
+  log.debug(s"UserTimeBookingAggregate: created $userId")
 
   override def persistenceId: String = userId.value
 
@@ -92,55 +92,45 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     log.error(s"updateStart:$evt")
     evt match {
       case e: UserTimeBookingInitialized =>
-        log.error(s"### UserTimeBookingInitialized")
+        log.debug(s"UserTimeBookingInitialized")
         context become created
 
         bookingHistoryRepository.deleteByUser(userId)
         notifyClient(UserTimeBookingHistoryEntryCleaned(userId))
       case UserTimeBookingStarted(booking) =>
-        if(booking.tags.contains(TagId("TEST"))) {
-        log.error(s"### UserBookingStarted - $booking")
+        log.debug(s"UserBookingStarted - $booking")
         state match {
           case ub: UserTimeBooking => tryUpdateState(startUserBooking(ub, booking))
         }
-        }
       case UserTimeBookingStopped(booking) =>
-        if(booking.tags.contains(TagId("TEST"))) {
-        log.error(s"### UserBookingStopped - $booking")
+        log.debug(s"UserBookingStopped - $booking")
 
         state match {
           case ub: UserTimeBooking => tryUpdateState(endAndLogUserBooking(ub, booking))
         }
-        }
       case UserTimeBookingPaused(bookingId, time) =>
-        log.error(s"### UserBookingPaused - $bookingId")
+        log.debug(s"UserBookingPaused - $bookingId")
         state = state match {
           case ub: UserTimeBooking => endUserBooking(ub, bookingId, time)
           case _ => state
         }
       case UserTimeBookingRemoved(booking) =>
-        if(booking.tags.contains(TagId("TEST"))) {
-        log.error(s"### UserBookingRemoved - $booking")
+        log.debug(s"UserBookingRemoved - $booking")
         state match {
           case ub: UserTimeBooking => tryUpdateState(removeUserBooking(ub, booking))
         }
-        }
       case UserTimeBookingAdded(booking) =>
-        if(booking.tags.contains(TagId("TEST"))) {
-        log.error(s"### UserBookingAdded - $booking")
+        log.debug(s"UserBookingAdded - $booking")
         state match {
           case ub: UserTimeBooking => tryUpdateState(startUserBooking(ub, booking))
         }
-        }
       case UserTimeBookingEdited(booking, start, end) =>
-        if(booking.tags.contains(TagId("TEST"))) {
-        log.error(s"### UserBookingEdited- $booking: $start-$end")
+        log.debug(s"UserBookingEdited- $booking: $start-$end")
         state match {
           case ub: UserTimeBooking => tryUpdateState(editUserBooking(ub, booking, start, end))
         }
-        }
       case UserTimeBookingStartTimeChanged(bookingId, fromStart, toStart) =>
-        log.error(s"### UserBookingStartTimeChanged - $bookingId - $fromStart -> $toStart")
+        log.debug(s"UserBookingStartTimeChanged - $bookingId - $fromStart -> $toStart")
         state = state match {
           case ub: UserTimeBooking => updateStartTime(ub, bookingId, fromStart, toStart)
           case _ => state
@@ -190,7 +180,6 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def removeUserBooking(ub: UserTimeBooking, booking: Booking): Future[Try[UserTimeBooking]] = {
-    Thread.sleep(3000)
     bookingHistoryRepository.removeById(booking.id) map {
       case true =>
         notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
