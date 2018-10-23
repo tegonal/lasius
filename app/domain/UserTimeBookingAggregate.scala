@@ -31,11 +31,6 @@ import actors.ClientReceiverComponent
 import scala.concurrent.ExecutionContext.Implicits.global
 import actors.DefaultClientReceiverComponent
 import repositories.MongoUserBookingHistoryRepositoryComponent
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 
 object UserTimeBookingAggregate {
   import AggregateRoot._
@@ -61,8 +56,6 @@ object UserTimeBookingAggregate {
   case class AddBooking(userId: UserId, categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime, comment: Option[String] = None) extends UserTimeBookingCommand
   case class EditBooking(userId: UserId, bookingId: BookingId, start: DateTime, end: DateTime) extends UserTimeBookingCommand
 
-  case class StateUpdated(newState: UserTimeBooking)
-
   def props(userId: UserId): Props = Props(classOf[MongoUserTimeBookingAggregate], userId)
 
 }
@@ -82,14 +75,14 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   override var state: State = UserTimeBooking(userId, Seq())
 
   def newBookingId = BookingId(UUID.randomUUID().toString())
-  
+
   /**
    * Updates internal processor state according to event that is to be applied.
    *
    * @param evt Event to apply
    */
   override def updateState(evt: PersistetEvent): Unit = {
-    log.error(s"updateStart:$evt")
+    log.debug(s"updateStart:$evt")
     evt match {
       case e: UserTimeBookingInitialized =>
         log.debug(s"UserTimeBookingInitialized")
@@ -99,14 +92,15 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         notifyClient(UserTimeBookingHistoryEntryCleaned(userId))
       case UserTimeBookingStarted(booking) =>
         log.debug(s"UserBookingStarted - $booking")
-        state match {
-          case ub: UserTimeBooking => tryUpdateState(startUserBooking(ub, booking))
+        state = state match {
+          case ub: UserTimeBooking => startUserBooking(ub, booking)
+          case _ => state
         }
       case UserTimeBookingStopped(booking) =>
         log.debug(s"UserBookingStopped - $booking")
-
-        state match {
-          case ub: UserTimeBooking => tryUpdateState(endAndLogUserBooking(ub, booking))
+        state = state match {
+          case ub: UserTimeBooking => endAndLogUserBooking(ub, booking)
+          case _ => state
         }
       case UserTimeBookingPaused(bookingId, time) =>
         log.debug(s"UserBookingPaused - $bookingId")
@@ -116,18 +110,21 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         }
       case UserTimeBookingRemoved(booking) =>
         log.debug(s"UserBookingRemoved - $booking")
-        state match {
-          case ub: UserTimeBooking => tryUpdateState(removeUserBooking(ub, booking))
+        state = state match {
+          case ub: UserTimeBooking => removeUserBooking(ub, booking)
+          case _ => state
         }
       case UserTimeBookingAdded(booking) =>
         log.debug(s"UserBookingAdded - $booking")
-        state match {
-          case ub: UserTimeBooking => tryUpdateState(startUserBooking(ub, booking))
+        state = state match {
+          case ub: UserTimeBooking => startUserBooking(ub, booking)
+          case _ => state
         }
       case UserTimeBookingEdited(booking, start, end) =>
         log.debug(s"UserBookingEdited- $booking: $start-$end")
-        state match {
-          case ub: UserTimeBooking => tryUpdateState(editUserBooking(ub, booking, start, end))
+        state = state match {
+          case ub: UserTimeBooking => editUserBooking(ub, booking, start, end)
+          case _ => state
         }
       case UserTimeBookingStartTimeChanged(bookingId, fromStart, toStart) =>
         log.debug(s"UserBookingStartTimeChanged - $bookingId - $fromStart -> $toStart")
@@ -139,36 +136,19 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     }
   }
 
-  def tryUpdateState(futureState: => Future[Try[UserTimeBooking]]) = {
-    context become updatingState
-
-    futureState map {
-      case Success(newState) =>
-        state = newState
-      case Failure(e) =>
-        log.error(s"Failed to update state", e)
-    }
-  }
-
-  def startUserBooking(ub: UserTimeBooking, booking: Booking): Future[Try[UserTimeBooking]] = {
+  def startUserBooking(ub: UserTimeBooking, booking: Booking) = {
     if (booking.end.isDefined) {
-      bookingHistoryRepository.insert(booking) map { _ =>
-        notifyClient(UserTimeBookingHistoryEntryAdded(booking))
-        Success(ub.copy(bookings = ub.bookings :+ booking))
-      }
-    } else {
-      Future.successful(Success(ub.copy(bookings = ub.bookings :+ booking)))
+      bookingHistoryRepository.insert(booking)
+      notifyClient(UserTimeBookingHistoryEntryAdded(booking))
     }
+
+    ub.copy(bookings = ub.bookings :+ booking)
   }
 
-  def endAndLogUserBooking(ub: UserTimeBooking, booking: Booking): Future[Try[UserTimeBooking]] = {
-    bookingHistoryRepository.endTimeBooking(booking) map {
-      case true =>
-        notifyClient(UserTimeBookingHistoryEntryAdded(booking))
-        Success(endUserBooking(ub, booking.id, booking.end.get))
-      case _ =>
-        Failure(new IllegalStateException(s"Failed to end user booking $booking"))
-    }
+  def endAndLogUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    bookingHistoryRepository.insert(booking)
+    notifyClient(UserTimeBookingHistoryEntryAdded(booking))
+    endUserBooking(ub, booking.id, booking.end.get)
   }
 
   def endUserBooking(ub: UserTimeBooking, bookingId: BookingId, endTime: DateTime) = {
@@ -179,33 +159,27 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     ub.copy(bookings = newBookings)
   }
 
-  def removeUserBooking(ub: UserTimeBooking, booking: Booking): Future[Try[UserTimeBooking]] = {
-    bookingHistoryRepository.removeById(booking.id) map {
-      case true =>
-        notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
+  def removeUserBooking(ub: UserTimeBooking, booking: Booking) = {
+    bookingHistoryRepository.remove(booking)
+    notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
 
-        val newBookings = ub.bookings.filter(_.id != booking.id)
-        Success(ub.copy(bookings = newBookings))
-      case _ =>
-        Failure(new IllegalStateException(s"Failed to remove user booking $booking"))
-    }
+    val newBookings = ub.bookings.filter(_.id != booking.id)
+    ub.copy(bookings = newBookings)
   }
 
-  def editUserBooking(ub: UserTimeBooking, booking: Booking, start: DateTime, end: DateTime): Future[Try[UserTimeBooking]] = {
+  def editUserBooking(ub: UserTimeBooking, booking: Booking, start: DateTime, end: DateTime) = {
     bookingHistoryRepository.updateTimeBooking(booking.id, start, end) map {
       case true =>
         val updatedBooking = booking.copy(start = start, end = Some(end))
         notifyClient(UserTimeBookingHistoryEntryChanged(updatedBooking))
-        val newBookings = ub.bookings.map { b =>
-          if (b.id == booking.id) b.copy(start = start, end = Some(end))
-          else b
-        }
-        Success(ub.copy(bookings = newBookings))
-      case _ =>
-        log.warning(s"Couldn't update time booking:$booking")
-        Failure(new IllegalStateException(s"Couldn't update time booking:$booking"))
+      case _ => log.warning(s"Couldn't update time booking:$booking")
     }
 
+    val newBookings = ub.bookings.map { b =>
+      if (b.id == booking.id) b.copy(start = start, end = Some(end))
+      else b
+    }
+    ub.copy(bookings = newBookings)
   }
 
   def updateStartTime(ub: UserTimeBooking, bookingId: BookingId, fromStart: DateTime, toStart: DateTime) = {
@@ -225,21 +199,15 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
     }
   }
 
-  val updatingState: Receive = {
-    case StateUpdated(newState) =>
-      state = newState
-      context.unbecome()
-  }
-
   val uninitialized: Receive = {
     case GetState =>
       sender ! state
     case Initialize(state) =>
-      log.error(s"Initialize: $state")
+      log.debug(s"Initialize: $state")
       this.state = state
       context become created
     case e =>
-      log.error(s"InitBooking -> userId: $userId:$e")
+      log.debug(s"InitBooking -> userId: $userId:$e")
       persist(UserTimeBookingInitialized(userId))(afterEventPersisted)
       context become created
       created(e)
@@ -247,7 +215,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   val created: Receive = {
     case StartBooking(_, categoryId, projectId, tags, start) =>
-      log.error(s"StartBooking -> projectId:$projectId, tags:$tags, start:$start")
+      log.debug(s"StartBooking -> projectId:$projectId, tags:$tags, start:$start")
       //if another booking is still in progress
       state match {
         case b: UserTimeBooking => stopBookingInProgress(b, start)
@@ -256,7 +224,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       val newBooking = Booking(newBookingId, start, None, userId, categoryId, projectId, tags)
       persist(UserTimeBookingStarted(newBooking))(afterEventPersisted)
     case EndBooking(_, bookingId, end) =>
-      log.error(s"EndBooking -> bookingId:$bookingId")
+      log.debug(s"EndBooking -> bookingId:$bookingId")
       state match {
         case b: UserTimeBooking =>
           b.bookingInProgress.map { b =>
@@ -267,20 +235,20 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
           }
       }
     case RemoveBooking(_, bookingId) =>
-      log.error(s"RemoveBooking, current state:$state")
+      log.debug(s"RemoveBooking, current state:$state")
       state match {
         case b: UserTimeBooking =>
           b.bookings.find(_.id == bookingId) map { removedB =>
-            log.error(s"RemoveBooking, found existing booking:$removedB")
+            log.debug(s"RemoveBooking, found existing booking:$removedB")
             persist(UserTimeBookingRemoved(removedB))(afterEventPersisted)
           }
       }
     case EditBooking(_, bookingId, start, end) =>
-      log.error(s"EditBooking, current state:$state")
+      log.debug(s"EditBooking, current state:$state")
       state match {
         case b: UserTimeBooking =>
           b.bookings.find(_.id == bookingId) map { edited =>
-            log.error(s"EditBooking, found existing booking:$edited")
+            log.debug(s"EditBooking, found existing booking:$edited")
             persist(UserTimeBookingEdited(edited, start, end))(afterEventPersisted)
           }
       }
@@ -291,7 +259,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         case b: UserTimeBooking =>
           b.bookings.find(_.id == bookingId) map { b =>
             val pausedB = b.copy(end = Some(time))
-            log.error(s"PauseBooking, found existing booking:$pausedB")
+            log.debug(s"PauseBooking, found existing booking:$pausedB")
             persist(UserTimeBookingPaused(pausedB.id, time))(afterEventPersisted)
           }
       }
@@ -299,15 +267,15 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
       state match {
         case b: UserTimeBooking =>
           b.bookings.find(b => b.id == bookingId && b.end.isDefined).map { pausedB =>
-            log.error(s"ResumeBooking, found existing booking:$bookingId")
+            log.debug(s"ResumeBooking, found existing booking:$bookingId")
             //first stop booking in progress
             stopBookingInProgress(b, time)
 
             val resumedB = Booking(newBookingId, time, None, userId, pausedB.categoryId, pausedB.projectId, pausedB.tags)
-            log.error(s"ResumedBooking, found existing booking:$resumedB")
+            log.debug(s"ResumedBooking, found existing booking:$resumedB")
             persist(UserTimeBookingStarted(resumedB))(afterEventPersisted)
           }.getOrElse {
-            log.error(s"ResumeBooking: didn't find paused booking with id:$bookingId")
+            log.debug(s"ResumeBooking: didn't find paused booking with id:$bookingId")
           }
       }
     case ChangeStartTimeOfBooking(userId, bookingId, newStart) =>
