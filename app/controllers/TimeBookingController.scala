@@ -40,7 +40,7 @@ class TimeBookingController {
     implicit subject =>
       implicit request => {
         Logger.debug(s"TimeBokingController -> start - userId:${subject.userId}, projectId: $projectId, tags:$tags, start:$start")
-        timeBookingManagerService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
+        timeBookingViewService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
         Future.successful(Ok)
       }
   }
@@ -48,7 +48,7 @@ class TimeBookingController {
   def stop(bookingId: BookingId, end: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! EndBooking(subject.userId, bookingId, end)
+        timeBookingViewService ! EndBooking(subject.userId, bookingId, end)
         Future.successful(Ok)
       }
   }
@@ -56,7 +56,7 @@ class TimeBookingController {
   def remove(bookingId: BookingId) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! RemoveBooking(subject.userId, bookingId)
+        timeBookingViewService ! RemoveBooking(subject.userId, bookingId)
         Future.successful(Ok)
       }
   }
@@ -64,7 +64,7 @@ class TimeBookingController {
   def edit(bookingId: BookingId, start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! EditBooking(subject.userId, bookingId, start, end)
+        timeBookingViewService ! EditBooking(subject.userId, bookingId, start, end)
         Future.successful(Ok)
       }
   }
@@ -72,7 +72,7 @@ class TimeBookingController {
   def pause(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! PauseBooking(subject.userId, bookingId, time)
+        timeBookingViewService ! PauseBooking(subject.userId, bookingId, time)
         Future.successful(Ok)
       }
   }
@@ -80,7 +80,7 @@ class TimeBookingController {
   def resume(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! ResumeBooking(subject.userId, bookingId, time)
+        timeBookingViewService ! ResumeBooking(subject.userId, bookingId, time)
         Future.successful(Ok)
       }
   }
@@ -88,7 +88,7 @@ class TimeBookingController {
   def changeStart(bookingId: BookingId, newStart: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! ChangeStartTimeOfBooking(subject.userId, bookingId, newStart)
+        timeBookingViewService ! ChangeStartTimeOfBooking(subject.userId, bookingId, newStart)
         Future.successful(Ok)
       }
   }
@@ -96,7 +96,7 @@ class TimeBookingController {
   def add(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime, comment: Option[String]) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingManagerService ! AddBooking(subject.userId, categoryId, projectId, tags, start, end, comment)
+        timeBookingViewService ! AddBooking(subject.userId, categoryId, projectId, tags, start, end, comment)
         Future.successful(Ok)
       }
   }

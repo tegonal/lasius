@@ -1,51 +1,46 @@
 /*   __                          __                                          *\
-*   / /____ ___ ____  ___  ___ _/ /       lasius                      *
-*  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        contributed by tegonal              *
-*  \__/\__/\_, /\___/_//_/\_,_/_/         http://tegonal.com/                 *
-*         /___/                                                               *
-*                                                                             *
-* This program is free software: you can redistribute it and/or modify it     *
-* under the terms of the GNU General Public License as published by    *
-* the Free Software Foundation, either version 3 of the License,              *
-* or (at your option) any later version.                                      *
-*                                                                             *
-* This program is distributed in the hope that it will be useful, but         *
-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  *
-* or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for *
-* more details.                                                               *
-*                                                                             *
-* You should have received a copy of the GNU General Public License along     *
-* with this program. If not, see http://www.gnu.org/licenses/                 *
-*                                                                             *
+ *   / /____ ___ ____  ___  ___ _/ /       lasius                      *
+ *  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        contributed by tegonal              *
+ *  \__/\__/\_, /\___/_//_/\_,_/_/         http://tegonal.com/                 *
+ *         /___/                                                               *
+ *                                                                             *
+ * This program is free software: you can redistribute it and/or modify it     *
+ * under the terms of the GNU General Public License as published by    *
+ * the Free Software Foundation, either version 3 of the License,              *
+ * or (at your option) any later version.                                      *
+ *                                                                             *
+ * This program is distributed in the hope that it will be useful, but         *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  *
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for *
+ * more details.                                                               *
+ *                                                                             *
+ * You should have received a copy of the GNU General Public License along     *
+ * with this program. If not, see http://www.gnu.org/licenses/                 *
+ *                                                                             *
 \*                                                                           */
 package core
 
+import actors.{LasiusSupervisorActor, TagCache}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
+import akka.serialization.SerializationExtension
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
+import domain.LoginStateAggregate
+import domain.views.CurrentTeamTimeBookingsView
 import models._
 import play.api._
-import play.api.mvc._
 import play.api.mvc.Results._
-import controllers._
-import play.api.mvc.RequestHeader
-import scala.concurrent.Future
-import actors.LasiusSupervisorActor
-import akka.actor.ActorSystem
-import akka.pattern.{ ask, pipe }
-import services.TimeBookingViewService
-import domain.views.CurrentUserTimeBookingsView
-import services._
-import domain.LoginStateAggregate
-import akka.util.Timeout
-import scala.concurrent.duration._
+import play.api.mvc.{RequestHeader, _}
+import services.{TimeBookingViewService, _}
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import akka.actor.ActorRef
-import play.api.libs.json.Json
-import actors.TagCache
-import domain.views.CurrentTeamTimeBookingsView
-import akka.stream.ActorMaterializer
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
-
-object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) with GlobalSettings {
+object Global
+    extends WithFilters(new play.modules.statsd.api.StatsdFilter())
+    with GlobalSettings {
 
   implicit val system = ActorSystem("lasius-actor-system")
   implicit val materializer = ActorMaterializer()
@@ -54,7 +49,7 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val executionContext = system.dispatcher
   implicit val timeout = Timeout(5 seconds) // needed for `?` below
   val duration = Duration.create(5, SECONDS);
-  val timeBookingManagerService = Await.result(supervisor ? TimeBookingViewService.props, duration).asInstanceOf[ActorRef]
+  val timeBookingViewService = Await.result(supervisor ? TimeBookingViewService.props, duration).asInstanceOf[ActorRef]
 
   val loginStateAggregate = Await.result(supervisor ? LoginStateAggregate.props, duration).asInstanceOf[ActorRef]
   val loginHandler =  Await.result(supervisor ? LoginHandler.props, duration).asInstanceOf[ActorRef]
@@ -67,23 +62,26 @@ object Global extends WithFilters(new play.modules.statsd.api.StatsdFilter()) wi
   val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]  
 
   override def onStart(app: Application) {
+    //move UpdateUserId from test to app if you want to use it, see remark on UpdateUserId.update before executing
+    //implicit val serialization = SerializationExtension(system)
+    //UpdateUserId.update("x.y", "x.z")
+
     val initData = Play.current.configuration.getBoolean("db.initialize_data")
     if (initData.isDefined && initData.get) {
-      InitialData.init() map {x => 
+      InitialData.init() map { x =>
         currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
       }
-    }
-    else {
-      currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize  
+    } else {
+      currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
     }
 
     //initialite login handler
-    LoginHandler.subscribe(loginHandler, system.eventStream)      
-    
+    LoginHandler.subscribe(loginHandler, system.eventStream)
+
     //start pluginhandler
     Logger.debug(s"Start pluginHandler:$pluginHandler")
     pluginHandler ! PluginHandler.Startup
-        
+
     ()
   }
 

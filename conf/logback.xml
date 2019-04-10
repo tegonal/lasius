@@ -30,7 +30,7 @@
   </appender>
 
   <logger name="play" level="INFO" />
-  <logger name="application" level="DEBUG" />
+  <logger name="application" level="INFO" />
   
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
@@ -39,9 +39,9 @@
   <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
   
   <!-- Set logging for all Akka library classes to INFO -->
-  <logger name="akka" level="DEBUG" />
+  <logger name="akka" level="INFO" />
   <!-- Set a specific actor to DEBUG -->
-  <logger name="actors" level="DEBUG" />
+  <logger name="actors" level="INFO" />
   
   <logger name="r.c.a" level="INFO" />
   <logger name="akka.persistence.inmemory.journal" level="INFO" />
