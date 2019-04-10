@@ -62,10 +62,10 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
     log.debug(s"loadInitialTeams")
     userRepository.findAll() map { users =>
       log.debug(s"findAllUsers:$users")
-      if (users.length > 0) {      
-        val userMap = users.map { user =>
+      if (users.nonEmpty) {
+        val userMap = users.flatMap { user =>
           user.teams.map(t => (t.id, user.id))
-        }.flatten
+        }
         
         teams = userMap.groupBy(_._1).map{case (t, v) => (t, TeamBookingState(v.map(x => (x._2, None)).toMap))}
         user2Teams = userMap.groupBy(_._2).map{case (t, v) => (t, v.map(_._1))}
@@ -83,12 +83,12 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
    case e:CurrentUserTimeBookingEvent =>
      val userId = e.booking.userId
      log.debug(s"CurrentTeamTimeBookingsView: received $e")
-     user2Teams.get(e.booking.userId).map { userTeams => 
+     user2Teams.get(e.booking.userId).foreach { userTeams =>
        //store latest event in map of team
-       userTeams.map{ teamId => 
-         val teamBookings  = (teams.get(teamId).map {state => 
+       userTeams.foreach { teamId =>
+         val teamBookings  = teams.get(teamId).map {state =>
            state.copy(timeBookings = state.timeBookings + (e.booking.userId -> Some(e.booking)))
-         }.getOrElse(TeamBookingState(Map(userId -> Some(e.booking)))))
+         }.getOrElse(TeamBookingState(Map(userId -> Some(e.booking))))
          teams = teams + (teamId -> teamBookings)                 
          
          log.debug(s"Updated state:$teamId - $teamBookings")
@@ -96,7 +96,7 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
          //notify team
          val today = DateTime.now.withTimeAtStartOfDay()  
          if (!today.isAfter(e.booking.day)) {
-           val teamMembers = teamBookings.timeBookings.map(_._1)
+           val teamMembers = teamBookings.timeBookings.keys
            log.debug(s"Notify team members:$teamMembers -> $teamBookings")
            clientReceiver ! (userId,  CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten), teamMembers.toList)
          }
@@ -106,7 +106,7 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
      //get current team time bookings by user
      log.debug(s"GetCurrenTeamTimebookings:$teamId")
      val s = sender
-     teams.get(teamId).map { teamBookings => 
+     teams.get(teamId).map { teamBookings =>
        log.debug(s"GetCurrenTeamTimebookings:$teamId -> $teamBookings")
        s ! CurrentTeamTimeBookings(teamId, teamBookings.timeBookings.values.toSeq.flatten)
      }.getOrElse {
