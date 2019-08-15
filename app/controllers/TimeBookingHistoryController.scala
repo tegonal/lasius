@@ -25,7 +25,7 @@ import java.text.DecimalFormat
 import models._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
 import play.api.mvc.{Controller, Result}

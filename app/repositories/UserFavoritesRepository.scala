@@ -21,7 +21,7 @@
 package repositories
 
 import models._
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import reactivemongo.play.json.collection.JSONCollection
 import repositories.MongoDBCommandSet._

@@ -82,7 +82,7 @@ class DefaultComponents(context: Context) extends BuiltInComponentsFromContext(c
   lazy val currentTeamTimeBookingsController = CurrentTeamTimeBookingsController
   lazy val jsController = new JSController
   lazy val router = new Routes(httpErrorHandler,
-    null,
+    ApplicationController,
     jsController,
     UsersController,
     null,
@@ -94,7 +94,7 @@ class DefaultComponents(context: Context) extends BuiltInComponentsFromContext(c
     StructureController,
     TimeBookingStatisticsController,
     UserFavoritesController,
-    null)
+    "")
 }
 
 class DefaultServices extends SystemServices {

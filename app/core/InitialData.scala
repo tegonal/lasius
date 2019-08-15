@@ -23,7 +23,7 @@ package core
 import models._
 import org.mindrot.jbcrypt.BCrypt
 import play.api.Logger
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import repositories._
 
 object InitialData extends MongoBasicRepositoryComponent {

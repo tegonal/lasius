@@ -22,7 +22,7 @@ package controllers
 
 import actors.ClientMessagingWebsocketActor
 import models._
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.mvc.Controller
 import repositories._

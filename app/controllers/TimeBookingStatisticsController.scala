@@ -24,7 +24,7 @@ import models._
 import org.joda.time._
 import play.api.mvc.Controller
 import play.api.Logger
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import repositories.{BookingStatisticRepository, MongoUserBookingStatisticsRepositoryComponent, UserBookingStatisticsRepositoryComponent}
 import BaseFormat._

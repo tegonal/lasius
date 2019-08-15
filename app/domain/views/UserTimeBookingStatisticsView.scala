@@ -27,7 +27,7 @@ import akka.persistence.query.PersistenceQuery
 import akka.stream.ActorMaterializer
 import models._
 import org.joda.time.{DateTime, Days, Duration, Interval}
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import repositories._
 
 import scala.concurrent.duration._

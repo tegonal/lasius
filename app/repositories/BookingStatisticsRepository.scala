@@ -23,7 +23,7 @@ package repositories
 import models._
 import models.BaseFormat._
 import org.joda.time.{DateTime, Duration}
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
 import reactivemongo.play.json.collection.JSONCollection
