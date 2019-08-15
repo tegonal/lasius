@@ -20,13 +20,14 @@
 \*                                                                           */
 package domain.views
 
+import actors._
 import akka.actor._
 import models._
-import repositories._
-import scala.concurrent.ExecutionContext.Implicits.global
-import actors._
-import scala.concurrent.duration._
 import org.joda.time.DateTime
+import repositories._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object CurrentTeamTimeBookingsView {
   
@@ -50,7 +51,7 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
     
   override def preStart() = {
     log.debug(s"CurrentTeamTimeBookingsView: preStart, register as listener, ${context.system}")
-    context.system.eventStream.subscribe(self, classOf[OutEvent])
+    context.system.eventStream.subscribe(this.self, classOf[OutEvent])
   }
   
   override def postStop() {
@@ -72,7 +73,7 @@ class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
         log.debug(s"loadInitialTeams: $teams")
       }
       else {
-        context.system.scheduler.scheduleOnce(1 second)(self ! Initialize)
+        context.system.scheduler.scheduleOnce(1 second)(this.self ! Initialize)
       }
     }
   }

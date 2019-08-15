@@ -20,27 +20,24 @@
 \*                                                                           */
 package repositories
 
-import scala.concurrent.ExecutionContext
-import play.api.libs.json._
-import scala.concurrent.Future
-import play.api.libs.iteratee.Enumerator
-import play.api.Logger
-import play.api.Play.current
 import com.tegonal.play.json.TypedId.BaseId
 import models.BaseEntity
+import play.api.libs.json._
+import play.api.Play.current
 import play.api.libs.json.Json.JsValueWrapper
 import play.modules.reactivemongo.ReactiveMongoApi
-import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
-import reactivemongo.api.commands._
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson._
+import reactivemongo.play.json.collection.JSONCollection
+import reactivemongo.play.json._
+import scala.concurrent.{ExecutionContext, Future}
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
 trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
-  def coll: JSONCollection
+  def coll: Future[JSONCollection]
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]]
 
@@ -53,8 +50,6 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
 
   def findFirst(sel: JsObject, skip: Int = 0)(implicit ctx: ExecutionContext): Future[Option[(T, BSONObjectID)]]
-
-  def findStream(sel: JsObject, skip: Int = 0, pageSize: Int = 0)(implicit ctx: ExecutionContext): Enumerator[TraversableOnce[(T, BSONObjectID)]]
 
   def findByIds(ids: Traversable[BSONObjectID], limit: Int)(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
 
@@ -69,18 +64,14 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
   self: BaseRepository[T, ID] =>
-  import play.modules.reactivemongo.json._
-  import play.modules.reactivemongo.json.collection._
 
   lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
-  def db = reactiveMongoApi.db
+  def db = reactiveMongoApi.database
 
-  lazy val bsonCollection: BSONCollection = db.collection(coll.name, coll.failoverStrategy)
+  lazy val bsonCollection: Future[BSONCollection] = db.flatMap(d => coll.map(c => d.collection(c.name, c.failoverStrategy)))
 
   def findIds(sel: JsObject): Future[Seq[BSONObjectID]] = {
-    val cursor = coll.find(sel, Json.obj()).cursor[JsObject]
-    val list = cursor.collect[Seq]()
-    list map (_ map (js => (js \ "_id").as[BSONObjectID]))
+    coll.flatMap(_.find(sel, Json.obj()).cursor[JsObject]().collect[Seq](Integer.MAX_VALUE, Cursor.FailOnError()).map(_.map(js => (js \ "_id").as[BSONObjectID])))
   }
 
   def findByIds(ids: Traversable[BSONObjectID], limit: Int = 0)(implicit ctx: ExecutionContext) = {
@@ -89,26 +80,25 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   }
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]] = {
-    coll.find(Json.obj("_id" -> id)).cursor[JsObject].headOption.map(_.map(js => (js.as[T], id)))
+    coll.flatMap(_.find(Json.obj("_id" -> id)).cursor[JsObject]().headOption.map(_.map(js => (js.as[T], id))))
   }
 
   def update(sel: JsObject, modifier: JsObject, upsert: Boolean = true)(implicit ctx: ExecutionContext): Future[Boolean] = {
-    coll.update(sel, modifier, upsert = upsert) map (_.ok)
+    coll.flatMap(_.update(sel, modifier, upsert = upsert).map(_.ok))
   }
 
   def update(doc: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
-    coll.save(doc) map (_.ok)
+    val json = format.writes(doc).as[JsObject]
+    coll.flatMap(_.insert(json).map(_.ok))
   }
 
   def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
     val json = format.writes(obj).as[JsObject]
-    coll.remove(json) map (_.ok)
+    coll.flatMap(_.remove(json).map(_.ok))
   }
 
   def removeById(id: ID)(implicit fact: ID => JsValueWrapper, ctx: ExecutionContext): Future[Boolean] = {
-    coll.remove(Json.obj("id" -> id)) map { result =>
-      result.ok
-    }
+    coll.flatMap(_.remove(Json.obj("id" -> id)).map(_.ok))
   }
 
   def insert(t: T)(implicit ctx: ExecutionContext): Future[BSONObjectID] = {
@@ -116,37 +106,27 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
     val obj = format.writes(t).as[JsObject]
     obj \ "_id" match {
       case _: JsUndefined =>
-        coll.insert(obj ++ Json.obj("_id" -> id))
-          .map { _ => id }
+        coll.flatMap(_.insert(obj ++ Json.obj("_id" -> id)).map(_ => id))
 
       case JsDefined(JsObject(Seq((_, JsString(oid))))) =>
-        coll.insert(obj).map { _ => BSONObjectID(oid) }
+        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case JsDefined(JsObject(Seq("$oid", JsString(oid)))) =>
-        coll.insert(obj).map { _ => BSONObjectID(oid) }
+        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case JsDefined(JsString(oid)) =>
-        coll.insert(obj).map { _ => BSONObjectID(oid) }
+        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case f => sys.error(s"Could not parse _id field: $f")
     }
   }
 
   def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]] = {
-
-    val cursor = coll.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]()
-    val l = if (limit != 0) cursor.collect[Traversable](limit) else cursor.collect[Traversable]()
-    l.map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID])))
+    coll.flatMap(_.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]().collect[Traversable](limit, Cursor.FailOnError()).map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID]))))
   }
 
   def findFirst(sel: JsObject, skip: Int = 0)(implicit ctx: ExecutionContext): Future[Option[(T, BSONObjectID)]] = {
     find(sel, 1, skip) map (_.headOption)
-  }
-
-  def findStream(sel: JsObject, skip: Int = 0, pageSize: Int = 0)(implicit ctx: ExecutionContext): Enumerator[TraversableOnce[(T, BSONObjectID)]] = {
-    val cursor = coll.find(sel).options(QueryOpts().skip(skip)).cursor[JsObject]()
-    val enum = if (pageSize != 0) cursor.enumerateBulks(pageSize) else cursor.enumerateBulks()
-    enum.map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID])))
   }
 
   def findById(id: ID)(implicit fact: ID => JsValueWrapper): Future[Option[T]] = {

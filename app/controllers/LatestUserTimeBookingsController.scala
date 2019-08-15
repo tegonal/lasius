@@ -20,18 +20,12 @@
 \*                                                                           */
 package controllers
 
-import play.api.mvc.Controller
-
-import models.UserId
-import play.api.mvc.Action
 import core.Global._
 import domain.views.LatestUserTimeBookingsView._
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.json._
 import models.FreeUser
+import play.api.mvc.Controller
+
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class LatestUserTimeBookingsController {
@@ -46,4 +40,4 @@ class LatestUserTimeBookingsController {
   }
 }
 
-object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent
+object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider

@@ -20,19 +20,16 @@
 \*                                                                           */
 package repositories
 
+import models._
+import models.BaseFormat.dateFormat
+import org.joda.time.DateTime
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
+import play.api.Logger
+import reactivemongo.play.json.collection.JSONCollection
+import repositories.MongoDBCommandSet._
 
 import scala.concurrent._
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
-import models._
-import play.api.Logger
-import org.joda.time.DateTime
-import repositories.MongoDBCommandSet._
-import reactivemongo.core.commands.LastError
-import akka.actor.Actor
-import reactivemongo.bson.BSONObjectID
 
 trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with PersistentUserViewRepository[Booking, BookingId] {
   def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]]
@@ -44,7 +41,7 @@ trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with P
 
 class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking, BookingId] with BookingHistoryRepository
   with MongoPeristentUserViewRepository[Booking, BookingId] {
-  def coll = db.collection[JSONCollection]("BookingHistory")
+  def coll = db.map(_.collection[JSONCollection]("BookingHistory"))
 
   def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
     val startEnd = Json.arr(

@@ -20,21 +20,20 @@
 \*                                                                           */
 package core
 
-import play.api.Logger
 import models._
+import org.mindrot.jbcrypt.BCrypt
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import repositories._
-import org.mindrot.jbcrypt.BCrypt
-import java.net.URL
 
 object InitialData extends MongoBasicRepositoryComponent {
   def init() = {
     Logger.debug("Initialize user data...")
-    userRepository.coll.drop map { r =>
+    userRepository.coll.flatMap(_.drop map { r =>
       initializeUsers()
     } recoverWith {
       case t => initializeUsers()
-    }
+    })
   }
 
   def initializeUsers() = {

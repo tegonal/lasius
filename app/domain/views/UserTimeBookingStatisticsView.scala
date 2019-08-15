@@ -20,24 +20,16 @@
 \*                                                                           */
 package domain.views
 
-import akka.persistence.PersistentView
-
+import actors.{ClientMessagingWebsocketActor, ClientReceiverComponent, DefaultClientReceiverComponent}
 import akka.actor._
-import domain.UserTimeBookingAggregate._
-import repositories._
-import actors.ClientMessagingWebsocketActor
-import play.api.libs.concurrent.Execution.Implicits._
+import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
+import akka.persistence.query.PersistenceQuery
+import akka.stream.ActorMaterializer
 import models._
-import org.joda.time.Days
-import org.joda.time.DateMidnight
-import org.joda.time.Duration
-import org.joda.time.DateTime
-import org.joda.time.LocalDate
-import org.joda.time.Interval
-import utils.DateTimeUtils._
-import actors.ClientReceiverComponent
-import actors.DefaultClientReceiverComponent
-import play.api.Logger
+import org.joda.time.{DateTime, Days, Duration, Interval}
+import play.api.libs.concurrent.Execution.Implicits._
+import repositories._
+
 import scala.concurrent.duration._
 
 object UserTimeBookingStatisticsView {
@@ -50,15 +42,27 @@ object UserTimeBookingStatisticsView {
 class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBookingStatisticsView(userId)
   with MongoUserBookingStatisticsRepositoryComponent with DefaultClientReceiverComponent
 
-class UserTimeBookingStatisticsView(userId: UserId) extends PersistentView with ActorLogging {
+class UserTimeBookingStatisticsView(userId: UserId) extends Actor with ActorLogging {
   self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent =>
-  import domain.UserTimeBookingAggregate._
   import domain.views.UserTimeBookingStatisticsView._
 
-  override val persistenceId = userId.value
-  override val viewId = userId.value + "-time-booking-statistics"
+  val persistenceId = userId.value
+  val viewId = userId.value + "-time-booking-statistics"
 
-  override def autoUpdateInterval = 1 second
+  def autoUpdateInterval = 1 second
+
+  implicit val materializer = ActorMaterializer()
+
+  val readJournal =
+    PersistenceQuery(context.system).readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
+
+  val journalSource = readJournal.eventsByPersistenceId(viewId, fromSequenceNr = 0L, toSequenceNr = Long.MaxValue)
+
+  override def preStart = {
+    journalSource.runForeach{ event =>
+      context.self ! event
+    }
+  }
 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>

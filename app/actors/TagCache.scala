@@ -21,11 +21,9 @@
 package actors
 
 import akka.actor._
+import core.Global
 import models._
 import shapeless._
-import core.Global
-import scala.reflect.runtime.universe._
-import scala.reflect.ClassTag
 
 object TagCache {  
   
@@ -44,7 +42,8 @@ trait TagCache extends Actor with ActorLogging {
   self: ClientReceiverComponent =>
     
     import TagCache._
-    import scala.reflect.runtime.universe._    
+
+    import scala.reflect.runtime.universe._
     
     var tagCache:Map[ProjectId, Map[Manifest[_], Set[BaseTag]]] = Map()
   

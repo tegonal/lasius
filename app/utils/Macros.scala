@@ -1,7 +1,7 @@
 package utils
 
+import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import language.experimental.macros
 
 object Macros {
   def inferImplicitsImpl[A: c.WeakTypeTag](c: Context): c.Expr[A] = {

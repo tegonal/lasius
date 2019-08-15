@@ -20,16 +20,8 @@
 \*                                                                           */
 package services
 
-import akka.actor.ActorLogging
-import akka.actor.Actor
-import akka.actor.ActorRef
-import domain.UserTimeBookingAggregate
-import akka.actor.Terminated
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import models.UserId
-import models.ProjectId
-import models.TagId
-import org.joda.time.DateTime
-import akka.actor.Props
 
 object UserService {
   case class StopUserView(userId: UserId)

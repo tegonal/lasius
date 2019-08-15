@@ -23,27 +23,28 @@ package core
 import actors.{LasiusSupervisorActor, TagCache}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.serialization.SerializationExtension
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import domain.LoginStateAggregate
 import domain.views.CurrentTeamTimeBookingsView
 import models._
 import play.api._
+import play.api.i18n.Lang
+import play.api.mvc.RequestHeader
 import play.api.mvc.Results._
-import play.api.mvc.{RequestHeader, _}
+import play.api.ApplicationLoader.Context
+import play.api.routing.Router
+import play.filters.HttpFiltersComponents
 import services.{TimeBookingViewService, _}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
-object Global
-    extends WithFilters(new play.modules.statsd.api.StatsdFilter())
-    with GlobalSettings {
-
+object Global extends ApplicationLoader {
   implicit val system = ActorSystem("lasius-actor-system")
   implicit val materializer = ActorMaterializer()
+  implicit val ec = system.dispatcher
+
   val systemUser = UserId("lasius-system")
   val supervisor = system.actorOf(LasiusSupervisorActor.props)
   val executionContext = system.dispatcher
@@ -59,9 +60,9 @@ object Global
   val latestUserTimeBookingsViewService = Await.result(supervisor ? LatestUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService = Await.result(supervisor ? TimeBookingStatisticsViewService.props, duration).asInstanceOf[ActorRef]
   val tagCache = Await.result(supervisor ? TagCache.props, duration).asInstanceOf[ActorRef]
-  val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]  
+  val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]
 
-  override def onStart(app: Application) {
+  def load(context: ApplicationLoader.Context): Application = {
     //move UpdateUserId from test to app if you want to use it, see remark on UpdateUserId.update before executing
     //implicit val serialization = SerializationExtension(system)
     //UpdateUserId.update("x.y", "x.z")
@@ -82,11 +83,15 @@ object Global
     Logger.debug(s"Start pluginHandler:$pluginHandler")
     pluginHandler ! PluginHandler.Startup
 
-    ()
+    new DefaultGlobal(context).application
   }
 
-  override def onError(request: RequestHeader, ex: Throwable) = {
+  def onError(request: RequestHeader, ex: Throwable) = {
     //Airbrake.notify(request, ex)
-    Future.successful(InternalServerError(views.html.errorPage(ex)))
+    Future.successful(InternalServerError(views.html.errorPage(ex)(Lang.defaultLang)))
   }
+}
+
+class DefaultGlobal(context: Context) extends BuiltInComponentsFromContext(context) with HttpFiltersComponents {
+  lazy val router = Router.empty
 }

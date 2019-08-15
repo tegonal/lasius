@@ -20,12 +20,10 @@
 \*                                                                           */
 package controllers
 
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc._
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.util.{ Success, Failure }
-import repositories.SecurityRepositoryComponent
-import repositories.MongoSecurityRepositoryComponent
+import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
 
 trait UsersController {
   // Cake pattern
@@ -48,4 +46,4 @@ trait UsersController {
   }
 }
 
-object UsersController extends UsersController with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent
+object UsersController extends UsersController with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent with DefaultCacheProvider

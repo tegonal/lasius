@@ -20,21 +20,15 @@
 \*                                                                           */
 package models
 
+import java.net.{URI, URL}
+
 import com.tegonal.play.json.TypedId._
-import reactivemongo.bson.BSONObjectID
-import play.api.libs.json._
-import scala.util.Success
-import org.joda.time.Duration
-import org.joda.time.DateMidnight
-import org.joda.time.DateTime
 import models.BaseFormat.CompositeBaseId
-import org.joda.time.LocalDate
-import reactivemongo.bson.BSONDateTime
-import reactivemongo.bson.BSONHandler
-import org.joda.time.DateTimeFieldType
-import scala.util.Try
-import java.net.URL
-import java.net.URI
+import org.joda.time.{DateTime, Duration}
+import play.api.libs.json._
+import reactivemongo.bson.{BSONDateTime, BSONHandler, BSONObjectID}
+
+import scala.util.Success
 
 trait BaseEntity[I <: BaseId[_]] {
   val id: I
@@ -95,6 +89,11 @@ object BaseFormat {
     def read(time: BSONDateTime) = new DateTime(time.value)
     def write(jdtime: DateTime) = BSONDateTime(jdtime.getMillis)
   }
+
+  val defaultTypeFormat = (__ \ "type").format[String]
+
+  val dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
+  implicit val dateFormat = Format[DateTime](JodaReads.jodaDateReads(dateTimePattern), JodaWrites.jodaDateWrites(dateTimePattern))
 }
 
 class BSONObjectIdTypedIdFormat[I <: BaseId[BSONObjectID]](implicit fact: Factory[BSONObjectID, I]) extends Format[I] {

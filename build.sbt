@@ -1,6 +1,12 @@
+import play.sbt.routes.RoutesKeys
+
 name := """lasius"""
 
 version := "1.1-SNAPSHOT"
+
+lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
+  RoutesKeys.routesImport += "binders.Binders._"
+)
 
 scalaVersion := "2.12.8"
 
@@ -19,8 +25,10 @@ val reactiveMongoVer = "0.18.4-play27"
 
 libraryDependencies ++= Seq(
     "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVer,
+    "org.reactivemongo" %% "reactivemongo-play-json" % reactiveMongoVer,
     "com.tegonal" %% "play-json-typedid" % "1.0.2",
     "org.julienrf" %% "play-json-derived-codecs" % "6.0.0",
+    "com.typesafe.play" %% "play-json-joda" % "2.7.3",
     "com.typesafe.akka" %% "akka-persistence" % akkaVs  withSources(),
     "com.typesafe.akka" %% "akka-persistence-query" % akkaVs  withSources(),
     "com.typesafe.akka" %% "akka-slf4j" % akkaVs,

@@ -20,12 +20,10 @@
 \*                                                                           */
 package domain
 
-import models.UserId
-import akka.persistence._
 import akka.actor._
 import akka.event.LoggingReceive
-import models.PersistetEvent
-import models._
+import akka.persistence._
+import models.{PersistetEvent, UserId, _}
 
 object LoginStateAggregate {
   import AggregateRoot._

@@ -20,21 +20,19 @@
 \*                                                                           */
 package controllers
 
+import actors.TagCache.{CachedTags, GetTags}
+import akka.pattern.ask
+import akka.util.Timeout
+import core.Global
+import helpers.UserHelper
+import models._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
 import play.api.mvc.Controller
 import repositories._
-import play.api.mvc.Action
-import play.api.libs.json._
-import play.api.libs.concurrent.Execution.Implicits._
-import models._
-import helpers.UserHelper
+
 import scala.concurrent.Future
-import actors.TagCache.GetTags
-import core.Global
-import akka.pattern.{ ask, pipe }
 import scala.concurrent.duration._
-import akka.util.Timeout
-import scala.concurrent.Await
-import actors.TagCache.CachedTags
 
 class StructureController extends UserHelper {
   self: Controller with BasicRepositoryComponent with Security =>
@@ -75,4 +73,4 @@ class StructureController extends UserHelper {
   }
 }
 
-object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent
+object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider

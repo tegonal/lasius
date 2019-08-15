@@ -20,10 +20,11 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
 import java.net.URL
+
 import models.BaseFormat._
 import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
 
 case class JiraConfigId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId
 case class JiraSettings(checkFrequency: Long)

@@ -20,15 +20,13 @@
 \*                                                                           */
 package repositories
 
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent._
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
 import models._
-import models.BaseFormat._
-import repositories.MongoDBCommandSet._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
 import play.api.Logger
+import reactivemongo.play.json.collection.JSONCollection
+
+import scala.concurrent._
 
 trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
 
@@ -36,7 +34,7 @@ trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
 }
 
 class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, JiraConfigId] with JiraConfigRepository {
-  def coll = db.collection[JSONCollection]("JiraConfig")
+  def coll = db.map(_.collection[JSONCollection]("JiraConfig"))
 
   def getJiraConfigurations(): Future[Seq[JiraConfig]] = {
     find(Json.obj()) map { configs =>

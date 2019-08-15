@@ -3,9 +3,7 @@ package utils
 object StringUtils {
   implicit class ExString(self: String) {
 
-    def quote: String = {
-      return "\"" + self + "\""
-    }
+    def quote: String = "\"" + self + "\""
 
   }
 

@@ -1,21 +1,15 @@
 package domain.views
 
+import actors.{ClientReceiverComponent, DefaultClientReceiverComponent}
+import akka.actor.{Actor, ActorLogging, Props}
+import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
+import akka.persistence.query.PersistenceQuery
+import akka.stream.ActorMaterializer
 import models._
-import akka.actor.Props
-import akka.actor.ActorLogging
-import akka.actor.actorRef2Scala
-import actors.ClientMessagingWebsocketActor
-import models.CurrentUserTimeBooking
-import org.joda.time.Duration
 import org.joda.time.DateTime
-import org.joda.time.Interval
-import scala.concurrent.duration._
-import actors.ClientReceiverComponent
-import actors.DefaultClientReceiverComponent
-import akka.persistence.PersistentView
-import scala.collection.SortedSet
 import utils.DateTimeUtils._
-import play.api.libs.json._
+
+import scala.concurrent.duration._
 
 object LatestUserTimeBookingsView {
   case class GetLatestTimeBooking(userId: UserId, maxHistory: Int)
@@ -28,13 +22,19 @@ class DefaultLatestUserTimeBookingsView(userId: UserId)
   extends LatestUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
-class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
+class LatestUserTimeBookingsView(userId: UserId) extends Actor with ActorLogging {
   self: ClientReceiverComponent =>
-  import domain.UserTimeBookingAggregate._
   import domain.views.LatestUserTimeBookingsView._
 
-  override val persistenceId = userId.value
-  override val viewId = userId.value + "-latest-time-bookings"
+  implicit val materializer = ActorMaterializer()
+
+  val persistenceId = userId.value
+  val viewId = userId.value + "-latest-time-bookings"
+
+  val readJournal =
+    PersistenceQuery(context.system).readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
+
+  val journalSource = readJournal.eventsByPersistenceId(viewId, fromSequenceNr = 0L, toSequenceNr = Long.MaxValue)
 
   val oldDateTime: DateTime = DateTime.parse("2000-01-01")
   val maxInternalHistory = 1000
@@ -47,7 +47,13 @@ class LatestUserTimeBookingsView(userId: UserId) extends PersistentView with Act
 
   var state: TimeBookingsHistory = TimeBookingsHistory()
 
-  override def autoUpdateInterval = 100 millis
+  def autoUpdateInterval = 100 millis
+
+  override def preStart = {
+    journalSource.runForeach{ event =>
+      context.self ! event
+    }
+  }
 
   private def getStartTime(booking: BookingStub): DateTime = {
     state.startTimeMap.get(booking).getOrElse(oldDateTime)

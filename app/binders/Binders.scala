@@ -20,15 +20,16 @@
 \*                                                                           */
 package binders
 
-import org.joda.time.format._
-import org.joda.time._
-import play.api.mvc._
+import java.text.{ParseException, SimpleDateFormat}
+
 import com.tegonal.play.json.TypedId._
-import java.text.SimpleDateFormat
 import models._
-import java.text.ParseException
 import models.BaseFormat.BaseBSONObjectId
+import org.joda.time._
+import org.joda.time.format._
+import play.api.mvc._
 import reactivemongo.bson.BSONObjectID
+
 import scala.util._
 
 object Binders {

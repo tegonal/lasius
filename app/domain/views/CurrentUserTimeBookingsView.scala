@@ -20,20 +20,15 @@
 \*                                                                           */
 package domain.views
 
-import akka.persistence.PersistentView
+import actors.{ClientReceiverComponent, DefaultClientReceiverComponent}
+import akka.actor.{Actor, ActorLogging, Props}
+import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
+import akka.persistence.query.PersistenceQuery
+import akka.stream.ActorMaterializer
+import models.{CurrentUserTimeBooking, _}
+import org.joda.time.{DateTime, Duration, Interval}
 
-import models._
-import akka.actor.Props
-import akka.actor.ActorLogging
-import akka.actor.actorRef2Scala
-import actors.ClientMessagingWebsocketActor
-import models.CurrentUserTimeBooking
-import org.joda.time.Duration
-import org.joda.time.DateTime
-import org.joda.time.Interval
 import scala.concurrent.duration._
-import actors.ClientReceiverComponent
-import actors.DefaultClientReceiverComponent
 
 object CurrentUserTimeBookingsView {
 
@@ -47,22 +42,33 @@ class DefaultCurrentUserTimeBookingsView(userId: UserId)
   extends CurrentUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
-class CurrentUserTimeBookingsView(userId: UserId) extends PersistentView with ActorLogging {
+class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLogging {
   self: ClientReceiverComponent =>
-  import domain.UserTimeBookingAggregate._
   import domain.views.CurrentUserTimeBookingsView._
 
-  override val persistenceId = userId.value
-  override val viewId = userId.value + "-current-time-bookings"
+  implicit val materializer = ActorMaterializer()
+
+  val persistenceId = userId.value
+  val viewId = userId.value + "-current-time-bookings"
+
+  val readJournal =
+    PersistenceQuery(context.system).readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
+
+  val journalSource = readJournal.eventsByPersistenceId(viewId, fromSequenceNr = 0L, toSequenceNr = Long.MaxValue)
 
   case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
-  import domain.UserTimeBookingAggregate._
 
   var state: CurrentTimeBookings = CurrentTimeBookings(None, DateTime.now, Map())
 
-  override def autoUpdateInterval = 100 millis
+  def autoUpdateInterval = 100 millis
 
-  val receive: Receive = {
+  override def preStart = {
+    journalSource.runForeach{ event =>
+      context.self ! event
+    }
+  }
+
+  val receive = {
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       val day = e.booking.start.withTimeAtStartOfDay

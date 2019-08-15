@@ -27,10 +27,7 @@ import akka.actor._
 import akka.persistence._
 import models._
 import org.joda.time.DateTime
-import repositories.{
-  MongoUserBookingHistoryRepositoryComponent,
-  UserBookingHistoryRepositoryComponent
-}
+import repositories.{MongoUserBookingHistoryRepositoryComponent, UserBookingHistoryRepositoryComponent}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

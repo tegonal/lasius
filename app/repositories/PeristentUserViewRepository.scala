@@ -20,18 +20,12 @@
 \*                                                                           */
 package repositories
 
-import play.modules.reactivemongo.json._
-import play.modules.reactivemongo.json.collection._
-import models._
-import play.api.libs.json.Format
-import scala.concurrent.ExecutionContext
 import com.tegonal.play.json.TypedId.BaseId
-import scala.concurrent.Future
-import org.joda.time.DateTime
-import play.api.libs.json._
-import reactivemongo.core.commands._
-import repositories.MongoDBCommandSet._
-import play.api.Logger
+import models._
+import play.api.libs.json.{Format, _}
+import reactivemongo.play.json._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait PersistentUserViewRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
   def deleteByUser(userId: UserId)(implicit ctx: ExecutionContext, format: Format[T]): Future[Boolean]
@@ -42,7 +36,7 @@ trait MongoPeristentUserViewRepository[T <: BaseEntity[ID], ID <: BaseId[_]] ext
 
   def deleteByUser(userId: UserId)(implicit ctx: ExecutionContext, format: Format[T]): Future[Boolean] = {
     val sel = Json.obj("userId" -> userId)
-    coll.remove(sel) map (_.ok)
+    coll.flatMap(_.remove(sel).map(_.ok))
   }
 
 }

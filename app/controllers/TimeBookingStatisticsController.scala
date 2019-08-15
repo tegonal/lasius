@@ -20,20 +20,16 @@
 \*                                                                           */
 package controllers
 
-import play.api.mvc.Controller
-import repositories.UserBookingStatisticsRepositoryComponent
 import models._
-import play.api.mvc.Action
-import play.api.Logger
 import org.joda.time._
-import play.api.libs.json._
+import play.api.mvc.Controller
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
-import repositories.MongoUserBookingStatisticsRepositoryComponent
-import repositories.BookingStatisticRepository
+import play.api.libs.json._
+import repositories.{BookingStatisticRepository, MongoUserBookingStatisticsRepositoryComponent, UserBookingStatisticsRepositoryComponent}
+import BaseFormat._
+
 import scala.concurrent.Future
-import repositories.BookingByCategoryRepository
-import utils.DateTimeUtils._
-import play.api.mvc.Result
 
 trait TimeBookingStatisticsController {
   self: Controller with UserBookingStatisticsRepositoryComponent with Security =>
@@ -99,4 +95,4 @@ trait TimeBookingStatisticsController {
   }
 }
 
-object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent
+object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider

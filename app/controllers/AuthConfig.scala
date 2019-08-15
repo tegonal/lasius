@@ -20,19 +20,14 @@
 \*                                                                           */
 package controllers
 
-import play.api._
-
-import play.api.mvc._
-import play.api.libs.json._
-import models._
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import play.api.mvc.Result
-import play.api.mvc.RequestHeader
-import repositories.SecurityRepositoryComponent
 import helpers.UserHelper
-import repositories.MongoSecurityRepositoryComponent
+import models._
+import play.api.libs.json._
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
+import play.api.mvc.{RequestHeader, Result, _}
+import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthConfig {
   /**

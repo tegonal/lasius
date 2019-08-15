@@ -20,18 +20,16 @@
 \*                                                                           */
 package repositories
 
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent._
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
 import models._
-import reactivemongo.core.commands.LastError
-import play.api.Logger
-import org.joda.time.DateTime
-import repositories.MongoDBCommandSet._
 import models.BaseFormat._
-import org.joda.time.Duration
+import org.joda.time.{DateTime, Duration}
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
+import play.api.Logger
+import reactivemongo.play.json.collection.JSONCollection
+import repositories.MongoDBCommandSet._
+
+import scala.concurrent._
 
 trait BookingStatisticRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]] extends BaseRepository[M, I]
   with PersistentUserViewRepository[M, I] {
@@ -79,7 +77,7 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
 }
 
 class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[BookingByProject, BookingByProjectId] with BookingByProjectRepository {
-  def coll = db.collection[JSONCollection]("BookingByProject")
+  def coll = db.map(_.collection[JSONCollection]("BookingByProject"))
 
   def getUniqueContraint(model: BookingByProject): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "projectId" -> model.projectId)
@@ -87,7 +85,7 @@ class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[Bo
 }
 
 class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[BookingByCategory, BookingByCategoryId] with BookingByCategoryRepository {
-  def coll = db.collection[JSONCollection]("BookingByCategory")
+  def coll = db.map(_.collection[JSONCollection]("BookingByCategory"))
 
   def getUniqueContraint(model: BookingByCategory): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "categoryId" -> model.categoryId)
@@ -95,7 +93,7 @@ class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[B
 }
 
 class BookingByTagMongoRepository extends BookingStatisticMongoRepository[BookingByTag, BookingByTagId] with BookingByTagRepository {
-  def coll = db.collection[JSONCollection]("BookingByTag")
+  def coll = db.map(_.collection[JSONCollection]("BookingByTag"))
 
   def getUniqueContraint(model: BookingByTag): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "tagId" -> model.tagId)

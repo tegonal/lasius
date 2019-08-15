@@ -20,9 +20,9 @@
 \*                                                                           */
 package actors
 
+import actors.ControlCommands._
 import akka.actor._
 import models._
-import actors.ControlCommands._
 
 object ControlCommands {
   case class SendToClient(senderUserId: UserId, event: OutEvent, receivers: List[UserId] = Nil)

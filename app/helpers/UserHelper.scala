@@ -20,14 +20,10 @@
 \*                                                                           */
 package helpers
 
-import models.Subject
-import models.User
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
-import play.api.Logger
-import repositories.UserRepository
+import models.{Subject, User, UserId}
 import repositories.SecurityRepositoryComponent
-import models.UserId
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait UserHelper {
   self: SecurityRepositoryComponent =>

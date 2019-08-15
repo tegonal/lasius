@@ -20,36 +20,32 @@
 \*                                                                           */
 package controllers
 
-import play.api._
-import play.api.mvc._
-import models._
-import models.Events._
-import scala.concurrent.Future
-import actors.ClientMessagingWebsocketActor
-import play.api.Play.current
-import services.UserService.StartUserTimeBookingView
-import core.Global._
-import repositories.SecurityRepositoryComponent
-import repositories.UserRepository
-import play.api.libs.concurrent.Execution.Implicits._
-import org.mindrot.jbcrypt.BCrypt
-import play.api.libs.json._
-import repositories.MongoSecurityRepositoryComponent
-import domain.LoginStateAggregate
 import java.util.UUID
-import play.api.cache.Cache
+
+import actors.ClientMessagingWebsocketActor
+import core.Global._
+import models._
+import org.mindrot.jbcrypt.BCrypt
+import play.api._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
 import play.api.libs.streams._
+import play.api.mvc._
 import play.api.mvc.WebSocket.MessageFlowTransformer
+import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
+import Events._
+
+import scala.concurrent.Future
 
 class ApplicationController {
-  self: Controller with SecurityRepositoryComponent with Security =>
+  self: Controller with SecurityRepositoryComponent with Security with CacheAware =>
     
     implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
     
     lazy val appConfig = loadApplicationConfig()
     lazy val playConfig = Play.current.configuration
-    
-    private def loadApplicationConfig() = {     
+
+    private def loadApplicationConfig() = {
       val ssl = playConfig.getBoolean("lasius.use_ssl").getOrElse(false)
       val title = playConfig.getString("lasius.title").getOrElse("Lasius")
       val instance = playConfig.getString("lasius.instance").getOrElse("Dev")
@@ -91,7 +87,7 @@ class ApplicationController {
       case Left(user) => {
         Logger.debug(s"Store token for user: $user")
         val uuid = UUID.randomUUID.toString
-        Cache.set(uuid, user.id)
+        cache.set(uuid, user.id)
 
         loginStateAggregate ! UserLoggedIn(user.id)
 
@@ -127,7 +123,7 @@ class ApplicationController {
 
   def doLogout(subject: Subject) = {
     Logger.debug(s"Remove token from cache: ${subject.token}")
-    Cache.remove(subject.token)
+    cache.remove(subject.token)
 
     loginStateAggregate ! UserLoggedOut(subject.userId)
 
@@ -150,3 +146,4 @@ object ApplicationController extends ApplicationController
   with MongoSecurityRepositoryComponent
   with Security
   with DefaultSecurityComponent
+  with DefaultCacheProvider

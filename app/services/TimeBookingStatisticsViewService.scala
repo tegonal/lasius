@@ -20,19 +20,11 @@
 \*                                                                           */
 package services
 
-import akka.actor.ActorLogging
-import akka.actor.Actor
-import akka.actor.ActorRef
-import domain.UserTimeBookingAggregate
-import akka.actor.Terminated
-import models.UserId
-import models.ProjectId
-import models.TagId
-import org.joda.time.DateTime
 import akka.actor.Props
-import services.UserService.StartUserTimeBookingView
 import domain.views.UserTimeBookingStatisticsView
 import domain.views.UserTimeBookingStatisticsView.Ack
+import models.UserId
+import services.UserService.StartUserTimeBookingView
 
 object TimeBookingStatisticsViewService {
 
@@ -40,8 +32,6 @@ object TimeBookingStatisticsViewService {
 }
 
 class TimeBookingStatisticsViewService extends UserService[StartUserTimeBookingView] {
-
-  import domain.UserTimeBookingAggregate._
 
   def processCommand: Receive = {
     case Ack =>

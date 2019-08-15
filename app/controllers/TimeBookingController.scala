@@ -20,17 +20,14 @@
 \*                                                                           */
 package controllers
 
-import play.api.mvc.Controller
-
-import services.TimeBookingViewService
+import core.Global._
+import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
-import play.api.mvc.Action
-import domain.UserTimeBookingAggregate._
-import akka.actor.ActorRef
-import core.Global._
+import play.api.mvc.Controller
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
+
 import scala.concurrent.Future
 
 class TimeBookingController {
@@ -102,4 +99,4 @@ class TimeBookingController {
   }
 }
 
-object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent
+object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider

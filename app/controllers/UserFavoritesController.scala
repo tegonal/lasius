@@ -20,13 +20,12 @@
 \*                                                                           */
 package controllers
 
+import actors.ClientMessagingWebsocketActor
+import models._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
 import play.api.mvc.Controller
 import repositories._
-import models._
-import play.api.libs.json._
-import play.api.mvc.Action
-import play.api.libs.concurrent.Execution.Implicits._
-import actors.ClientMessagingWebsocketActor
 
 class UserFavoritesController {
   self: Controller with UserDataRepositoryComponent with Security =>
@@ -61,4 +60,4 @@ class UserFavoritesController {
   }
 }
 
-object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent with Security with DefaultSecurityComponent
+object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider

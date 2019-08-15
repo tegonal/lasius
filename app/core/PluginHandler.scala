@@ -21,14 +21,11 @@
 package core
 
 import akka.actor._
-import repositories._
-import scala.concurrent.ExecutionContext.Implicits.global
-import services.JiraConfiguration
-import services.OAuthAuthentication
-import actors.scheduler.jira.JiraTagParseScheduler
-import actors.scheduler.jira.JiraTagParseScheduler._
-import play.api.Play
 import core.LoginHandler.InitializeUserViews
+import play.api.Play
+import repositories._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object PluginHandler {
   def props(): Props = Props(classOf[DefaultPluginHandler])
@@ -45,8 +42,6 @@ trait PluginHandler extends Actor with ActorLogging {
   self: BasicRepositoryComponent =>
   import PluginHandler._
 
-  val jiraTagParseScheduler = context.actorOf(JiraTagParseScheduler.props)
-
   log.debug(s"PluginHandler started")
 
   val receive: Receive = {
@@ -54,13 +49,11 @@ trait PluginHandler extends Actor with ActorLogging {
       log.debug(s"PluginHandler startup")
       initialize
     case Shutdown =>
-    jiraTagParseScheduler ! JiraTagParseScheduler.StopAllSchedulers
     case e =>
       log.warning(s"Received unknown event:$e")
   }
 
   def initialize = {
-    initializeJiraPlugin
     initializeUserViews
   }
 
@@ -73,24 +66,6 @@ trait PluginHandler extends Actor with ActorLogging {
       userRepository.findAll() foreach { users =>
         log.debug(s"findAllUsers:$users")
         users.foreach(user => Global.loginHandler ! InitializeUserViews(user.id))
-      }
-    }
-  }
-
-  def initializeJiraPlugin = {
-    log.debug(s"PluginHandler initializeJiraPlugin:$jiraConfigRepository")
-    //start jira parse scheduler for every project attached to a jira configuration
-    jiraConfigRepository.getJiraConfigurations() map { s =>
-      log.debug(s"Got jira configs:$s")
-      s.map { config =>
-        log.debug(s"Start Jira Scheduler for config:$config")
-        val jiraConfig = JiraConfiguration(config.baseUrl.toString)
-        val auth = OAuthAuthentication(config.auth.consumerKey, config.auth.privateKey, config.auth.accessToken)
-        
-        config.projects.foreach { proj =>
-          log.debug(s"Start parsing for the following configuration:$jiraConfig - $proj")
-          jiraTagParseScheduler ! StartScheduler(jiraConfig, config.settings, proj.settings, auth, proj.projectId)
-        }
       }
     }
   }

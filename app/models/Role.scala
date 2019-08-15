@@ -21,7 +21,6 @@
 package models
 
 import play.api.libs.json._
-import play.api.Logger
 
 sealed trait Role
 case object FreeUser extends Role

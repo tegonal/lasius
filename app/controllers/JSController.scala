@@ -20,52 +20,45 @@
 \*                                                                           */
 package controllers
 
-import play.api.Play.current
-import play.api.cache.Cached
-import play.api.mvc.Action
-import play.api.mvc.Controller
+import play.api.mvc._
 import play.api.routing.JavaScriptReverseRouter
+import play.mvc.Http.MimeTypes
 
-object JSController extends Controller {
+class JSController extends Controller {
 
   /**
    * Returns the JavaScript router that the client can use for "type-safe" routes.
    * Uses browser caching; set duration (in seconds) according to your release cycle.
-   * @param varName The name of the global variable, defaults to `jsRoutes`
    */
-  def jsRoutes(varName: String = "jsRoutes") =
-    Cached(_ => "jsRoutes", duration = 86400) {
-      Action { implicit request =>
-        import routes.javascript._
-        Ok(
-          JavaScriptReverseRouter("jsRoutes")(
-            ApplicationController.index,
-            ApplicationController.login,
-            ApplicationController.logout,
-            ApplicationController.messagingSocket,
-            ApplicationController.config,
-            CurrentUserTimeBookingsController.getCurrentTimeBooking,
-            CurrentTeamTimeBookingsController.getTeamTimeBooking,
-            LatestUserTimeBookingsController.getLatestTimeBooking,
-            StructureController.getCategories,
-            TimeBookingController.add,
-            TimeBookingController.changeStart,
-            TimeBookingController.edit,
-            TimeBookingController.pause,
-            TimeBookingController.remove,
-            TimeBookingController.resume,
-            TimeBookingController.start,
-            TimeBookingController.stop,
-            TimeBookingHistoryController.getTimeBookingHistory,
-            TimeBookingHistoryController.getTimeBookingHistoryByRange,
-            TimeBookingHistoryController.exportTimeBookingHistory,
-            TimeBookingHistoryController.exportTimeBookingHistoryByRange,
-            TimeBookingStatisticsController.getAggregatedStatistics,
-            TimeBookingStatisticsController.getStatistics,
-            UserFavoritesController.addFavorite,
-            UserFavoritesController.getFavorites,
-            UserFavoritesController.removeFavorite,
-            UsersController.authUser)).as(JAVASCRIPT)
-      }
-    }
+  def javascriptRoutes = Action { implicit request =>
+    Ok(
+      JavaScriptReverseRouter("jsRoutes")(
+        routes.javascript.ApplicationController.index,
+        routes.javascript.ApplicationController.login,
+        routes.javascript.ApplicationController.logout,
+        routes.javascript.ApplicationController.messagingSocket,
+        routes.javascript.ApplicationController.config,
+        routes.javascript.CurrentUserTimeBookingsController.getCurrentTimeBooking,
+        routes.javascript.CurrentTeamTimeBookingsController.getTeamTimeBooking,
+        routes.javascript.LatestUserTimeBookingsController.getLatestTimeBooking,
+        routes.javascript.StructureController.getCategories,
+        routes.javascript.TimeBookingController.add,
+        routes.javascript.TimeBookingController.changeStart,
+        routes.javascript.TimeBookingController.edit,
+        routes.javascript.TimeBookingController.pause,
+        routes.javascript.TimeBookingController.remove,
+        routes.javascript.TimeBookingController.resume,
+        routes.javascript.TimeBookingController.start,
+        routes.javascript.TimeBookingController.stop,
+        routes.javascript.TimeBookingHistoryController.getTimeBookingHistory,
+        routes.javascript.TimeBookingHistoryController.getTimeBookingHistoryByRange,
+        routes.javascript.TimeBookingHistoryController.exportTimeBookingHistory,
+        routes.javascript.TimeBookingHistoryController.exportTimeBookingHistoryByRange,
+        routes.javascript.TimeBookingStatisticsController.getAggregatedStatistics,
+        routes.javascript.TimeBookingStatisticsController.getStatistics,
+        routes.javascript.UserFavoritesController.addFavorite,
+        routes.javascript.UserFavoritesController.getFavorites,
+        routes.javascript.UserFavoritesController.removeFavorite,
+        routes.javascript.UsersController.authUser)).as(MimeTypes.JAVASCRIPT)
+  }
 }

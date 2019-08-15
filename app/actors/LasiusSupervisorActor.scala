@@ -20,16 +20,12 @@
 \*                                                                           */
 package actors
 
-import akka.actor.Actor
-import akka.actor.Props
-import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy
-import akka.actor.actorRef2Scala
-import scala.concurrent.duration.DurationInt
+import akka.actor.{actorRef2Scala, Actor, Props}
      
 class LasiusSupervisorActor extends Actor {
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
+
   import scala.concurrent.duration._
  
   override val supervisorStrategy =

@@ -20,18 +20,17 @@
 \*                                                                           */
 package controllers
 
-import play.api.mvc.Controller
-import repositories._
-import org.joda.time._
-import play.api.mvc.Action
-import play.api.libs.json._
-import play.api.libs.concurrent.Execution.Implicits._
-import play.api.Logger
-import models._
-import utils.StringUtils._
-import org.joda.time.format.DateTimeFormat
 import java.text.DecimalFormat
-import play.api.mvc.Result
+
+import models._
+import org.joda.time._
+import org.joda.time.format.DateTimeFormat
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
+import play.api.Logger
+import play.api.mvc.{Controller, Result}
+import repositories._
+import utils.StringUtils._
 
 object CSVHelper {
   val CSV_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss"
@@ -81,14 +80,12 @@ class TimeBookingHistoryController {
   }
 
   def exportTimeBookingHistory(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) { implicit subject => implicit request => {
-    import controllers.CSVHelper._
 
     bookingHistoryRepository.findByUserIdAndRange(Some(subject.userId), from, to) map ( bookingsToCSV )
     }
   }
 
   def exportTimeBookingHistoryByRange(from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) { implicit subject => implicit request => {
-    import controllers.CSVHelper._
 
     bookingHistoryRepository.findByUserIdAndRange(None, from, to) map ( bookingsToCSV )
   }
@@ -97,8 +94,8 @@ class TimeBookingHistoryController {
   private def bookingsToCSV: Traversable[Booking] => Result = { bookings =>
     import controllers.CSVHelper._
     val headers = Seq("User", "Category", "Project", "Tags", "Start", "End", "Comment", "Amount").mkString(",")
-    val content = bookings.map(_.toCSV).mkString("\n");
-    val csv = headers + "\n" + content;
+    val content = bookings.map(_.toCSV).mkString("\n")
+    val csv = headers + "\n" + content
 
     Ok(csv).withHeaders(
       "Content-Type" -> "text/csv",
@@ -106,5 +103,5 @@ class TimeBookingHistoryController {
   }
 }
 
-object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent {
+object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider {
 }

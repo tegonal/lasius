@@ -20,14 +20,10 @@
 \*                                                                           */
 package core
 
-import akka.persistence._
 import akka.actor._
-import services._
-import domain._
-import domain.LoginStateAggregate._
-import models._
-import core.Global._
 import akka.event.EventStream
+import core.Global._
+import models._
 
 object LoginHandler {
 
@@ -44,7 +40,6 @@ object LoginHandler {
 class LoginHandler extends Actor with ActorLogging {
 
   import domain.UserTimeBookingAggregate._
-  import domain.LoginStateAggregate._
   import LoginHandler._
   import services.UserService._
 

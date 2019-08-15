@@ -20,9 +20,8 @@
 \*                                                                           */
 package domain
 
-import akka.persistence._
 import akka.actor._
-import play.api.libs.json.Format
+import akka.persistence._
 import models.PersistetEvent
 
 object AggregateRoot {

@@ -20,10 +20,9 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
-
 import models.BaseFormat._
 import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
 
 case class TeamId(value: BSONObjectID = BSONObjectID.generate) extends BaseBSONObjectId {
 }

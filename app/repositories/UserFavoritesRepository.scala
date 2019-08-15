@@ -20,14 +20,13 @@
 \*                                                                           */
 package repositories
 
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent._
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
 import models._
-import models.BaseFormat._
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json._
+import reactivemongo.play.json.collection.JSONCollection
 import repositories.MongoDBCommandSet._
+
+import scala.concurrent._
 
 trait UserFavoritesRepository extends BaseRepository[UserFavorites, UserId] {
   def getByUser(userId: UserId): Future[UserFavorites]
@@ -38,7 +37,7 @@ trait UserFavoritesRepository extends BaseRepository[UserFavorites, UserId] {
 }
 
 class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavorites, UserId] with UserFavoritesRepository {
-  def coll = db.collection[JSONCollection]("Favorites")
+  def coll = db.map(_.collection[JSONCollection]("Favorites"))
 
   def getByUser(userId: UserId): Future[UserFavorites] = {
     findById(userId) map { favorites =>

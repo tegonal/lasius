@@ -20,16 +20,11 @@
 \*                                                                           */
 package models
 
+import julienrf.json.derived
+import org.joda.time.{DateTime, Duration}
 import play.api.libs.json._
-import play.api.mvc.WebSocket.FrameFormatter
-import reactivemongo.bson.BSONObjectID
-import julienrf.variants.Variants
-import org.joda.time.Duration
-import models.BaseFormat._
-import org.joda.time.DateTime
-import scala.collection.SortedSet
-import play.api.libs.json.Json.JsValueWrapper
-import scala.util._
+import BaseFormat._
+import play.api.mvc.WebSocket.MessageFlowTransformer
 
 sealed trait PersistetEvent extends Serializable
 
@@ -50,11 +45,8 @@ sealed trait InEvent
 
 case class HelloServer(client: String) extends InEvent
 
-object InEvent {
-  implicit val inEventFormat: Format[InEvent] = Variants.format[InEvent]("type")
-}
-
 sealed trait OutEvent
+
 case object HelloClient extends OutEvent
 case class UserLoggedOut(userId: UserId) extends OutEvent with PersistetEvent
 case class CurrentUserTimeBooking(userId: UserId, day: DateTime, booking: Option[Booking], totalBySameBooking: Option[Duration], totalByDay: Duration)
@@ -85,17 +77,19 @@ case class LatestTimeBooking(userId: UserId, history: Seq[BookingStub]) extends 
 
 case class TagCacheChanged(projectId: ProjectId, removed:Set[BaseTag], added:Set[BaseTag]) extends OutEvent
 
+object InEvent {
+  implicit val inEventFormat: Format[InEvent] = derived.flat.oformat[InEvent](defaultTypeFormat)
+}
+
 object OutEvent {
   implicit val currentUserTimeBookingFormat: Format[CurrentUserTimeBooking] = Json.format[CurrentUserTimeBooking]
-
-  implicit val outEventFormat: Format[OutEvent] = Variants.format[OutEvent]("type")
+  implicit val outEventFormat: Format[OutEvent] = derived.flat.oformat[OutEvent](defaultTypeFormat)
 }
 
 object Events {
-  implicit val inEventFrameFormatter = FrameFormatter.jsonFrame[InEvent]
-  implicit val outEventFrameFormatter = FrameFormatter.jsonFrame[OutEvent]
+  implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
 }
 
 object PersistetEvent {
-  implicit val eventFormat: Format[PersistetEvent] = Variants.format[PersistetEvent]("type")
+  implicit val eventFormat: Format[PersistetEvent] = derived.flat.oformat[PersistetEvent](BaseFormat.defaultTypeFormat)
 }

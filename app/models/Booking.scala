@@ -20,14 +20,10 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
-
-import models.BaseFormat._
-import com.tegonal.play.json._
-import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
 import org.joda.time.DateTime
-import scala.beans.BeanInfo
+import play.api.libs.json._
+import BaseFormat._
 
 case class BookingId(value: String) extends StringBaseId
 

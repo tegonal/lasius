@@ -20,14 +20,11 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
-import models.BaseFormat._
-import com.tegonal.play.json._
-import play.api.libs.json._
 import com.tegonal.play.json.TypedId._
-import org.joda.time.DateTime
-import org.joda.time.Duration
-import org.joda.time.LocalDate
+import models.BaseFormat._
+import org.joda.time.{DateTime, Duration}
+import play.api.libs.json._
+import reactivemongo.bson.BSONObjectID
 
 trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
   val duration: Duration

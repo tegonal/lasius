@@ -21,9 +21,9 @@
 package actors
 
 import akka.serialization._
+import models._
 import play.api.libs.json._
 import play.api.Logger
-import models._
 
 class JsonSerializer extends Serializer {
   // This is whether "fromBinary" requires a "clazz" or not

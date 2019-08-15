@@ -20,13 +20,12 @@
 \*                                                                           */
 package models
 
-import reactivemongo.bson.BSONObjectID
-import com.tegonal.play.json._
-import play.api.libs.json._
-import com.tegonal.play.json.TypedId._
-import julienrf.variants.Variants
 import java.net.URI
-import models.BaseFormats._
+
+import com.tegonal.play.json.TypedId._
+import julienrf.json.derived
+import play.api.libs.json._
+import BaseFormat._
 
 case class TagId(value: String) extends StringBaseId
 case class ProjectId(value: String) extends StringBaseId
@@ -53,7 +52,7 @@ case class JiraVersionTag(id: TagId, configId: JiraConfigId, projectKey:String) 
 case class Project(id: ProjectId, tags: Seq[Tag]) extends BaseEntity[ProjectId]
 case class Category(id: CategoryId, projects: Seq[Project]) extends BaseEntity[CategoryId]
 
-object JiraIsseTag{ 
+object JiraIssueTag{
   implicit val issueTagFormat: Format[JiraIssueTag]  = Json.format[JiraIssueTag]
 }
 object JiraVersionTag{ 
@@ -63,7 +62,7 @@ object Tag{
   implicit val tagFormat: Format[Tag]  = Json.format[Tag]
 }
 object BaseTag {
-  implicit val baseTagFormat: Format[BaseTag]  = Variants.format[BaseTag]("type")  
+  implicit val baseTagFormat: Format[BaseTag]  = derived.flat.oformat[BaseTag](BaseFormat.defaultTypeFormat)
 }
 
 object Project {
