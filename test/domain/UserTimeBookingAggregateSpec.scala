@@ -21,38 +21,18 @@
 package domain
 
 import actor.ClientReceiverComponentMock
-
-import scala.concurrent.duration._
 import akka.actor._
-import com.typesafe.config.ConfigFactory
-import akka.testkit._
-import org.specs2.matcher.Matchers
-import org.mockito.Matchers.{ argThat, anyInt, eq => isEq }
-import org.specs2.mutable.Specification
-import org.specs2.mock.Mockito
-import akka.testkit.TestKitBase
-import models.UserId
-import org.specs2.runner.JUnitRunner
-import domain.AggregateRoot._
-import org.junit.runner.RunWith
-import org.specs2.time.NoTimeConversions
 import akka.testkit.TestProbe
-import akka.event.LoggingReceive
-import akka.testkit.TestActorRef
-import org.specs2.matcher.Scope
-import domain.UserTimeBookingAggregate._
-import models._
-import org.joda.time.DateTime
-import domain.AggregateRoot.Initialize
-import akka._
 import akka.PersistentActorTestScope
-import mongo.EmbedMongo
-import scala.concurrent.Await
-import org.specs2.execute.Result
-import repositories._
-import repositories.UserBookingHistoryRepositoryComponent
+import domain.AggregateRoot.Initialize
+import domain.UserTimeBookingAggregate._
+import models.{UserId, _}
+import org.joda.time.DateTime
+import repositories.{UserBookingHistoryRepositoryComponent, _}
+import org.specs2.mutable._
+import org.specs2.mock._
+
 import scala.concurrent._
-import play.api.test._
 
 class UserTimeBookingAggregateSpec extends Specification with Mockito {
 
@@ -141,7 +121,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       }
 
       //add current booking to repository
-      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
+      there was one(component.bookingHistoryRepository).insert(closedBooking)(any[ExecutionContext])
     }
 
     "Start new booking" in new PersistentActorTestScope {
@@ -225,7 +205,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       stream.expectMsg(UserTimeBookingStopped(closedBooking))
 
       //add current booking to repository
-      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
+      there was one(component.bookingHistoryRepository).insert(closedBooking)(any[ExecutionContext])
     }
 
     "stop booking with enddate in future" in new PersistentActorTestScope {
@@ -250,7 +230,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       stream.expectMsg(UserTimeBookingStopped(closedBooking))
 
       //add current booking to repository
-      there was one(component.bookingHistoryRepository).insert(isEq(closedBooking))(any[ExecutionContext])
+      there was one(component.bookingHistoryRepository).insert(closedBooking)(any[ExecutionContext])
     }
   }
 
@@ -269,7 +249,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       val currentBooking = Booking(BookingId("1"), start, Some(end), userId, CategoryId("cat"), ProjectId("proj"), Seq())
       val modifiedBooking = currentBooking.copy(start = newStart)
 
-      component.bookingHistoryRepository.updateTimeBooking(isEq(currentBooking.id), isEq(newStart), isEq(end)) returns Future.successful(true)
+      component.bookingHistoryRepository.updateTimeBooking(currentBooking.id, newStart, end) returns Future.successful(true)
 
       actorRef ! Initialize(UserTimeBooking(userId, Seq(currentBooking)))
 
@@ -280,7 +260,7 @@ class UserTimeBookingAggregateSpec extends Specification with Mockito {
       probe.expectMsg(UserTimeBooking(userId, Seq(modifiedBooking)))
       stream.expectMsg(UserTimeBookingEdited(currentBooking, newStart, end))
 
-      there was one(component.bookingHistoryRepository).updateTimeBooking(isEq(currentBooking.id), isEq(newStart), isEq(end))
+      there was one(component.bookingHistoryRepository).updateTimeBooking(currentBooking.id, newStart, end)
     }
   }
 

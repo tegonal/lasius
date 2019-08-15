@@ -1,6 +1,6 @@
 package scripts
 import akka.actor.ActorSystem
-import akka.contrib.persistence.mongodb.{Atom, Legacy}
+import akka.contrib.persistence.mongodb.{Atom, Event, Legacy, RxMongoSerializers, RxMongoSerializersExtension}
 import akka.contrib.persistence.mongodb.JournallingFieldNames._
 import akka.contrib.persistence.mongodb.RxMongoSerializers._
 import akka.persistence.PersistentRepr
@@ -9,13 +9,13 @@ import models._
 import play.api.Play.current
 import play.api.libs.json.Json
 import play.modules.reactivemongo.ReactiveMongoApi
-import play.modules.reactivemongo.json._
-import play.modules.reactivemongo.json.collection.{JSONCollection, _}
-import reactivemongo.api.SerializationPack
+import reactivemongo.api.{Cursor, SerializationPack}
 import reactivemongo.api.collections.GenericCollection
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONObjectID}
+import reactivemongo.play.json.collection.JSONCollection
+import reactivemongo.play.json._
 import repositories._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,11 +38,12 @@ object UpdateUserId {
   )(implicit serialization: Serialization, system: ActorSystem) {
 
     lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
-    def db = reactiveMongoApi.db
+    def db = reactiveMongoApi.database
+    val rxMongoSerializers: RxMongoSerializers =RxMongoSerializersExtension(system)
 
-    val journalCollection: BSONCollection = {
-      val coll = db.collection[JSONCollection]("journal")
-      db.collection(coll.name, coll.failoverStrategy)
+    val journalCollection: Future[BSONCollection] = {
+      val coll = db.map(_.collection[JSONCollection]("journal"))
+      db.flatMap(d => coll.map(c => d.collection(c.name, c.failoverStrategy)))
     }
 
     def errorHandling(
@@ -70,25 +71,28 @@ object UpdateUserId {
         coll.update(selector, modifier, upsert = false, multi = true)
       )
 
-    def updateUserId(repos: BaseRepository[_, _]*) =
+    def updateUserId(repos: BaseRepository[_, _]*): Seq[Future[UpdateWriteResult]] =
       repos.map(repo => {
         println(s"Updating userId on ${repo.getClass.getSimpleName}")
-        update(
-          repo.coll,
-          Json.obj("userId" -> oldUserId),
-          Json.obj("$set" -> Json.obj("userId" -> newUserId))
-        )
-
+        repo.coll.flatMap(coll => {
+          update(
+            coll,
+            Json.obj("userId" -> oldUserId),
+            Json.obj("$set" -> Json.obj("userId" -> newUserId))
+          )
+        })
       })
 
     def updateId(repos: BaseRepository[_, _]*) =
       repos.map(repo => {
         println(s"Updating id on ${repo.getClass.getSimpleName}")
-        update(
-          repo.coll,
-          Json.obj("id" -> oldUserId),
-          Json.obj("$set" -> Json.obj("id" -> newUserId))
-        )
+        repo.coll.flatMap(coll => {
+          update(
+            coll,
+            Json.obj("id" -> oldUserId),
+            Json.obj("$set" -> Json.obj("id" -> newUserId))
+          )
+        })
       })
 
     def copyPersistentEvent(persistentRepr: PersistentRepr) ={
@@ -113,12 +117,10 @@ object UpdateUserId {
       }
     }
 
-    def copyJournal(doc: BSONDocument) = {
-
-
+    def copyJournal(doc: BSONDocument): BSONDocument = {
       val events = doc.as[BSONArray](EVENTS).values.collect {
         case d: BSONDocument =>
-          val event = JournalDeserializer.deserializeDocument(d)
+          val event = rxMongoSerializers.JournalDeserializer.deserializeDocument(d)
           val persistentRepr = event.payload match {
             case l: Legacy =>
               serialization
@@ -133,53 +135,53 @@ object UpdateUserId {
           event.copy(
             pid = newUserId,
             writerUuid = Some(newUserId),
-            payload = Legacy(persistentRepr.withPayload(newPayload))
+            payload = Legacy(persistentRepr.withPayload(newPayload), Set.empty[String]) // TODO tags
           )
       }
       val firstEvent = events.head
-      val newJournal = JournalSerializer.serializeAtom(
+      val newJournal = rxMongoSerializers.JournalSerializer.serializeAtom(
         new Atom(firstEvent.pid, firstEvent.sn, firstEvent.sn, events)
       )
       newJournal
     }
-    def updatePids(colls: BSONCollection*) = {
-
-      colls.map(coll => {
+    def updatePids(colls: BSONCollection*): Future[Seq[Future[Traversable[UpdateWriteResult]]]] = {
+      Future.sequence(colls.map(coll => {
         println(s"Updating ${coll.name}")
 
         coll
           .find(Json.obj(PROCESSOR_ID -> oldUserId))
           .cursor[BSONDocument]()
-          .collect[Traversable]()
-          .flatMap(
+          .collect[Traversable](Integer.MAX_VALUE, Cursor.FailOnError())
+          .map(
             x =>
               Future.sequence(x.map { doc =>
                 val newJournal: BSONDocument = copyJournal(doc)
                 val id = doc.as[BSONObjectID]("_id")
-                errorHandling(journalCollection.update(Json.obj("_id" -> id), newJournal))
+                errorHandling(journalCollection.flatMap(_.update(Json.obj("_id" -> id), newJournal)))
               })
           )
-      })
+      }))
     }
 
     println(s"updating $oldUserId to $newUserId")
 
-    val updatedIds =
+    val updatedIds: Seq[Future[UpdateWriteResult]] =
       updateId(new UserMongoRepository(), new UserFavoritesMongoRepository())
 
-    val updatedUserIds = updateUserId(
+    val updatedUserIds: Seq[Future[UpdateWriteResult]] = updateUserId(
       new BookingByCategoryMongoRepository(),
       new BookingByProjectMongoRepository(),
       new BookingByTagMongoRepository(),
       new BookingHistoryMongoRepository()
     )
 
-    val updatedPids = updatePids(journalCollection)
-
     println("waiting for updates to finish")
     Await.result(
-      Future.sequence(updatedIds ++ updatedUserIds ++ updatedPids),
-      30 seconds
+    for {
+          coll <- journalCollection
+          updatedPids <- updatePids(coll)
+          results <- Future.sequence(updatedIds ++ updatedUserIds ++ updatedPids)
+      } yield results, 30 seconds
     )
     println("updates done")
   }

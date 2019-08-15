@@ -20,38 +20,25 @@
 \*                                                                           */
 package mongo
 
-import play.api.test.Helpers._
-import play.api.test.FakeApplication
-import reactivemongo.bson.BSONObjectID
-import com.github.athieriot.EmbedConnection
-import org.specs2.mutable.Specification
-import scala.concurrent.ExecutionContext
-import de.flapdoodle.embed.mongo.{ Command, MongodStarter }
-import de.flapdoodle.embed.mongo.config.{ MongodConfigBuilder, Net, RuntimeConfigBuilder }
+import java.util.logging.{Level, Logger}
+
+import de.flapdoodle.embed.mongo.{Command, MongodStarter}
+import de.flapdoodle.embed.mongo.config.{ExtractedArtifactStoreBuilder, MongodConfigBuilder, Net, RuntimeConfigBuilder}
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.process.config.IRuntimeConfig
 import de.flapdoodle.embed.process.config.io.ProcessOutput
-import de.flapdoodle.embed.process.runtime.Network
-import reactivemongo.api.MongoDriver
-import java.util.logging.Logger
-import org.specs2.matcher.Scope
-import org.specs2.mutable.Around
-import org.specs2.execute.AsResult
-import org.specs2.execute.Result
 import de.flapdoodle.embed.process.io.Processors
-import java.util.logging.Level
-import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder
-import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder
-import de.flapdoodle.embed.process.io.progress.LoggingProgressListener
-import org.specs2.mutable.BeforeAfter
-import play.modules.reactivemongo.ReactiveMongoPlugin
-import play.api.test.PlayRunners
-import play.api.Play
-import de.flapdoodle.embed.mongo.config.processlistener.IMongoProcessListener
+import de.flapdoodle.embed.process.runtime.Network
 import mongo.EmbedMongo.MongoConfig
+import org.specs2.execute.{AsResult, Result}
+import org.specs2.matcher.Scope
+import org.specs2.mutable.{Around, Specification}
 import org.specs2.specification.core.Fragments
-import org.specs2.specification.Step
-import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers._
+import reactivemongo.bson.BSONObjectID
+
+import scala.concurrent.ExecutionContext
 
 trait EmbedMongo extends Specification {
   sequential =>
@@ -115,12 +102,12 @@ object EmbedMongo {
     override def around[T: AsResult](t: => T): Result = {
       val port = config.port;
       logger.warning(s"Execute test with mongodb on port:${port}")
-      implicit lazy val app = FakeApplication(additionalConfiguration =
+      implicit lazy val app = (new GuiceApplicationBuilder().configure(
         Map(
           ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
           ("mongodb.channels", "1"),
           ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port}")),
-          ("akka.contrib.persistence.mongodb.mongo.db", dbName)))
+          ("akka.contrib.persistence.mongodb.mongo.db", dbName)))).build()
 
       logger.warning("Run with application:" + app)
       AsResult(running(app)(t))

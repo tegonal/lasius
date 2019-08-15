@@ -20,48 +20,19 @@
 \*                                                                           */
 package domain.views
 
-import org.specs2.matcher.Matchers
-import org.specs2.matcher.Matchers._
-import org.specs2.mutable.Specification
-import akka.PersistentActorTestScope
-import akka.testkit._
-import models.UserId
 import actor.ClientReceiverComponentMock
-import akka.actor.Props
-import akka.pattern.ask
-import domain._
-import domain.UserTimeBookingAggregate._
-import org.specs2.mock.Mockito
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import org.mockito.Matchers.{ argThat, anyInt, eq => isEq }
-import models._
-import org.joda.time.DateTime
-import org.joda.time.Duration
+import akka.PersistentActorTestScope
+import akka.actor.{ActorSystem, Props}
+import akka.testkit._
+import models.{UserId, _}
+import org.joda.time.{DateTime, Duration, Interval}
 import org.specs2.matcher._
-import org.joda.time.LocalTime
 import play.api.libs.json._
-import repositories.BookingByTagRepository
-import repositories.BookingByProjectRepository
-import repositories.BookingByCategoryRepository
-import repositories.BookingByCategoryRepository
-import repositories.BookingByProjectRepository
-import repositories.BookingByTagMongoRepository
-import repositories.UserBookingStatisticsRepositoryComponent
-import akka.actor.ActorSystem
-import repositories.BookingByProjectRepository
-import org.mockito.verification.VerificationMode
-import repositories.BookingByCategoryRepository
-import scala.concurrent.Future
-import repositories.BookingByCategoryRepository
-import repositories.BookingByProjectRepository
-import repositories.BookingByTagRepository
-import repositories.UserBookingStatisticsRepositoryComponentMock
-import repositories.UserBookingStatisticsRepositoryComponentMock
-import repositories.UserBookingStatisticsRepositoryComponentMock
-import org.joda.time.Interval
-import repositories.UserBookingStatisticsRepositoryComponentMockClass
-import play.api.Logger
+import repositories._
+import org.specs2.mutable._
+import org.specs2.mock._
+
+import scala.concurrent.ExecutionContext
 
 class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
 
@@ -79,9 +50,9 @@ class UserTimeBookingStatisticsViewSpec extends Specification with Mockito {
       probe.send(actorRef, UserTimeBookingInitialized(userId))
       probe.expectMsg(UserTimeBookingStatisticsView.Ack)
 
-      there was one(bookingByCategoryRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByCategory]])
-      there was one(bookingByProjectRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByProject]])
-      there was one(bookingByTagRepository).deleteByUser(isEq(userId))(any[ExecutionContext], any[Format[BookingByTag]])
+      there was one(bookingByCategoryRepository).deleteByUser(userId)(any[ExecutionContext], any[Format[BookingByCategory]])
+      there was one(bookingByProjectRepository).deleteByUser(userId)(any[ExecutionContext], any[Format[BookingByProject]])
+      there was one(bookingByTagRepository).deleteByUser(userId)(any[ExecutionContext], any[Format[BookingByTag]])
     }
   }
 

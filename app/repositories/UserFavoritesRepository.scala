@@ -55,7 +55,7 @@ class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavor
       }
       case None =>
         val newFavorites = UserFavorites(userId, Seq(stub))
-        insert(newFavorites) map { id => newFavorites }
+        insert(newFavorites) map { _ => newFavorites }
     }
   }
 

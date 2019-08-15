@@ -20,20 +20,16 @@
 \*                                                                           */
 package repositories
 
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import com.github.athieriot._
-import org.specs2.mutable.Specification
-import org.joda.time.DateTime
 import models._
-import play.api.libs.json._
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import org.joda.time.format.DateTimeFormat
-import play.api.test.FakeApplication
 import mongo.EmbedMongo
 import mongo.EmbedMongo.WithMongo
+import org.joda.time.DateTime
+import org.junit.runner.RunWith
+import org.specs2.runner.JUnitRunner
+import play.api.libs.json._
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class MongoPeristentUserViewRepositorySpec extends EmbedMongo {

@@ -20,31 +20,23 @@
 \*                                                                           */
 package controllers
 
-import scala.concurrent.Future
+import controllers.ApplicationController._
+import models._
+import org.apache.http.HttpStatus
+import org.junit.runner.RunWith
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.runner.JUnitRunner
+import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.test._
 import play.api.test.Helpers._
-import org.junit.runner.RunWith
-import play.api.libs.json.Json
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import models._
-import reactivemongo.bson.BSONObjectID
-import views.html.defaultpages.badRequest
-import play.api.Logger
-import org.apache.http.HttpStatus
-import controllers.ApplicationController._
-import play.cache.Cache
-import scala.concurrent.ExecutionContext
-import org.mockito.internal.stubbing.answers.DoesNothing
-import scala.concurrent._
+
+import scala.concurrent.{ExecutionContext, Future, _}
 import scala.concurrent.duration._
-import org.specs2.runner.JUnitRunner
-import org.specs2.mutable.Specification
-import org.specs2.mock.Mockito
 
 @RunWith(classOf[JUnitRunner])
-class SecuritySpec extends Specification with Results with Mockito {
+class SecuritySpec extends Specification with Results with Mockito with DefaultCacheProvider{
   sequential =>
   "HasToken" should {
 
@@ -107,7 +99,7 @@ class SecuritySpec extends Specification with Results with Mockito {
       val token = "ghvhvh"
       val token2 = "kljnkln880"
       val request = FakeRequest().withCookies(Cookie(AuthTokenCookieKey, token)).withHeaders((AuthTokenHeader, token2)).asInstanceOf[Request[Unit]]
-      Cache.set(token2, UserId("userId"))
+      cache.set(token2, UserId("userId"))
 
       //execute
       val result = runHasToken(controller, request)
@@ -122,7 +114,7 @@ class SecuritySpec extends Specification with Results with Mockito {
       val controller = spy(new SecurityMockImpl())
       val token = "ghvhvh"
       val request = FakeRequest().withCookies(Cookie(AuthTokenCookieKey, token)).withHeaders(AuthTokenHeader -> token).asInstanceOf[Request[Unit]]
-      Cache.set(token, UserId("userId"))
+      cache.set(token, UserId("userId"))
       implicit val req = FakeRequest()
 
       //execute
@@ -201,7 +193,7 @@ class SecuritySpec extends Specification with Results with Mockito {
     }
   }
 }
-trait SecurityMock extends Security with SecurityComponentMock with Controller {
+trait SecurityMock extends Security with SecurityComponentMock with Controller with DefaultCacheProvider {
 }
 
 class SecurityMockImpl extends SecurityMock
@@ -218,7 +210,7 @@ object UserMock {
     Seq())
 }
 
-class HasRoleSecurityMock(subject: Subject = Subject("fsdfsdf", UserId("123"))) extends Security with SecurityComponentMock with Controller {
+class HasRoleSecurityMock(subject: Subject = Subject("fsdfsdf", UserId("123"))) extends Security with SecurityComponentMock with Controller with DefaultCacheProvider {
   override def HasToken[A](p: BodyParser[A] = parse.anyContent)(
     f: Subject => Request[A] => Future[Result])(implicit context: ExecutionContext): Action[A] = {
     Action.async(p) { implicit request =>

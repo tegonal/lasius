@@ -33,7 +33,7 @@ import play.api.mvc.Result
 import reactivemongo.bson.BSONObjectID
 import play.api.Logger
 
-class SecurityControllerMock(token: String = "", userId: UserId = UserId("someUserId"), authorized: Future[Boolean] = Future.successful(true), user: Option[User] = None, authorizationFailedResult: Result = null) extends SecurityComponentMock with Controller with Security {
+class SecurityControllerMock(token: String = "", userId: UserId = UserId("someUserId"), authorized: Future[Boolean] = Future.successful(true), user: Option[User] = None, authorizationFailedResult: Result = null) extends SecurityComponentMock with Controller with Security with DefaultCacheProvider {
   override def HasToken[A](p: BodyParser[A] = parse.anyContent)(
     f: Subject => Request[A] => Future[Result])(implicit context: ExecutionContext): Action[A] = {
     Action.async(p) { implicit request =>

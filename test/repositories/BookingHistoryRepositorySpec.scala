@@ -58,7 +58,7 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
 
     Await.result(f, DurationInt(15).seconds)
 
-    val find = repository.findByUserIdAndRange(user, from, to)
+    val find = repository.findByUserIdAndRange(Some(user), from, to)
     val findSync = Await.result(find, DurationInt(15).seconds)
 
     test(findSync)

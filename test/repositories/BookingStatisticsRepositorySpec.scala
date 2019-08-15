@@ -32,6 +32,7 @@ import play.api.libs.json._
 import org.joda.time.format.DateTimeFormat
 import mongo.EmbedMongo
 import mongo.EmbedMongo.WithMongo
+import BaseFormat._
 
 @RunWith(classOf[JUnitRunner])
 class BookingStatisticsRepositorySpec extends EmbedMongo {

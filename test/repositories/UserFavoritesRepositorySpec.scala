@@ -20,18 +20,14 @@
 \*                                                                           */
 package repositories
 
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.mutable._
-import com.github.athieriot.EmbedConnection
-import models.UserId
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import models._
-import com.github.athieriot.CleanAfterExample
-import play.api.test.FakeApplication
+import models.{UserId, _}
 import mongo.EmbedMongo
 import mongo.EmbedMongo.WithMongo
+import org.junit.runner.RunWith
+import org.specs2.runner.JUnitRunner
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class UserFavoritesRepositorySpec extends EmbedMongo {

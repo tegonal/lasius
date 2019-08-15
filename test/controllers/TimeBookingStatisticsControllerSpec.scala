@@ -20,18 +20,15 @@
 \*                                                                           */
 package controllers
 
-import play.api.test.Helpers._
-import play.api.test.PlaySpecification
-import repositories.UserBookingStatisticsRepositoryComponentMock
 import models._
+import org.joda.time.{DateTime, Duration}
 import org.specs2.mock.Mockito
-import play.api.test.WithApplication
-import org.joda.time.DateTime
-import scala.concurrent.Future
-import play.api.mvc._
-import play.api.test._
 import play.api.libs.json._
-import org.joda.time.Duration
+import play.api.mvc._
+import play.api.test.{PlaySpecification, WithApplication, _}
+import repositories.UserBookingStatisticsRepositoryComponentMock
+
+import scala.concurrent.Future
 
 class TimeBookingStatisticsControllerSpec extends PlaySpecification with Mockito with Results {
   "getAggregatedStatistics" should {

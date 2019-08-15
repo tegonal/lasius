@@ -1,17 +1,13 @@
 package domain.views
 
-import org.specs2.mutable.Specification
-import org.specs2.mock.Mockito
+import actors.{ClientReceiver, ClientReceiverComponent}
 import akka.PersistentActorTestScope
-import models._
-import akka.testkit._
 import akka.actor._
-import org.joda.time.DateTime
-import org.joda.time.Duration
-import domain.UserTimeBookingAggregate._
-import actors.ClientReceiver
-import org.mockito.Matchers.{ argThat, anyInt, eq => isEq }
-import actors.ClientReceiverComponent
+import akka.testkit._
+import models._
+import org.joda.time.{DateTime, Duration}
+import org.specs2.mutable._
+import org.specs2.mock._
 
 class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
@@ -38,7 +34,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       probe.send(actorRef, UserTimeBookingStarted(booking))
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
 
-      there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
+      there was one(clientReceiver) ! (org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.eq(state), org.mockito.ArgumentMatchers.eq(List(userId)))
     }
   }
 
@@ -71,7 +67,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
 
       val newBooking = booking.copy(start = newStart)
       val state = CurrentUserTimeBookingEvent(CurrentUserTimeBooking(userId, day, Some(newBooking), None, Duration.ZERO))
-      there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
+      there was one(clientReceiver) ! (org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.eq(state), org.mockito.ArgumentMatchers.eq(List(userId)))
     }
   }
 
@@ -99,7 +95,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       probe.send(actorRef, UserTimeBookingStopped(booking))
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
 
-      there was one(clientReceiver) ! (isEq(userId), isEq(state), isEq(List(userId)))
+      there was one(clientReceiver) ! (org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.eq(state), org.mockito.ArgumentMatchers.eq(List(userId)))
 
       //edit time booking
       val newDuration = Duration.standardHours(4)
@@ -110,7 +106,7 @@ class CurrentUserTimeBookingsViewSpec extends Specification with Mockito {
       probe.send(actorRef, UserTimeBookingEdited(booking, newStart, end))
       probe.expectMsg(CurrentUserTimeBookingsView.Ack)
 
-      there was one(clientReceiver) ! (isEq(userId), isEq(newState), isEq(List(userId)))
+      there was one(clientReceiver) ! (org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.eq(newState), org.mockito.ArgumentMatchers.eq(List(userId)))
     }
   }
 }
