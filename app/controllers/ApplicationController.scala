@@ -23,32 +23,29 @@ package controllers
 import java.util.UUID
 
 import actors.ClientMessagingWebsocketActor
-import core.Global._
+import core.{ConfigAware, DefaultSystemServicesAware, SystemServicesAware}
 import models._
 import org.mindrot.jbcrypt.BCrypt
 import play.api._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.libs.streams._
 import play.api.mvc._
 import play.api.mvc.WebSocket.MessageFlowTransformer
 import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
-import Events._
 
 import scala.concurrent.Future
 
 class ApplicationController {
-  self: Controller with SecurityRepositoryComponent with Security with CacheAware =>
+  self: Controller with SecurityRepositoryComponent with Security with CacheAware with SystemServicesAware with ConfigAware =>
     
     implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
     
     lazy val appConfig = loadApplicationConfig()
-    lazy val playConfig = Play.current.configuration
 
     private def loadApplicationConfig() = {
-      val ssl = playConfig.getBoolean("lasius.use_ssl").getOrElse(false)
-      val title = playConfig.getString("lasius.title").getOrElse("Lasius")
-      val instance = playConfig.getString("lasius.instance").getOrElse("Dev")
+      val ssl = config.getBoolean("lasius.use_ssl")
+      val title = config.getString("lasius.title")
+      val instance = config.getString("lasius.instance")
       ApplicationConfig(title, instance, ssl)
     }
 
@@ -89,7 +86,7 @@ class ApplicationController {
         val uuid = UUID.randomUUID.toString
         cache.set(uuid, user.id)
 
-        loginStateAggregate ! UserLoggedIn(user.id)
+        systemServices.loginStateAggregate ! UserLoggedIn(user.id)
 
         Ok(Json.obj("token" -> uuid))
           .withCookies(Cookie(AuthTokenCookieKey, uuid, None, httpOnly = false))
@@ -125,7 +122,7 @@ class ApplicationController {
     Logger.debug(s"Remove token from cache: ${subject.token}")
     cache.remove(subject.token)
 
-    loginStateAggregate ! UserLoggedOut(subject.userId)
+    systemServices.loginStateAggregate ! UserLoggedOut(subject.userId)
 
     //notify client
     ClientMessagingWebsocketActor ! (subject.userId, UserLoggedOut(subject.userId), List(subject.userId))
@@ -136,7 +133,7 @@ class ApplicationController {
   /**
    * Load application config
    */
-  def config = Action.async {
+  def getConfig = Action.async {
     Future.successful(Ok(Json.toJson(appConfig)))
   }
 }
@@ -147,3 +144,5 @@ object ApplicationController extends ApplicationController
   with Security
   with DefaultSecurityComponent
   with DefaultCacheProvider
+  with DefaultSystemServicesAware
+  with ConfigAware

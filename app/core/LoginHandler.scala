@@ -22,7 +22,6 @@ package core
 
 import akka.actor._
 import akka.event.EventStream
-import core.Global._
 import models._
 
 object LoginHandler {
@@ -37,7 +36,7 @@ object LoginHandler {
   def props: Props = Props(new LoginHandler)
 }
 
-class LoginHandler extends Actor with ActorLogging {
+class LoginHandler extends Actor with ActorLogging with DefaultSystemServicesAware {
 
   import domain.UserTimeBookingAggregate._
   import LoginHandler._
@@ -55,18 +54,18 @@ class LoginHandler extends Actor with ActorLogging {
   def initializeUserViews(userId: UserId) = {
     log.debug(s"user logged in:$userId, start persistentViews")
     //initialize persistentviews
-    currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
-    latestUserTimeBookingsViewService ! domain.views.LatestUserTimeBookingsView.GetLatestTimeBooking(userId, 5)
-    timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
-    timeBookingViewService ! StartAggregate(userId)
+    systemServices.currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
+    systemServices.latestUserTimeBookingsViewService ! domain.views.LatestUserTimeBookingsView.GetLatestTimeBooking(userId, 5)
+    systemServices.timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
+    systemServices.timeBookingViewService ! StartAggregate(userId)
   }
 
   def handleLoggedOut(userId: UserId) = {
     log.debug(s"user logged in:$userId, stop persistentViews")
 
     //kill persistentviews
-    currentUserTimeBookingsViewService ! StopUserView(userId)
-    latestUserTimeBookingsViewService ! StopUserView(userId)
-    timeBookingStatisticsViewService ! StopUserView(userId)
+    systemServices.currentUserTimeBookingsViewService ! StopUserView(userId)
+    systemServices.latestUserTimeBookingsViewService ! StopUserView(userId)
+    systemServices.timeBookingStatisticsViewService ! StopUserView(userId)
   }
 }

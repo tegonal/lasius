@@ -21,22 +21,20 @@
 package controllers
 
 import akka.pattern.ask
-import core.Global._
+import core.{DefaultSystemServicesAware, SystemServicesAware}
 import domain.views.CurrentUserTimeBookingsView._
 import models._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import play.api.Logger
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class CurrentUserTimeBookingsController {
-  self: Controller with Security =>
+  self: Controller with Security with SystemServicesAware =>
 
   def getCurrentTimeBooking() = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        currentUserTimeBookingsViewService ? GetCurrentTimeBooking(subject.userId) map {
+        systemServices.currentUserTimeBookingsViewService ? GetCurrentTimeBooking(subject.userId) map {
           case c:CurrentUserTimeBookingEvent => 
             Ok(Json.toJson(c))
           case x =>
@@ -47,4 +45,4 @@ class CurrentUserTimeBookingsController {
   }
 }
 
-object CurrentUserTimeBookingsController extends CurrentUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider
+object CurrentUserTimeBookingsController extends CurrentUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

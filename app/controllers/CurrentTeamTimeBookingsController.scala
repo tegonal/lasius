@@ -21,35 +21,34 @@
 package controllers
 
 import akka.pattern.ask
-import core.Global._
+import core.{DefaultSystemServicesAware, SystemServicesAware}
 import domain.views.CurrentTeamTimeBookingsView._
 import models._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import play.api.Logger
-import Events._
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class CurrentTeamTimeBookingsController {
-  self: Controller with Security =>
+  self: Controller with Security with SystemServicesAware =>
+
+  lazy val logger = Logger(getClass().getName())
 
   def getTeamTimeBooking(teamId: TeamId) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        currentTeamTimeBookingsView ? GetCurrentTeamTimeBookings(teamId) map {
+        systemServices.currentTeamTimeBookingsView ? GetCurrentTeamTimeBookings(teamId) map {
           case b: CurrentTeamTimeBookings =>
-            Logger.debug(s"getCurrentTeamTimeBooking:$b")
+            logger.debug(s"getCurrentTeamTimeBooking:$b")
             Ok(Json.toJson(b))
           case NoResultFound =>
-            Logger.debug(s"getCurrentTeamTimeBooking: NoResultFound")
+            logger.debug(s"getCurrentTeamTimeBooking: NoResultFound")
             NotFound
-          case x => 
-            Logger.debug(s"getCurrentTeamTimeBooking:$teamId => $x")
+          case x =>
+            logger.debug(s"getCurrentTeamTimeBooking:$teamId => $x")
             BadRequest
         }
       }
   }
 }
 
-object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider
+object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

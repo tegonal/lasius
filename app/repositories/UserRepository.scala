@@ -21,7 +21,7 @@
 package repositories
 
 import models.{User, UserId}
-import play.api.libs.concurrent.Execution.Implicits._
+import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import reactivemongo.play.json.collection.JSONCollection
 

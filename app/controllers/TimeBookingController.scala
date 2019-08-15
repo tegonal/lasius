@@ -20,24 +20,23 @@
 \*                                                                           */
 package controllers
 
-import core.Global._
+import core.{DefaultSystemServicesAware, SystemServicesAware}
 import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
 import play.api.mvc.Controller
 import play.api.Logger
-import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 
 class TimeBookingController {
-  self: Controller with Security =>
+  self: Controller with Security with SystemServicesAware =>
 
   def start(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
         Logger.debug(s"TimeBokingController -> start - userId:${subject.userId}, projectId: $projectId, tags:$tags, start:$start")
-        timeBookingViewService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
+        systemServices.timeBookingViewService ! StartBooking(subject.userId, categoryId, projectId, tags, start)
         Future.successful(Ok)
       }
   }
@@ -45,7 +44,7 @@ class TimeBookingController {
   def stop(bookingId: BookingId, end: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! EndBooking(subject.userId, bookingId, end)
+        systemServices.timeBookingViewService ! EndBooking(subject.userId, bookingId, end)
         Future.successful(Ok)
       }
   }
@@ -53,7 +52,7 @@ class TimeBookingController {
   def remove(bookingId: BookingId) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! RemoveBooking(subject.userId, bookingId)
+        systemServices.timeBookingViewService ! RemoveBooking(subject.userId, bookingId)
         Future.successful(Ok)
       }
   }
@@ -61,7 +60,7 @@ class TimeBookingController {
   def edit(bookingId: BookingId, start: DateTime, end: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! EditBooking(subject.userId, bookingId, start, end)
+        systemServices.timeBookingViewService ! EditBooking(subject.userId, bookingId, start, end)
         Future.successful(Ok)
       }
   }
@@ -69,7 +68,7 @@ class TimeBookingController {
   def pause(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! PauseBooking(subject.userId, bookingId, time)
+        systemServices.timeBookingViewService ! PauseBooking(subject.userId, bookingId, time)
         Future.successful(Ok)
       }
   }
@@ -77,7 +76,7 @@ class TimeBookingController {
   def resume(bookingId: BookingId, time: DateTime = DateTime.now()) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! ResumeBooking(subject.userId, bookingId, time)
+        systemServices.timeBookingViewService ! ResumeBooking(subject.userId, bookingId, time)
         Future.successful(Ok)
       }
   }
@@ -85,7 +84,7 @@ class TimeBookingController {
   def changeStart(bookingId: BookingId, newStart: DateTime) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! ChangeStartTimeOfBooking(subject.userId, bookingId, newStart)
+        systemServices.timeBookingViewService ! ChangeStartTimeOfBooking(subject.userId, bookingId, newStart)
         Future.successful(Ok)
       }
   }
@@ -93,10 +92,10 @@ class TimeBookingController {
   def add(categoryId: CategoryId, projectId: ProjectId, tags: Seq[TagId], start: DateTime, end: DateTime, comment: Option[String]) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        timeBookingViewService ! AddBooking(subject.userId, categoryId, projectId, tags, start, end, comment)
+        systemServices.timeBookingViewService ! AddBooking(subject.userId, categoryId, projectId, tags, start, end, comment)
         Future.successful(Ok)
       }
   }
 }
 
-object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider
+object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

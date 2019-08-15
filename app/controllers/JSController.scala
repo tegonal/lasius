@@ -37,7 +37,7 @@ class JSController extends Controller {
         routes.javascript.ApplicationController.login,
         routes.javascript.ApplicationController.logout,
         routes.javascript.ApplicationController.messagingSocket,
-        routes.javascript.ApplicationController.config,
+        routes.javascript.ApplicationController.getConfig,
         routes.javascript.CurrentUserTimeBookingsController.getCurrentTimeBooking,
         routes.javascript.CurrentTeamTimeBookingsController.getTeamTimeBooking,
         routes.javascript.LatestUserTimeBookingsController.getLatestTimeBooking,

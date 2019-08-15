@@ -22,10 +22,7 @@ package core
 
 import akka.actor._
 import core.LoginHandler.InitializeUserViews
-import play.api.Play
 import repositories._
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object PluginHandler {
   def props(): Props = Props(classOf[DefaultPluginHandler])
@@ -37,8 +34,9 @@ object PluginHandler {
 class DefaultPluginHandler
     extends PluginHandler
     with MongoBasicRepositoryComponent
+    with DefaultSystemServicesAware
 
-trait PluginHandler extends Actor with ActorLogging {
+trait PluginHandler extends Actor with ActorLogging with SystemServicesAware  with ConfigAware{
   self: BasicRepositoryComponent =>
   import PluginHandler._
 
@@ -58,14 +56,13 @@ trait PluginHandler extends Actor with ActorLogging {
   }
 
   private def initializeUserViews = {
-    val initializeViews = Play.current.configuration
+    val initializeViews = config
       .getBoolean("lasius.persistence.on_startup.initialize_views")
-      .getOrElse(false)
     log.debug(s"initializeUserViews:$initializeViews")
     if (initializeViews) {
       userRepository.findAll() foreach { users =>
         log.debug(s"findAllUsers:$users")
-        users.foreach(user => Global.loginHandler ! InitializeUserViews(user.id))
+        users.foreach(user => systemServices.loginHandler ! InitializeUserViews(user.id))
       }
     }
   }

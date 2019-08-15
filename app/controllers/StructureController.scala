@@ -23,10 +23,9 @@ package controllers
 import actors.TagCache.{CachedTags, GetTags}
 import akka.pattern.ask
 import akka.util.Timeout
-import core.Global
+import core.{DefaultSystemServicesAware, SystemServicesAware}
 import helpers.UserHelper
 import models._
-import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json._
 import play.api.mvc.Controller
 import repositories._
@@ -35,7 +34,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class StructureController extends UserHelper {
-  self: Controller with BasicRepositoryComponent with Security =>
+  self: Controller with BasicRepositoryComponent with Security with SystemServicesAware =>
 
   case class ProjectContainer(project: Project, categoryId: CategoryId, name: String, tagCache:Seq[BaseTag])
 
@@ -64,7 +63,7 @@ class StructureController extends UserHelper {
   
   def getTags(projectId: ProjectId): Future[Set[BaseTag]] = {
         implicit val timeout = Timeout(5 seconds) // needed for `?` below
-        val future = Global.tagCache ? GetTags(projectId)
+        val future = systemServices.tagCache ? GetTags(projectId)
         future.map{ result =>
           val tagResult = result.asInstanceOf[CachedTags]
           
@@ -73,4 +72,4 @@ class StructureController extends UserHelper {
   }
 }
 
-object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider
+object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

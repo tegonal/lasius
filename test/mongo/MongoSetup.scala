@@ -56,7 +56,7 @@ trait EmbedMongo extends Specification {
     .net(new Net(port, Network.localhostIsIPv6()))
     .build
 
-  lazy val logger = Logger.getLogger(getClass().getName());
+  lazy val logger = Logger.getLogger(getClass().getName())
 
   lazy val processOutput = new ProcessOutput(Processors.logTo(logger, Level.FINEST), Processors.logTo(logger,
     Level.FINEST), Processors.named("[console>]", Processors.logTo(logger, Level.FINEST)));
@@ -97,17 +97,17 @@ object EmbedMongo {
 
     lazy val dbName = BSONObjectID.generate.stringify
 
-    lazy val logger = Logger.getLogger(getClass().getName());
+    lazy val logger = Logger.getLogger(getClass().getName())
 
     override def around[T: AsResult](t: => T): Result = {
-      val port = config.port;
+      val port = config.port
       logger.warning(s"Execute test with mongodb on port:${port}")
-      implicit lazy val app = (new GuiceApplicationBuilder().configure(
+      implicit lazy val app = new GuiceApplicationBuilder().configure(
         Map(
           ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
           ("mongodb.channels", "1"),
           ("akka.contrib.persistence.mongodb.mongo.urls", List(s"localhost:${port}")),
-          ("akka.contrib.persistence.mongodb.mongo.db", dbName)))).build()
+          ("akka.contrib.persistence.mongodb.mongo.db", dbName))).build()
 
       logger.warning("Run with application:" + app)
       AsResult(running(app)(t))

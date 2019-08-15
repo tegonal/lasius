@@ -20,24 +20,23 @@
 \*                                                                           */
 package controllers
 
-import core.Global._
+import core.{DefaultSystemServicesAware, SystemServicesAware}
 import domain.views.LatestUserTimeBookingsView._
 import models.FreeUser
 import play.api.mvc.Controller
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class LatestUserTimeBookingsController {
-  self: Controller with Security =>
+  self: Controller with Security with SystemServicesAware =>
 
   def getLatestTimeBooking(maxHistory: Int) = HasRole(FreeUser, parse.empty) {
     implicit subject =>
       implicit request => {
-        latestUserTimeBookingsViewService ! GetLatestTimeBooking(subject.userId, maxHistory)
+        systemServices.latestUserTimeBookingsViewService ! GetLatestTimeBooking(subject.userId, maxHistory)
         Future.successful(Ok)
       }
   }
 }
 
-object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider
+object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

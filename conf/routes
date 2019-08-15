@@ -6,7 +6,7 @@
 GET      /                                      controllers.ApplicationController.index
 
 # Load Application config
-GET      /config                                controllers.ApplicationController.config
+GET      /config                                controllers.ApplicationController.getConfig
 
 # JavaScript routes object
 GET      /jsroutes.js                           controllers.JSController.javascriptRoutes
