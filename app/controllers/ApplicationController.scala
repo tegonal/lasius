@@ -23,7 +23,7 @@ package controllers
 import java.util.UUID
 
 import actors.ClientMessagingWebsocketActor
-import core.{ConfigAware, DefaultSystemServicesAware, SystemServicesAware}
+import core.{CacheAware, ConfigAware, DefaultCacheAware, DefaultSystemServicesAware, SystemServicesAware}
 import models._
 import org.mindrot.jbcrypt.BCrypt
 import play.api._
@@ -143,6 +143,6 @@ object ApplicationController extends ApplicationController
   with MongoSecurityRepositoryComponent
   with Security
   with DefaultSecurityComponent
-  with DefaultCacheProvider
+  with DefaultCacheAware
   with DefaultSystemServicesAware
   with ConfigAware

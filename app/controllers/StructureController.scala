@@ -23,7 +23,7 @@ package controllers
 import actors.TagCache.{CachedTags, GetTags}
 import akka.pattern.ask
 import akka.util.Timeout
-import core.{DefaultSystemServicesAware, SystemServicesAware}
+import core.{DefaultCacheAware, DefaultSystemServicesAware, SystemServicesAware}
 import helpers.UserHelper
 import models._
 import play.api.libs.json._
@@ -72,4 +72,4 @@ class StructureController extends UserHelper {
   }
 }
 
-object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object StructureController extends StructureController with MongoBasicRepositoryComponent with Controller with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

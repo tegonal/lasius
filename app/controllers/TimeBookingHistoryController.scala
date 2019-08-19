@@ -22,7 +22,7 @@ package controllers
 
 import java.text.DecimalFormat
 
-import core.DefaultSystemServicesAware
+import core.{DefaultCacheAware, DefaultSystemServicesAware}
 import models._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
@@ -31,7 +31,6 @@ import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
 import play.api.mvc.{Controller, Result}
-import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 import utils.StringUtils._
 
@@ -106,4 +105,4 @@ class TimeBookingHistoryController {
   }
 }
 
-object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object TimeBookingHistoryController extends TimeBookingHistoryController with Controller with MongoUserBookingHistoryRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

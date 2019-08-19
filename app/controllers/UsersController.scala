@@ -20,7 +20,7 @@
 \*                                                                           */
 package controllers
 
-import core.DefaultSystemServicesAware
+import core.DefaultCacheAware
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
@@ -48,4 +48,4 @@ class UsersController {
   }
 }
 
-object UsersController extends UsersController  with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent with DefaultCacheProvider
+object UsersController extends UsersController  with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent with DefaultCacheAware

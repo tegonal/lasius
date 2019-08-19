@@ -37,6 +37,8 @@ import play.api.i18n.Lang
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import play.api.mvc.Results._
 import play.api.ApplicationLoader.Context
+import play.api.cache.SyncCacheApi
+import play.api.cache.ehcache.EhCacheComponents
 import play.api.routing.Router
 import play.filters.HttpFiltersComponents
 import play.modules.reactivemongo.{ReactiveMongoApi, ReactiveMongoApiFromContext}
@@ -59,11 +61,13 @@ class CustomApplicationLoader extends ApplicationLoader with ConfigAware {
   }
 }
 
-class DefaultComponents(val config: Config, context: Context) extends ReactiveMongoApiFromContext(context) with HttpFiltersComponents with AssetsComponents {
+class DefaultComponents(val config: Config, context: Context) extends ReactiveMongoApiFromContext(context) with EhCacheComponents with NoHttpFiltersComponents with AssetsComponents {
   implicit val system = ActorSystem("lasius-actor-system")
 
   val systemUser = UserId("lasius-system")
   val supervisor = system.actorOf(LasiusSupervisorActor.props)
+
+  DefaultCacheProvider.initialize(defaultCacheApi.sync)
 
   DefaultReactiveMongoApi.initialize(reactiveMongoApi)
 
@@ -172,6 +176,24 @@ object DefaultReactiveMongoApi {
   def initialize(reactiveMongoApi: ReactiveMongoApi) = {
     if(instance == null)
       instance = new DefaultReactiveMongoApi(reactiveMongoApi)
+  }
+
+  def getInstance() = {
+    if(instance == null){
+      throw new UninitializedError
+    }
+    instance
+  }
+}
+
+class DefaultCacheProvider(val cache: SyncCacheApi)
+
+object DefaultCacheProvider {
+  private var instance: DefaultCacheProvider = null
+
+  def initialize(cache: SyncCacheApi) = {
+    if(instance == null)
+      instance = new DefaultCacheProvider(cache)
   }
 
   def getInstance() = {

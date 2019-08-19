@@ -20,7 +20,7 @@
 \*                                                                           */
 package controllers
 
-import core.{DefaultSystemServicesAware, SystemServicesAware}
+import core.{DefaultCacheAware, DefaultSystemServicesAware, SystemServicesAware}
 import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
@@ -98,4 +98,4 @@ class TimeBookingController {
   }
 }
 
-object TimeBookingController extends TimeBookingController  with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object TimeBookingController extends TimeBookingController  with Controller with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

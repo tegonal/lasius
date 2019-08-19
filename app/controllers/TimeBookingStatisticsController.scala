@@ -29,7 +29,7 @@ import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import repositories.{BookingStatisticRepository, MongoUserBookingStatisticsRepositoryComponent, UserBookingStatisticsRepositoryComponent}
 import BaseFormat._
-import core.DefaultSystemServicesAware
+import core.{DefaultCacheAware, DefaultSystemServicesAware}
 
 import scala.concurrent.Future
 
@@ -97,4 +97,4 @@ class TimeBookingStatisticsController {
   }
 }
 
-object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

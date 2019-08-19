@@ -20,6 +20,7 @@
 \*                                                                           */
 package controllers
 
+import core.CacheAware
 import models.{Role, Subject, UserId}
 import play.api.Logger
 import play.api.libs.json.Json
@@ -37,7 +38,7 @@ trait SecurityComponent {
 }
 
 trait Security {
-  self: Controller with SecurityComponent with CacheAware=>
+  self: Controller with SecurityComponent with CacheAware =>
 
   val AuthTokenHeader = "X-XSRF-TOKEN"
   val AuthTokenCookieKey = "XSRF-TOKEN"

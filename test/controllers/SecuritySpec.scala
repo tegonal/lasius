@@ -21,6 +21,7 @@
 package controllers
 
 import controllers.ApplicationController._
+import core.DefaultCacheProvider
 import models._
 import org.apache.http.HttpStatus
 import org.junit.runner.RunWith

@@ -21,7 +21,7 @@
 package controllers
 
 import akka.pattern.ask
-import core.{DefaultSystemServicesAware, SystemServicesAware}
+import core.{DefaultCacheAware, DefaultSystemServicesAware, SystemServicesAware}
 import domain.views.CurrentTeamTimeBookingsView._
 import models._
 import play.api.libs.json._
@@ -51,4 +51,4 @@ class CurrentTeamTimeBookingsController {
   }
 }
 
-object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object CurrentTeamTimeBookingsController extends CurrentTeamTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

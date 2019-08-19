@@ -21,7 +21,7 @@
 package controllers
 
 import actors.ClientMessagingWebsocketActor
-import core.DefaultSystemServicesAware
+import core.DefaultCacheAware
 import models._
 
 import concurrent.ExecutionContext.Implicits.global
@@ -62,4 +62,4 @@ class UserFavoritesController {
   }
 }
 
-object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider
+object UserFavoritesController extends UserFavoritesController with Controller with MongoUserDataRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheAware

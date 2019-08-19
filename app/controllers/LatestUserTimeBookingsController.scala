@@ -20,7 +20,7 @@
 \*                                                                           */
 package controllers
 
-import core.{DefaultSystemServicesAware, SystemServicesAware}
+import core.{DefaultCacheAware, DefaultSystemServicesAware, SystemServicesAware}
 import domain.views.LatestUserTimeBookingsView._
 import models.FreeUser
 import play.api.mvc.Controller
@@ -39,4 +39,4 @@ class LatestUserTimeBookingsController {
   }
 }
 
-object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object LatestUserTimeBookingsController extends LatestUserTimeBookingsController with Controller with Security with DefaultSecurityComponent with DefaultCacheAware with DefaultSystemServicesAware

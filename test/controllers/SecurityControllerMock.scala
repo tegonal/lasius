@@ -20,8 +20,9 @@
 \*                                                                           */
 package controllers
 
-import scala.concurrent.ExecutionContext
+import core.DefaultCacheProvider
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import models._
 import play.api.mvc.Action
