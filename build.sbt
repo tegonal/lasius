@@ -21,11 +21,12 @@ resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
 val akkaVs = "2.5.24"
-val reactiveMongoVer = "0.18.4-play27"
+val reactiveMongoVer = "0.18.4"
+val reactiveMongoPlayVer = s"$reactiveMongoVer-play27"
 
 libraryDependencies ++= Seq(
-    "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVer,
-    "org.reactivemongo" %% "reactivemongo-play-json" % reactiveMongoVer,
+    "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoPlayVer,
+    "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "2.2.10-SNAPSHOT" withSources(),
     "com.tegonal" %% "play-json-typedid" % "1.0.2",
     "org.julienrf" %% "play-json-derived-codecs" % "6.0.0",
     "com.typesafe.play" %% "play-json-joda" % "2.7.3",
@@ -33,8 +34,6 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % akkaVs  withSources(),
     "com.typesafe.akka" %% "akka-slf4j" % akkaVs,
     "com.typesafe.akka" %% "akka-testkit" % akkaVs % "test",
-    "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "2.2.9" withSources(),
-    "com.github.scullxbones" %% "akka-persistence-mongo-common" % "2.2.9" withSources(),
     //reativemongo based connector for persistent akka
     "org.mindrot" % "jbcrypt" % "0.3m",
     "com.github.athieriot" %% "specs2-embedmongo" % "0.8.0" % "test",

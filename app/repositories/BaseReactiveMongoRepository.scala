@@ -47,7 +47,7 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
   def update(doc: T)(implicit ctx: ExecutionContext): Future[Boolean]
 
-  def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
+  def find(sel: JsObject, limit: Int = -1, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]]
 
   def findFirst(sel: JsObject, skip: Int = 0)(implicit ctx: ExecutionContext): Future[Option[(T, BSONObjectID)]]
 
@@ -88,7 +88,7 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
 
   def update(doc: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
     val json = format.writes(doc).as[JsObject]
-    coll.flatMap(_.insert(json).map(_.ok))
+    coll.flatMap(_.insert(ordered = false).one(json).map(_.ok))
   }
 
   def remove(obj: T)(implicit ctx: ExecutionContext): Future[Boolean] = {
@@ -105,22 +105,22 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
     val obj = format.writes(t).as[JsObject]
     obj \ "_id" match {
       case _: JsUndefined =>
-        coll.flatMap(_.insert(obj ++ Json.obj("_id" -> id)).map(_ => id))
+        coll.flatMap(_.insert(ordered = false).one(obj ++ Json.obj("_id" -> id)).map(_ => id))
 
       case JsDefined(JsObject(Seq((_, JsString(oid))))) =>
-        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
+        coll.flatMap(_.insert(ordered = false).one(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case JsDefined(JsObject(Seq("$oid", JsString(oid)))) =>
-        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
+        coll.flatMap(_.insert(ordered = false).one(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case JsDefined(JsString(oid)) =>
-        coll.flatMap(_.insert(obj).map { _ => BSONObjectID(oid.getBytes) })
+        coll.flatMap(_.insert(ordered = false).one(obj).map { _ => BSONObjectID(oid.getBytes) })
 
       case f => sys.error(s"Could not parse _id field: $f")
     }
   }
 
-  def find(sel: JsObject, limit: Int = 0, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]] = {
+  def find(sel: JsObject, limit: Int = -1, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]] = {
     coll.flatMap(_.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]().collect[Traversable](limit, Cursor.FailOnError()).map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID]))))
   }
 
