@@ -20,6 +20,7 @@
 \*                                                                           */
 package controllers
 
+import core.DefaultSystemServicesAware
 import helpers.UserHelper
 import models._
 import play.api.libs.json._
@@ -65,4 +66,4 @@ trait DefaultAuthConfig extends AuthConfig with UserHelper {
   }
 }
 
-object DefaultAuthConfig extends DefaultAuthConfig with MongoSecurityRepositoryComponent with Controller
+object DefaultAuthConfig extends DefaultAuthConfig with MongoSecurityRepositoryComponent with Controller with DefaultSystemServicesAware

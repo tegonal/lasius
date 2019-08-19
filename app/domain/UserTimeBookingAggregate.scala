@@ -25,6 +25,7 @@ import java.util.UUID
 import actors.{ClientReceiverComponent, DefaultClientReceiverComponent}
 import akka.actor._
 import akka.persistence._
+import core.{DefaultReactiveMongoApi, DefaultReactiveMongoApiAware}
 import models._
 import org.joda.time.DateTime
 import repositories.{MongoUserBookingHistoryRepositoryComponent, UserBookingHistoryRepositoryComponent}
@@ -65,6 +66,7 @@ class MongoUserTimeBookingAggregate(userId: UserId)
     extends UserTimeBookingAggregate(userId)
     with MongoUserBookingHistoryRepositoryComponent
     with DefaultClientReceiverComponent
+    with DefaultReactiveMongoApiAware
 
 class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   this: UserBookingHistoryRepositoryComponent with ClientReceiverComponent =>

@@ -34,9 +34,10 @@ object PluginHandler {
 class DefaultPluginHandler
     extends PluginHandler
     with MongoBasicRepositoryComponent
-    with DefaultSystemServicesAware
+    with DefaultReactiveMongoApiAware
+    with DefaultLoginHandlerAware
 
-trait PluginHandler extends Actor with ActorLogging with SystemServicesAware  with ConfigAware{
+trait PluginHandler extends Actor with ActorLogging with LoginHandlerAware with ConfigAware {
   self: BasicRepositoryComponent =>
   import PluginHandler._
 
@@ -62,7 +63,7 @@ trait PluginHandler extends Actor with ActorLogging with SystemServicesAware  wi
     if (initializeViews) {
       userRepository.findAll() foreach { users =>
         log.debug(s"findAllUsers:$users")
-        users.foreach(user => systemServices.loginHandler ! InitializeUserViews(user.id))
+        users.foreach(user => loginHandler ! InitializeUserViews(user.id))
       }
     }
   }

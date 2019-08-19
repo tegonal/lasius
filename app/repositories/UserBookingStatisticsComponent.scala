@@ -21,7 +21,6 @@
 package repositories
 
 trait UserBookingStatisticsRepositoryComponent {
-
   val bookingByProjectRepository: BookingByProjectRepository
   val bookingByCategoryRepository: BookingByCategoryRepository
   val bookingByTagRepository: BookingByTagRepository

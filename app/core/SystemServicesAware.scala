@@ -16,7 +16,6 @@ trait SystemServices extends ActorSystemAware {
   val timeBookingViewService: ActorRef
 
   val loginStateAggregate: ActorRef
-  val loginHandler: ActorRef
 
   val currentUserTimeBookingsViewService: ActorRef
   val currentTeamTimeBookingsView: ActorRef
@@ -35,7 +34,7 @@ trait SystemServicesAware {
 }
 
 trait DefaultSystemServicesAware extends SystemServicesAware {
-  val systemServices: SystemServices = DefaultServices.getInstance()
+  lazy val systemServices: SystemServices = DefaultServices.getInstance()
   implicit val system: ActorSystem = DefaultServices.getInstance().system
   implicit val materializer = DefaultServices.getInstance().materializer
   implicit val ec = DefaultServices.getInstance().ec

@@ -21,7 +21,7 @@
 package actors
 
 import akka.actor._
-import core.{DefaultSystemServicesAware, SystemServicesAware}
+import core.DefaultServices
 import models._
 import shapeless._
 
@@ -36,10 +36,10 @@ object TagCache {
   def props(): Props = Props(classOf[DefaultTagCache])
 }
 
-class DefaultTagCache extends TagCache with DefaultClientReceiverComponent with DefaultSystemServicesAware
+class DefaultTagCache extends TagCache with DefaultClientReceiverComponent
 
 trait TagCache extends Actor with ActorLogging {
-  self: ClientReceiverComponent with SystemServicesAware =>
+  self: ClientReceiverComponent =>
     
     import TagCache._
 
@@ -71,7 +71,7 @@ trait TagCache extends Actor with ActorLogging {
       log.debug(s"TagCache changed:$diff")
       tagCache = diff.map{ case (removed, added) => 
         val msg = TagCacheChanged(projectId, removed, added)
-        clientReceiver broadcast (systemServices.systemUser, msg)
+        clientReceiver broadcast (DefaultServices.systemUser, msg)
       
         //update cache
         val newMap = currentMap.map(_ + (typ -> tags)).getOrElse(Map())

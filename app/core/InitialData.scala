@@ -23,10 +23,12 @@ package core
 import models._
 import org.mindrot.jbcrypt.BCrypt
 import play.api.Logger
+import play.modules.reactivemongo.ReactiveMongoApi
+
 import concurrent.ExecutionContext.Implicits.global
 import repositories._
 
-object InitialData extends MongoBasicRepositoryComponent {
+class InitialData(val reactiveMongoApi: ReactiveMongoApi) extends MongoBasicRepositoryComponent {
   def init() = {
     Logger.debug("Initialize user data...")
     userRepository.coll.flatMap(_.drop map { r =>

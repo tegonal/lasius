@@ -21,16 +21,16 @@
 package repositories
 
 import com.tegonal.play.json.TypedId.BaseId
+import core.ReactiveMongoApiAware
 import models.BaseEntity
 import play.api.libs.json._
-import play.api.Play.current
 import play.api.libs.json.Json.JsValueWrapper
-import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api._
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson._
-import reactivemongo.play.json.collection.JSONCollection
 import reactivemongo.play.json._
+import reactivemongo.play.json.collection.JSONCollection
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class MongoDBCommandException(msg: String) extends RuntimeException
@@ -63,9 +63,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 }
 
 abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]](implicit ctx: ExecutionContext, format: Format[T]) {
-  self: BaseRepository[T, ID] =>
+  self: BaseRepository[T, ID] with ReactiveMongoApiAware =>
 
-  lazy val reactiveMongoApi = current.injector.instanceOf[ReactiveMongoApi]
   def db = reactiveMongoApi.database
 
   lazy val bsonCollection: Future[BSONCollection] = db.flatMap(d => coll.map(c => d.collection(c.name, c.failoverStrategy)))

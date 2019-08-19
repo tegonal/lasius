@@ -20,7 +20,9 @@
 \*                                                                           */
 package repositories
 
+import core.DefaultReactiveMongoApiAware
 import models._
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
@@ -33,7 +35,7 @@ trait JiraConfigRepository extends BaseRepository[JiraConfig, JiraConfigId] {
   def getJiraConfigurations(): Future[Seq[JiraConfig]]
 }
 
-class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, JiraConfigId] with JiraConfigRepository {
+class JiraConfigMongoRepository extends BaseReactiveMongoRepository[JiraConfig, JiraConfigId] with JiraConfigRepository with DefaultReactiveMongoApiAware {
   def coll = db.map(_.collection[JSONCollection]("JiraConfig"))
 
   def getJiraConfigurations(): Future[Seq[JiraConfig]] = {

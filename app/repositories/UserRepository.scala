@@ -20,7 +20,9 @@
 \*                                                                           */
 package repositories
 
+import core.DefaultReactiveMongoApiAware
 import models.{User, UserId}
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import reactivemongo.play.json.collection.JSONCollection
@@ -34,7 +36,7 @@ trait UserRepository extends BaseRepository[User, UserId] {
   def findAll(): Future[Seq[User]]
 }
 
-class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with UserRepository {
+class UserMongoRepository extends BaseReactiveMongoRepository[User, UserId] with UserRepository with DefaultReactiveMongoApiAware {
   def coll = db.map(_.collection[JSONCollection]("User"))
 
   def findByEmail(email: String): Future[Option[User]] = {

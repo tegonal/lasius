@@ -25,8 +25,10 @@ import actors.{LasiusSupervisorActor, TagCache}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import controllers._
+import core.DefaultReactiveMongoApi.instance
+import core.DefaultServices.instance
 import domain.LoginStateAggregate
 import domain.views.CurrentTeamTimeBookingsView
 import models._
@@ -36,40 +38,19 @@ import play.api.mvc.{ControllerComponents, RequestHeader}
 import play.api.mvc.Results._
 import play.api.ApplicationLoader.Context
 import play.api.routing.Router
-import play.controllers.AssetsComponents
 import play.filters.HttpFiltersComponents
+import play.modules.reactivemongo.{ReactiveMongoApi, ReactiveMongoApiFromContext}
 import router.Routes
 import services.{TimeBookingViewService, _}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
-class CustomApplicationLoader extends ApplicationLoader with DefaultSystemServicesAware with ConfigAware {
+class CustomApplicationLoader extends ApplicationLoader with ConfigAware {
   lazy val logger = Logger(getClass().getName())
 
   def load(context: ApplicationLoader.Context): Application = {
-    //move UpdateUserId from test to app if you want to use it, see remark on UpdateUserId.update before executing
-    //implicit val serialization = SerializationExtension(system)
-    //UpdateUserId.update("x.y", "x.z")
-    DefaultServices.getInstance()
-
-    val initData = config.getBoolean("db.initialize_data")
-    if (initData) {
-      InitialData.init() map { _ =>
-        systemServices.currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
-      }
-    } else {
-      systemServices.currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
-    }
-
-    //initialite login handler
-    LoginHandler.subscribe(systemServices.loginHandler, system.eventStream)
-
-    //start pluginhandler
-    logger.debug(s"Start pluginHandler:${systemServices.pluginHandler}")
-    systemServices.pluginHandler ! PluginHandler.Startup
-
-    new DefaultComponents(context).application
+    new DefaultComponents(config, context).application
   }
 
   def onError(request: RequestHeader, ex: Throwable) = {
@@ -78,14 +59,42 @@ class CustomApplicationLoader extends ApplicationLoader with DefaultSystemServic
   }
 }
 
-class DefaultComponents(context: Context) extends BuiltInComponentsFromContext(context) with HttpFiltersComponents {
-  lazy val currentTeamTimeBookingsController = CurrentTeamTimeBookingsController
+class DefaultComponents(val config: Config, context: Context) extends ReactiveMongoApiFromContext(context) with HttpFiltersComponents with AssetsComponents {
+  implicit val system = ActorSystem("lasius-actor-system")
+
+  val systemUser = UserId("lasius-system")
+  val supervisor = system.actorOf(LasiusSupervisorActor.props)
+
+  DefaultReactiveMongoApi.initialize(reactiveMongoApi)
+
+  DefaultServices.initialize(system, supervisor)
+
+  DefaultLoginHandler.initialize(actorSystem, supervisor)
+
+  //move UpdateUserId from test to app if you want to use it, see remark on UpdateUserId.update before executing
+  //implicit val serialization = SerializationExtension(system)
+  //UpdateUserId.update("x.y", "x.z")
+  //initialite login handler
+  LoginHandler.subscribe(DefaultLoginHandler.getInstance().loginHandler, DefaultServices.getInstance().system.eventStream)
+
+  //start pluginhandler
+  DefaultServices.getInstance().pluginHandler ! PluginHandler.Startup
+
+  val initData = config.getBoolean("db.initialize_data")
+  if (initData) {
+    new InitialData(reactiveMongoApi).init() map { _ =>
+      DefaultServices.getInstance().currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
+    }
+  } else {
+    DefaultServices.getInstance().currentTeamTimeBookingsView ! CurrentTeamTimeBookingsView.Initialize
+  }
+
   lazy val jsController = new JSController
   lazy val router = new Routes(httpErrorHandler,
     ApplicationController,
     jsController,
     UsersController,
-    null,
+    assets,
     TimeBookingController,
     TimeBookingHistoryController,
     CurrentUserTimeBookingsController,
@@ -94,20 +103,17 @@ class DefaultComponents(context: Context) extends BuiltInComponentsFromContext(c
     StructureController,
     TimeBookingStatisticsController,
     UserFavoritesController,
-    "")
+    "/")
 }
 
-class DefaultServices extends SystemServices {
-  implicit val system = ActorSystem("lasius-actor-system")
-
+class DefaultServices(actorSystem: ActorSystem, val supervisor: ActorRef) extends SystemServices {
+  implicit val system = actorSystem
   val systemUser = UserId("lasius-system")
-  val supervisor = system.actorOf(LasiusSupervisorActor.props)
   implicit val timeout = Timeout(5 seconds) // needed for `?` below
   val duration = Duration.create(5, SECONDS)
   val timeBookingViewService = Await.result(supervisor ? TimeBookingViewService.props, duration).asInstanceOf[ActorRef]
 
   val loginStateAggregate = Await.result(supervisor ? LoginStateAggregate.props, duration).asInstanceOf[ActorRef]
-  val loginHandler =  Await.result(supervisor ? LoginHandler.props, duration).asInstanceOf[ActorRef]
 
   val currentUserTimeBookingsViewService = Await.result(supervisor ? CurrentUserTimeBookingsViewService.props, duration).asInstanceOf[ActorRef]
   val currentTeamTimeBookingsView = Await.result(supervisor ? CurrentTeamTimeBookingsView.props, duration).asInstanceOf[ActorRef]
@@ -117,12 +123,61 @@ class DefaultServices extends SystemServices {
   val pluginHandler = Await.result(supervisor ? PluginHandler.props, duration).asInstanceOf[ActorRef]
 }
 
-object DefaultServices {
-  private var instance: DefaultServices = null
+class DefaultLoginHandler(val system: ActorSystem, supervisor: ActorRef) extends ActorSystemAware {
+  implicit val timeout = Timeout(5 seconds)
+  val duration = Duration.create(5, SECONDS)
+
+  val loginHandler =  Await.result(supervisor ? LoginHandler.props, duration).asInstanceOf[ActorRef]
+}
+
+object DefaultLoginHandler {
+  private var instance: DefaultLoginHandler = null
+
+  def initialize(actorSystem: ActorSystem, supervisor: ActorRef): Unit = {
+    if(instance == null)
+      instance = new DefaultLoginHandler(actorSystem, supervisor)
+  }
 
   def getInstance() = {
+    if(instance == null){
+      throw new UninitializedError
+    }
+    instance
+  }
+}
+
+object DefaultServices {
+  val systemUser = UserId("lasius-system")
+
+  private var instance: DefaultServices = null
+
+  def initialize(actorSystem: ActorSystem, supervisor: ActorRef) = {
     if(instance == null)
-      instance = new DefaultServices()
+      instance = new DefaultServices(actorSystem, supervisor)
+  }
+
+  def getInstance() = {
+    if(instance == null){
+      throw new UninitializedError
+    }
+    instance
+  }
+}
+
+class DefaultReactiveMongoApi(val reactiveMongoApi: ReactiveMongoApi)
+
+object DefaultReactiveMongoApi {
+  private var instance: DefaultReactiveMongoApi = null
+
+  def initialize(reactiveMongoApi: ReactiveMongoApi) = {
+    if(instance == null)
+      instance = new DefaultReactiveMongoApi(reactiveMongoApi)
+  }
+
+  def getInstance() = {
+    if(instance == null){
+      throw new UninitializedError
+    }
     instance
   }
 }

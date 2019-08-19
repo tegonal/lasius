@@ -20,7 +20,9 @@
 \*                                                                           */
 package repositories
 
+import core.DefaultReactiveMongoApiAware
 import models._
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import reactivemongo.play.json.collection.JSONCollection
@@ -36,7 +38,7 @@ trait UserFavoritesRepository extends BaseRepository[UserFavorites, UserId] {
   def removeFavorite(userId: UserId, bookingStub: BookingStub): Future[UserFavorites]
 }
 
-class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavorites, UserId] with UserFavoritesRepository {
+class UserFavoritesMongoRepository extends BaseReactiveMongoRepository[UserFavorites, UserId] with UserFavoritesRepository with DefaultReactiveMongoApiAware {
   def coll = db.map(_.collection[JSONCollection]("Favorites"))
 
   def getByUser(userId: UserId): Future[UserFavorites] = {

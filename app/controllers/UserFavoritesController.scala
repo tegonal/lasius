@@ -21,7 +21,9 @@
 package controllers
 
 import actors.ClientMessagingWebsocketActor
+import core.DefaultSystemServicesAware
 import models._
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.mvc.Controller

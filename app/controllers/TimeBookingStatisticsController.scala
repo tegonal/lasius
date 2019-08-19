@@ -24,14 +24,16 @@ import models._
 import org.joda.time._
 import play.api.mvc.Controller
 import play.api.Logger
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import repositories.{BookingStatisticRepository, MongoUserBookingStatisticsRepositoryComponent, UserBookingStatisticsRepositoryComponent}
 import BaseFormat._
+import core.DefaultSystemServicesAware
 
 import scala.concurrent.Future
 
-trait TimeBookingStatisticsController {
+class TimeBookingStatisticsController {
   self: Controller with UserBookingStatisticsRepositoryComponent with Security =>
 
   def getAggregatedStatistics(source: String, from: DateTime, to: DateTime) = HasRole(FreeUser, parse.empty) {
@@ -95,4 +97,4 @@ trait TimeBookingStatisticsController {
   }
 }
 
-object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider
+object TimeBookingStatisticsController extends TimeBookingStatisticsController with Controller with MongoUserBookingStatisticsRepositoryComponent with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

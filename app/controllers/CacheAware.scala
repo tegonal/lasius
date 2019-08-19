@@ -10,7 +10,6 @@ trait CacheAware {
 
 trait DefaultCacheProvider extends CacheAware {
   override lazy val cache: SyncCacheApi = {
-    CacheManager.getInstance().addCache("default")
     new SyncEhCacheApi(CacheManager.getInstance().getCache("default"))
   }
 }

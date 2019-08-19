@@ -98,4 +98,4 @@ class TimeBookingController {
   }
 }
 
-object TimeBookingController extends TimeBookingController with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware
+object TimeBookingController extends TimeBookingController  with Controller with Security with DefaultSecurityComponent with DefaultCacheProvider with DefaultSystemServicesAware

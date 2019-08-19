@@ -20,12 +20,14 @@
 \*                                                                           */
 package controllers
 
-import concurrent.ExecutionContext.Implicits.global
+import core.DefaultSystemServicesAware
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{MongoSecurityRepositoryComponent, SecurityRepositoryComponent}
 
-trait UsersController {
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class UsersController {
   // Cake pattern
   this: SecurityRepositoryComponent with Controller with Security =>
 
@@ -46,4 +48,4 @@ trait UsersController {
   }
 }
 
-object UsersController extends UsersController with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent with DefaultCacheProvider
+object UsersController extends UsersController  with Controller with Security with DefaultSecurityComponent with MongoSecurityRepositoryComponent with DefaultCacheProvider

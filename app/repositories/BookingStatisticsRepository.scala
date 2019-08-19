@@ -20,9 +20,11 @@
 \*                                                                           */
 package repositories
 
+import core.DefaultReactiveMongoApiAware
 import models._
 import models.BaseFormat._
 import org.joda.time.{DateTime, Duration}
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
@@ -51,7 +53,7 @@ trait BookingByTagRepository extends BookingStatisticRepository[BookingByTag, Bo
 }
 
 abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M], I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit format: play.api.libs.json.Format[M]) extends BaseReactiveMongoRepository[M, I] with BookingStatisticRepository[M, I]
-  with MongoPeristentUserViewRepository[M, I] {
+  with MongoPeristentUserViewRepository[M, I] with DefaultReactiveMongoApiAware {
 
   def findByUserIdAndRange(userId: UserId, from: DateTime, to: DateTime)(implicit format: play.api.libs.json.Format[M]): Future[Traversable[M]] = {
     val sel = Json.obj("userId" -> userId,

@@ -22,6 +22,7 @@ package domain.views
 
 import actors._
 import akka.actor._
+import core.DefaultSystemServicesAware
 import models._
 import org.joda.time.DateTime
 import repositories._
@@ -35,14 +36,14 @@ object CurrentTeamTimeBookingsView {
   case class GetCurrentTeamTimeBookings(teamId: TeamId)
   case object NoResultFound
   case object Initialize
-  
+
   def props: Props = Props(classOf[DefaultCurrentTeamTimeBookingsView])
 }
 
-class DefaultCurrentTeamTimeBookingsView extends CurrentTeamTimeBookingsView with DefaultClientReceiverComponent with MongoBasicRepositoryComponent
+class DefaultCurrentTeamTimeBookingsView extends CurrentTeamTimeBookingsView with DefaultClientReceiverComponent with MongoBasicRepositoryComponent with DefaultSystemServicesAware
 
 class CurrentTeamTimeBookingsView extends Actor with ActorLogging {
-  self : BasicRepositoryComponent with ClientReceiverComponent =>
+  self: BasicRepositoryComponent with ClientReceiverComponent =>
     
   import CurrentTeamTimeBookingsView._
     

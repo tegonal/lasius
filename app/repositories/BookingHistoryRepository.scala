@@ -20,9 +20,11 @@
 \*                                                                           */
 package repositories
 
+import core.DefaultReactiveMongoApiAware
 import models._
 import models.BaseFormat.dateFormat
 import org.joda.time.DateTime
+
 import concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 import play.api.Logger
@@ -40,7 +42,7 @@ trait BookingHistoryRepository extends BaseRepository[Booking, BookingId] with P
 }
 
 class BookingHistoryMongoRepository extends BaseReactiveMongoRepository[Booking, BookingId] with BookingHistoryRepository
-  with MongoPeristentUserViewRepository[Booking, BookingId] {
+  with MongoPeristentUserViewRepository[Booking, BookingId] with DefaultReactiveMongoApiAware {
   def coll = db.map(_.collection[JSONCollection]("BookingHistory"))
 
   def findByUserIdAndRange(userId: Option[UserId], from: DateTime, to: DateTime): Future[Traversable[Booking]] = {
