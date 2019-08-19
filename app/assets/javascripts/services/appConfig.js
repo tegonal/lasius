@@ -33,7 +33,7 @@ define(['angular'], function (angular) {
         }
         else {
           $log.info('Load application config...');
-          playRoutes.controllers.ApplicationController.config().get().then(function (response) {
+          playRoutes.controllers.ApplicationController.getConfig().get().then(function (response) {
               config = response.data;              
               deferred.resolve(config);
             });            
