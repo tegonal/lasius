@@ -24,6 +24,7 @@ import actor.ClientReceiverComponentMock
 import akka.PersistentActorTestScope
 import akka.actor.{ActorSystem, Props}
 import akka.testkit._
+import core.DefaultSystemServicesAware
 import models.{UserId, _}
 import org.joda.time.{DateTime, Duration, Interval}
 import org.specs2.matcher._
@@ -536,4 +537,4 @@ object UserTimeBookingStatisticsViewMock {
 
 class UserTimeBookingStatisticsViewMock(userId: UserId, val bookingByCategoryRepository: BookingByCategoryRepository,
   val bookingByProjectRepository: BookingByProjectRepository, val bookingByTagRepository: BookingByTagRepository) extends UserTimeBookingStatisticsView(userId)
-  with UserBookingStatisticsRepositoryComponent with ClientReceiverComponentMock
+  with UserBookingStatisticsRepositoryComponent with ClientReceiverComponentMock with DefaultSystemServicesAware

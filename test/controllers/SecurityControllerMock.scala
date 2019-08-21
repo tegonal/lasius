@@ -20,21 +20,19 @@
 \*                                                                           */
 package controllers
 
-import core.DefaultCacheProvider
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import core.DefaultCacheAware
 import models._
-import play.api.mvc.Action
-import play.api.mvc.BodyParser
-import play.api.mvc.Controller
-import play.api.mvc.Request
-import play.api.mvc.RequestHeader
-import play.api.mvc.Result
-import reactivemongo.bson.BSONObjectID
-import play.api.Logger
+import play.api.mvc._
 
-class SecurityControllerMock(token: String = "", userId: UserId = UserId("someUserId"), authorized: Future[Boolean] = Future.successful(true), user: Option[User] = None, authorizationFailedResult: Result = null) extends SecurityComponentMock with Controller with Security with DefaultCacheProvider {
+import scala.concurrent.{ExecutionContext, Future}
+
+trait SecurityControllerMock extends SecurityComponentMock with Controller with Security with DefaultCacheAware {
+  val token: String = ""
+  val userId: UserId = UserId("someUserId")
+  val authorized: Future[Boolean] = Future.successful(true)
+  val user: Option[User] = None
+  val authorizationFailedResult: Result = null
+
   override def HasToken[A](p: BodyParser[A] = parse.anyContent)(
     f: Subject => Request[A] => Future[Result])(implicit context: ExecutionContext): Action[A] = {
     Action.async(p) { implicit request =>

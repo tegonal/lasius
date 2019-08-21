@@ -85,4 +85,4 @@ class TimeBookingStatisticsControllerSpec extends PlaySpecification with Mockito
     }
   }
 }
-class TimeBookingStatisticsControllerMock extends SecurityControllerMock with TimeBookingStatisticsController with UserBookingStatisticsRepositoryComponentMock with Controller
+class TimeBookingStatisticsControllerMock extends TimeBookingStatisticsController with SecurityControllerMock with UserBookingStatisticsRepositoryComponentMock with Controller

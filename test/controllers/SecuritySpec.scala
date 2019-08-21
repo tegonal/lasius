@@ -20,8 +20,9 @@
 \*                                                                           */
 package controllers
 
-import controllers.ApplicationController._
-import core.DefaultCacheProvider
+import controllers.ApplicationController.parse
+import controllers.UsersController.{AuthTokenCookieKey, AuthTokenHeader}
+import core.DefaultCacheAware
 import models._
 import org.apache.http.HttpStatus
 import org.junit.runner.RunWith
@@ -37,14 +38,15 @@ import scala.concurrent.{ExecutionContext, Future, _}
 import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
-class SecuritySpec extends Specification with Results with Mockito with DefaultCacheProvider{
+class SecuritySpec extends Specification with Results with Mockito with DefaultCacheAware {
   sequential =>
   "HasToken" should {
 
     def runHasToken(controller: SecurityMock, request: Request[Unit]) = {
       //execute
       implicit val context = scala.concurrent.ExecutionContext.Implicits.global
-      val result: Future[Result] = controller.HasToken(parse.empty) { subject =>
+
+      val result: Future[Result] = controller.HasToken(parse.empty) { _ =>
         implicit request =>
           Future.successful(Ok)
       }.apply(request)
@@ -194,7 +196,7 @@ class SecuritySpec extends Specification with Results with Mockito with DefaultC
     }
   }
 }
-trait SecurityMock extends Security with SecurityComponentMock with Controller with DefaultCacheProvider {
+trait SecurityMock extends Security with SecurityComponentMock with Controller with DefaultCacheAware {
 }
 
 class SecurityMockImpl extends SecurityMock
@@ -211,7 +213,7 @@ object UserMock {
     Seq())
 }
 
-class HasRoleSecurityMock(subject: Subject = Subject("fsdfsdf", UserId("123"))) extends Security with SecurityComponentMock with Controller with DefaultCacheProvider {
+class HasRoleSecurityMock(subject: Subject = Subject("fsdfsdf", UserId("123"))) extends Security with SecurityComponentMock with Controller with DefaultCacheAware {
   override def HasToken[A](p: BodyParser[A] = parse.anyContent)(
     f: Subject => Request[A] => Future[Result])(implicit context: ExecutionContext): Action[A] = {
     Action.async(p) { implicit request =>
