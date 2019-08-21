@@ -65,7 +65,7 @@ class DefaultComponents(val config: Config, context: Context) extends ReactiveMo
   implicit val system = ActorSystem("lasius-actor-system")
 
   val systemUser = UserId("lasius-system")
-  val supervisor = system.actorOf(LasiusSupervisorActor.props)
+  val supervisor = system.actorOf(LasiusSupervisorActor.props, "lasius-supervisor")
 
   DefaultCacheProvider.initialize(defaultCacheApi.sync)
 

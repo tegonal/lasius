@@ -22,13 +22,9 @@ package domain.views
 
 import actors.{ClientMessagingWebsocketActor, ClientReceiverComponent, DefaultClientReceiverComponent}
 import akka.actor._
-import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
-import akka.persistence.query.PersistenceQuery
-import akka.stream.ActorMaterializer
 import core.DefaultSystemServicesAware
 import models._
 import org.joda.time.{DateTime, Days, Duration, Interval}
-
 import repositories._
 
 import scala.concurrent.duration._
@@ -43,25 +39,14 @@ object UserTimeBookingStatisticsView {
 class MongoUserTimeBookingStatisticsView(userId: UserId) extends UserTimeBookingStatisticsView(userId)
   with MongoUserBookingStatisticsRepositoryComponent with DefaultClientReceiverComponent with DefaultSystemServicesAware
 
-class UserTimeBookingStatisticsView(userId: UserId) extends Actor with ActorLogging {
+class UserTimeBookingStatisticsView(userId: UserId) extends JournalReadingView with ActorLogging {
   self: UserBookingStatisticsRepositoryComponent with ClientReceiverComponent with DefaultSystemServicesAware =>
   import domain.views.UserTimeBookingStatisticsView._
 
   val persistenceId = userId.value
-  val viewId = userId.value + "-time-booking-statistics"
+  // val viewId = userId.value + "-time-booking-statistics"
 
   def autoUpdateInterval = 1 second
-
-  val readJournal =
-    PersistenceQuery(context.system).readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
-
-  val journalSource = readJournal.eventsByPersistenceId(viewId, fromSequenceNr = 0L, toSequenceNr = Long.MaxValue)
-
-  override def preStart = {
-    journalSource.runForeach{ event =>
-      context.self ! event
-    }
-  }
 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>

@@ -185,9 +185,9 @@ define(
 
                         function updateTime(momentInstance, apply) {
                           scope.duration.moment = (scope.result.booking.end === undefined)?
-                              moment().subtract(momentInstance):
+                              momentInstance:
                               moment(scope.result.booking.end).subtract(momentInstance);
-                              
+
                           if (scope.result.totalBySameBooking) {
                             scope.total_duration.moment = moment(scope.duration.moment).add(moment.duration(scope.result.totalBySameBooking));
                           }
@@ -199,7 +199,7 @@ define(
                           // update every second
                           if (scope.result.booking.end === undefined) {
                             activeTimeout = $window.setTimeout(function() {
-                              updateTime(momentInstance, true);
+                              updateTime(momentInstance.add(1, 's'), true);
                             }, 1000);
                           }
                         }
@@ -207,7 +207,7 @@ define(
                         function updateMoment(apply) {
                           cancelTimer();
                           if (currentValue) {
-                            var momentValue = moment.duration(currentValue);
+                            var momentValue = moment.duration(moment().diff(moment(currentValue)));
                             
                             updateTime(momentValue, false);
                           }

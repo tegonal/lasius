@@ -14,8 +14,8 @@
 	    </span>
 	</div>
     <div class="panel-body align_center current_booking_content">  	
-	  	<span class="text_big" ng-if="duration.moment.hours() > 2">{{duration.moment.hours()-1}} <small>hours</small></span>
-	  	<span class="text_big" ng-if="duration.moment.hours() == 2">1 <small>hour</small></span>
+	  	<span class="text_big" ng-if="duration.moment.hours() > 1">{{duration.moment.hours()-1}} <small>hours</small></span>
+	  	<span class="text_big" ng-if="duration.moment.hours() == 1">1 <small>hour</small></span>
 	  	<span class="text_big" ng-if="duration.moment.minutes() > 1">{{duration.moment.minutes()}} <small>minutes</small></span>
 	  	<span class="text_big" ng-if="duration.moment.minutes() == 1">1 <small>minute</small></span>
 	  	<span class="text_big" >{{duration.moment.seconds()}} <small>seconds</small></span>

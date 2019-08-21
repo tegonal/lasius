@@ -30,11 +30,13 @@ class LasiusSupervisorActor extends Actor {
  
   override val supervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-      case _                => Restart
+      case _                =>
+        Restart
     }
   
   def receive = {
-    case p: Props => sender() ! context.actorOf(p)
+    case p: Props =>
+      sender() ! context.actorOf(p)
    }
 }
 

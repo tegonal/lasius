@@ -21,10 +21,7 @@
 package domain.views
 
 import actors.{ClientReceiverComponent, DefaultClientReceiverComponent}
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
-import akka.persistence.query.PersistenceQuery
-import akka.stream.ActorMaterializer
+import akka.actor.{ActorLogging, Props}
 import models.{CurrentUserTimeBooking, _}
 import org.joda.time.{DateTime, Duration, Interval}
 
@@ -39,22 +36,15 @@ object CurrentUserTimeBookingsView {
 }
 
 class DefaultCurrentUserTimeBookingsView(userId: UserId)
-  extends CurrentUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
+extends CurrentUserTimeBookingsView(userId) with DefaultClientReceiverComponent {
 }
 
-class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLogging {
+class CurrentUserTimeBookingsView(userId: UserId) extends JournalReadingView with ActorLogging {
   self: ClientReceiverComponent =>
   import domain.views.CurrentUserTimeBookingsView._
 
-  implicit val materializer = ActorMaterializer()
-
   val persistenceId = userId.value
-  val viewId = userId.value + "-current-time-bookings"
-
-  val readJournal =
-    PersistenceQuery(context.system).readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
-
-  val journalSource = readJournal.eventsByPersistenceId(viewId, fromSequenceNr = 0L, toSequenceNr = Long.MaxValue)
+  // val viewId = userId.value + "-current-time-bookings"
 
   case class CurrentTimeBookings(booking: Option[Booking], currentDay: DateTime, dailyBookingsMap: Map[BookingStub, Duration])
 
@@ -62,18 +52,13 @@ class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLoggin
 
   def autoUpdateInterval = 100 millis
 
-  override def preStart = {
-    journalSource.runForeach{ event =>
-      context.self ! event
-    }
-  }
-
   val receive = {
     case e: UserTimeBookingStarted =>
       log.debug(s"CurrentUserTimeBookingsView -> UserTimeBookingStarted($e.booking)")
       val day = e.booking.start.withTimeAtStartOfDay
       val durations = state.booking.filter(_.end.isDefined).map(b => addDailyDuration(b, day)).getOrElse(getMapForDay(day))
       state = updateBooking(userId, Some(e.booking), day, durations)
+
       notifyClient()
       sender ! Ack
     case e: UserTimeBookingStopped =>
@@ -103,7 +88,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLoggin
       sender ! Ack
     case e: UserTimeBookingAdded =>
       e.booking.end.map { end =>
-        //check if on same day        
+        //check if on same day
         if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
           //add to totals
           val day = e.booking.end.get.withTimeAtStartOfDay
@@ -116,12 +101,12 @@ class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLoggin
         val durations = getMapForDay(day)
 
         state = updateBooking(e.booking.userId, Some(e.booking), day, durations)
-        notifyClient()        
+        notifyClient()
       }
       sender ! Ack
     case e: UserTimeBookingRemoved =>
       e.booking.end.map { end =>
-        //check if on same day        
+        //check if on same day
         if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
           if (state.booking.filter(_.id == e.booking.id).isEmpty) {
             //remove from totals
@@ -145,7 +130,7 @@ class CurrentUserTimeBookingsView(userId: UserId) extends Actor with ActorLoggin
       }
       sender ! Ack
     case UserTimeBookingEdited(booking, start, end) =>
-      //check if on same day        
+      //check if on same day
       if (end.withTimeAtStartOfDay.isEqual(state.currentDay)) {
         state.dailyBookingsMap.filter(_._1 == booking.createStub).headOption map { x =>
           //remove old booking from totals

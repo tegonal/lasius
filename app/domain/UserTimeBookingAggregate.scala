@@ -25,7 +25,7 @@ import java.util.UUID
 import actors.{ClientReceiverComponent, DefaultClientReceiverComponent}
 import akka.actor._
 import akka.persistence._
-import core.{DefaultReactiveMongoApi, DefaultReactiveMongoApiAware}
+import core.DefaultReactiveMongoApiAware
 import models._
 import org.joda.time.DateTime
 import repositories.{MongoUserBookingHistoryRepositoryComponent, UserBookingHistoryRepositoryComponent}
