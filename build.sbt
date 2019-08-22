@@ -26,7 +26,7 @@ val reactiveMongoPlayVer = s"$reactiveMongoVer-play27"
 
 libraryDependencies ++= Seq(
     "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoPlayVer,
-    "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "2.2.10-SNAPSHOT" withSources(),
+    "com.github.scullxbones" %% "akka-persistence-mongo-rxmongo" % "2.2.11-SNAPSHOT" withSources(),
     "com.tegonal" %% "play-json-typedid" % "1.0.2",
     "org.julienrf" %% "play-json-derived-codecs" % "6.0.0",
     "com.typesafe.play" %% "play-json-joda" % "2.7.3",
