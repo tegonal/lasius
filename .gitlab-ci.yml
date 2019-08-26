@@ -11,5 +11,5 @@ build:
     - sbt dist
   artifacts:
     paths:
-      target/universal/*.zip
+      - target/universal/*.zip
     expire_in: 1 week
