@@ -1,12 +1,15 @@
+stages:
+  - build
+
 build:
   image: hseeberger/scala-sbt:11.0.3_1.2.8_2.12.8
   stage: build
+  tags:
+    - not-laufwunder
   script:
     - sbt clean compile test:compile
     - sbt dist
   artifacts:
     paths:
       target/universal/*.zip
-  tags:
-    - not-laufwunder
-
+    expire_in: 1 week
