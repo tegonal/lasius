@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
   RoutesKeys.routesImport += "binders.Binders._"
 )
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.9"
 
 resolvers += "Tegonal releases" at "https://github.com/tegonal/tegonal-mvn/raw/master/releases/"
 
@@ -49,6 +49,9 @@ libraryDependencies ++= Seq(
     "org.webjars" % "requirejs" % "2.3.2",
     "org.webjars" % "underscorejs" % "1.8.3",
     "org.webjars" % "jquery" % "2.1.4",
+    "org.webjars.bower" % "jquery" % "2.1.4",
+    "org.webjars.bower" % "angular" % "1.7.8",
+    "org.webjars.bower" % "jquery-ui" % "1.12.1",
     "org.webjars.bower" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
     "org.webjars" % "angularjs" % "1.4.8" exclude("org.webjars", "jquery"),
     "org.webjars" % "angular-ui-bootstrap" % "0.14.3",
