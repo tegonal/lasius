@@ -3,3 +3,5 @@ scala:
   - 2.12.8
 jdk:
   - openjdk11
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION -Dfile.encoding=UTF8 compile test:compile
