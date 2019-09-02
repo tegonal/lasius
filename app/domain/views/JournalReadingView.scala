@@ -1,12 +1,14 @@
 package domain.views
 
 import akka.actor.Actor
-import akka.pattern.ask
 import akka.contrib.persistence.mongodb.{MongoReadJournal, ScalaDslMongoReadJournal}
 import akka.persistence.query.PersistenceQuery
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+
 import scala.concurrent.duration._
+
+case object LiveStreamFailed
 
 trait JournalReadingView extends Actor {
   val persistenceId: String
@@ -20,6 +22,6 @@ trait JournalReadingView extends Actor {
   override def preStart = {
     implicit val materializer = ActorMaterializer()
     implicit val timeout = Timeout(5 seconds)
-    journalSource.runForeach(event => context.self ? event)
+    journalSource.runForeach(event => context.self ! event)
   }
 }

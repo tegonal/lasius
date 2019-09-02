@@ -54,10 +54,10 @@ class LoginHandler extends Actor with ActorLogging with DefaultSystemServicesAwa
   def initializeUserViews(userId: UserId) = {
     log.debug(s"user logged in:$userId, start persistentViews")
     //initialize persistentviews
+    systemServices.timeBookingViewService ! StartAggregate(userId)
     systemServices.currentUserTimeBookingsViewService ! domain.views.CurrentUserTimeBookingsView.GetCurrentTimeBooking(userId)
     systemServices.latestUserTimeBookingsViewService ! domain.views.LatestUserTimeBookingsView.GetLatestTimeBooking(userId, 5)
     systemServices.timeBookingStatisticsViewService ! StartUserTimeBookingView(userId)
-    systemServices.timeBookingViewService ! StartAggregate(userId)
   }
 
   def handleLoggedOut(userId: UserId) = {

@@ -28,6 +28,7 @@ import org.joda.time.{DateTime, Days, Duration, Interval}
 import repositories._
 
 import scala.concurrent.duration._
+import scala.concurrent.Await
 
 object UserTimeBookingStatisticsView {
 
@@ -46,18 +47,20 @@ class UserTimeBookingStatisticsView(userId: UserId) extends JournalReadingView w
   val persistenceId = userId.value
   // val viewId = userId.value + "-time-booking-statistics"
 
-  def autoUpdateInterval = 1 second
+  //def autoUpdateInterval = 1 second
+
+  private val waitTime = 5 seconds
 
   val receive: Receive = {
     case e: UserTimeBookingInitialized =>
       log.debug(s"UserTimeBookingStatisticsView -> initialize")
-      bookingByProjectRepository.deleteByUser(userId)
+      Await.ready(bookingByProjectRepository.deleteByUser(userId), waitTime)
       notifyClient(UserTimeBookingByProjectEntryCleaned(userId))
 
-      bookingByCategoryRepository.deleteByUser(userId)
+      Await.ready(bookingByCategoryRepository.deleteByUser(userId), waitTime)
       notifyClient(UserTimeBookingByCategoryEntryCleaned(userId))
 
-      bookingByTagRepository.deleteByUser(userId)
+      Await.ready(bookingByTagRepository.deleteByUser(userId), waitTime)
       notifyClient(UserTimeBookingByTagEntryCleaned(userId))
       sender ! Ack
     case UserTimeBookingStopped(booking) =>
@@ -109,11 +112,11 @@ class UserTimeBookingStatisticsView(userId: UserId) extends JournalReadingView w
     durations map {
       _ match {
         case b: BookingByCategory =>
-          bookingByCategoryRepository.add(b)
+          Await.ready(bookingByCategoryRepository.add(b), waitTime)
         case b: BookingByProject =>
-          bookingByProjectRepository.add(b)
+          Await.ready(bookingByProjectRepository.add(b), waitTime)
         case b: BookingByTag =>
-          bookingByTagRepository.add(b)
+          Await.ready(bookingByTagRepository.add(b), waitTime)
         case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }
@@ -124,11 +127,11 @@ class UserTimeBookingStatisticsView(userId: UserId) extends JournalReadingView w
     durations map {
       _ match {
         case b: BookingByCategory =>
-          bookingByCategoryRepository.subtract(b)
+          Await.ready(bookingByCategoryRepository.subtract(b), waitTime)
         case b: BookingByProject =>
-          bookingByProjectRepository.subtract(b)
+          Await.ready(bookingByProjectRepository.subtract(b), waitTime)
         case b: BookingByTag =>
-          bookingByTagRepository.subtract(b)
+          Await.ready(bookingByTagRepository.subtract(b), waitTime)
         case b @ _ =>
           log.warning(s"Unsupported duration:$b")
       }

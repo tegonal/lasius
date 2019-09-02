@@ -31,17 +31,24 @@ import reactivemongo.bson._
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 
+import scala.concurrent.duration._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class MongoDBCommandException(msg: String) extends RuntimeException
 
 trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]] {
 
+  def failoverStrategy = FailoverStrategy(initialDelay = 100 milliseconds,
+    retries = 16)
+
   def coll: Future[JSONCollection]
 
   def get(id: BSONObjectID): Future[Option[(T, BSONObjectID)]]
 
   def insert(t: T)(implicit ctx: ExecutionContext): Future[BSONObjectID]
+
+  def insert(ts: List[T])(implicit ctx: ExecutionContext): Future[List[BSONObjectID]]
 
   def update(sel: JsObject, modifier: JsObject, upsert: Boolean = true)(implicit ctx: ExecutionContext): Future[Boolean]
 
@@ -119,6 +126,35 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
       case f => sys.error(s"Could not parse _id field: $f")
     }
   }
+
+  def insert(ts: List[T])(implicit ctx: ExecutionContext): Future[List[BSONObjectID]] = {
+    val objects = ts.map { t =>
+      val obj = format.writes(t).as[JsObject]
+      if((obj \"_id").isEmpty) {
+        val id = BSONObjectID.generate
+        (obj ++ Json.obj("_id" -> id), id)
+      } else {
+        (obj, extractId(obj))
+      }
+    }
+
+    coll.flatMap(_.insert(true).many(objects.map(_._1)).map(_ => objects.map(_._2)))
+  }
+
+  private def extractId(obj: JsObject) = { obj \ "_id" match {
+      case JsDefined(JsObject(Seq((_, JsString(oid))))) =>
+        BSONObjectID(oid.getBytes)
+
+      case JsDefined(JsObject(Seq("$oid", JsString(oid)))) =>
+        BSONObjectID(oid.getBytes)
+
+      case JsDefined(JsString(oid)) =>
+        BSONObjectID(oid.getBytes)
+
+      case f => sys.error(s"Could not parse _id field: $f")
+    }
+  }
+
 
   def find(sel: JsObject, limit: Int = -1, skip: Int = 0, sort: JsObject = Json.obj(), projection: JsObject = Json.obj())(implicit ctx: ExecutionContext): Future[Traversable[(T, BSONObjectID)]] = {
     coll.flatMap(_.find(sel).projection(projection).sort(sort).options(QueryOpts().skip(skip).batchSize(limit)).cursor[JsObject]().collect[Traversable](limit, Cursor.FailOnError()).map(_.map(js => (js.as[T], (js \ "_id").as[BSONObjectID]))))

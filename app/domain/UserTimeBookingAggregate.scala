@@ -30,7 +30,8 @@ import models._
 import org.joda.time.DateTime
 import repositories.{MongoUserBookingHistoryRepositoryComponent, UserBookingHistoryRepositoryComponent}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 object UserTimeBookingAggregate {
   import AggregateRoot._
@@ -81,6 +82,10 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   def newBookingId = BookingId(UUID.randomUUID().toString())
 
+  implicit val ec = context.system.dispatcher
+
+  private val timeout = 5 seconds
+
   /**
    * Updates internal processor state according to event that is to be applied.
    *
@@ -93,7 +98,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
         log.debug(s"UserTimeBookingInitialized")
         context become created
 
-        bookingHistoryRepository.deleteByUser(userId)
+        Await.ready(bookingHistoryRepository.deleteByUser(userId), timeout)
         notifyClient(UserTimeBookingHistoryEntryCleaned(userId))
       case UserTimeBookingStarted(booking) =>
         log.debug(s"UserBookingStarted - $booking")
@@ -145,7 +150,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
 
   def startUserBooking(ub: UserTimeBooking, booking: Booking) = {
     if (booking.end.isDefined) {
-      bookingHistoryRepository.insert(booking)
+      Await.ready(bookingHistoryRepository.insert(booking), timeout)
       notifyClient(UserTimeBookingHistoryEntryAdded(booking))
     }
 
@@ -153,7 +158,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def endAndLogUserBooking(ub: UserTimeBooking, booking: Booking) = {
-    bookingHistoryRepository.insert(booking)
+    Await.ready(bookingHistoryRepository.insert(booking), timeout)
     notifyClient(UserTimeBookingHistoryEntryAdded(booking))
     endUserBooking(ub, booking.id, booking.end.get)
   }
@@ -167,7 +172,7 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def removeUserBooking(ub: UserTimeBooking, booking: Booking) = {
-    bookingHistoryRepository.remove(booking)
+    Await.ready(bookingHistoryRepository.remove(booking), timeout)
     notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
 
     val newBookings = ub.bookings.filter(_.id != booking.id)
@@ -175,12 +180,15 @@ class UserTimeBookingAggregate(userId: UserId) extends AggregateRoot {
   }
 
   def editUserBooking(ub: UserTimeBooking, booking: Booking, start: DateTime, end: DateTime) = {
-    bookingHistoryRepository.updateTimeBooking(booking.id, start, end) map {
+    Await.ready(bookingHistoryRepository.updateTimeBooking(booking.id, start, end) map {
       case true =>
         val updatedBooking = booking.copy(start = start, end = Some(end))
         notifyClient(UserTimeBookingHistoryEntryChanged(updatedBooking))
       case _ => log.warning(s"Couldn't update time booking:$booking")
-    }
+    }, timeout)
+
+    val updatedBooking = booking.copy(start = start, end = Some(end))
+    notifyClient(UserTimeBookingHistoryEntryChanged(updatedBooking))
 
     val newBookings = ub.bookings.map { b =>
       if (b.id == booking.id) b.copy(start = start, end = Some(end))

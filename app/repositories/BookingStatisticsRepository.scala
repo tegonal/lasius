@@ -79,7 +79,7 @@ abstract class BookingStatisticMongoRepository[M <: models.OperatorEntity[I, M],
 }
 
 class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[BookingByProject, BookingByProjectId] with BookingByProjectRepository {
-  def coll = db.map(_.collection[JSONCollection]("BookingByProject"))
+  def coll = db.map(_.collection[JSONCollection]("BookingByProject", failoverStrategy))
 
   def getUniqueContraint(model: BookingByProject): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "projectId" -> model.projectId)
@@ -87,7 +87,7 @@ class BookingByProjectMongoRepository extends BookingStatisticMongoRepository[Bo
 }
 
 class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[BookingByCategory, BookingByCategoryId] with BookingByCategoryRepository {
-  def coll = db.map(_.collection[JSONCollection]("BookingByCategory"))
+  def coll = db.map(_.collection[JSONCollection]("BookingByCategory", failoverStrategy))
 
   def getUniqueContraint(model: BookingByCategory): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "categoryId" -> model.categoryId)
@@ -95,7 +95,7 @@ class BookingByCategoryMongoRepository extends BookingStatisticMongoRepository[B
 }
 
 class BookingByTagMongoRepository extends BookingStatisticMongoRepository[BookingByTag, BookingByTagId] with BookingByTagRepository {
-  def coll = db.map(_.collection[JSONCollection]("BookingByTag"))
+  def coll = db.map(_.collection[JSONCollection]("BookingByTag", failoverStrategy))
 
   def getUniqueContraint(model: BookingByTag): JsObject = {
     Json.obj("userId" -> model.userId, "day" -> model.day, "tagId" -> model.tagId)
