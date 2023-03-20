@@ -1,0 +1,28 @@
+name: Build & test backend application
+
+on:
+  workflow_call:
+  pull_request:
+  push:
+    paths:
+      - 'backend/**'
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+jobs:
+  Build-Backend:
+    name: Build & test backend application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build backend
+        working-directory: ./backend
+        run: sbt clean update compile test dist

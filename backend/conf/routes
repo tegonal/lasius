@@ -1,0 +1,968 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+#######
+####### General #######
+#######
+
+###
+#  tags:
+#    - general
+#  summary: Get application config
+#  operationId: getConfiguration
+#  responses:
+#     200:
+#       description: success
+#       content:
+#         application/json:
+#           schema:
+#             $ref: '#/components/schemas/models.ApplicationConfig'
+###
+GET /config             controllers.ApplicationController.getConfig
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - general
+#  responses:
+#    200:
+#      description: success
+###
+GET /messagingSocket    controllers.ApplicationController.messagingSocket
+
+#######
+####### Authentication #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - authentication
+#  summary: Log current user out
+#  operationId: signOut
+#  responses:
+#    200:
+#      description: success
+###
+POST /signout           controllers.ApplicationController.logout()
+
+###
+#  tags:
+#    - authentication
+#  summary: Authenticate with user and password
+#  operationId: signIn
+#  requestBody:
+#     content:
+#       application/json:
+#         schema:
+#           id: LoginPost
+#           $ref: '#/components/schemas/controllers.LoginForm'
+#  responses:
+#     200:
+#       description: success
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#                "token":
+#                  type: string
+###
+POST /signin            controllers.ApplicationController.login
+
+#######
+####### Current User #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user
+#  summary: Get current user's profile
+#  operationId: getUserProfile
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserDTO'
+###
+GET /user/profile         controllers.UsersController.authUser()
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user
+#  summary: Change current user's profile
+#  operationId: updateUserProfile
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.PersonalDataUpdate'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserDTO'
+###
+POST /user/profile          controllers.UsersController.updatePersonalData()
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user
+#  summary: Change current user's settings
+#  operationId: updateUserSettings
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UserSettings'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserDTO'
+###
+POST /user/profile/settings          controllers.UsersController.updateUserSettings()
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user
+#  summary: Change current user's password
+#  operationId: updateUserPassword
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.PasswordChangeRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user/update-password      controllers.UsersController.changePassword()
+
+#######
+####### Users #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - users
+#  summary: Change selected user's profile in selected organisation
+#  operationId: updateUserProfileByOrganisation
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.PersonalDataUpdate'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserDTO'
+###
+POST /users/organisations/:orgId/users/:userId      controllers.UsersController.updateUserData(orgId: models.OrganisationId, userId: models.UserId)
+
+#######
+####### Organisations Current User #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-organisations
+#  summary: Change current user's working hours for the selected organisation
+#  operationId: updateWorkingHoursByOrganisation
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UpdateUserOrganisation'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserDTO'
+###
+POST /user-organisations/organisations/:orgId/working-hours     controllers.UsersController.updateMyUserOrganisationData(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-organisations
+#  summary: Remove current user's membership from selected organisation
+#  operationId: deleteUserMembershipByOrganisation
+#  responses:
+#    200:
+#      description: successfully removed user from organisation
+###
+DELETE /user-organisations/organisations/:orgId/leave           controllers.OrganisationsController.unassignMyUser(orgId: models.OrganisationId)
+
+###
+#  security:
+#     - cookieAuth: []
+#  summary: TagController
+#  tags:
+#     - user-organisations
+#  summary: Get tags by organisation and project
+#  operationId: getTagsByProject
+#  responses:
+#     200:
+#       description: success
+#       content:
+#         application/json:
+#           schema:
+#             type: array
+#             items:
+#               $ref: '#/components/schemas/models.Tag'
+###
+GET /user-organisations/organisations/:orgId/projects/:projectId/tags          controllers.TagController.getTags(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+
+#######
+####### Current User Bookings #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Start booking time on selected organisation for the current user
+#  operationId: startUserBookingCurrent
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.StartBookingRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings/start         controllers.TimeBookingController.start(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Stop the currently running booking by organisation and booking id for the current user
+#  operationId: stopUserBookingCurrent
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.StopBookingRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings/:bookingId/stop       controllers.TimeBookingController.stop(orgId: models.OrganisationId, bookingId: models.BookingId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Change the currently running booking by organisation and booking id for the current user
+#  operationId: updateUserBookingCurrent
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.BookingChangeStartRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings/:bookingId/start-time     controllers.TimeBookingController.changeStart(orgId: models.OrganisationId, bookingId:models.BookingId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Remove a booking by organisation and booking id for the current user
+#  operationId: deleteUserBooking
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /user-bookings/organisations/:orgId/bookings/:bookingId          controllers.TimeBookingController.remove(orgId: models.OrganisationId, bookingId:models.BookingId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Create a booking by organisation for the current user
+#  operationId: addUserBookingByOrganisation
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.AddBookingRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings           controllers.TimeBookingController.add(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Change a booking by organisation for the current user
+#  operationId: updateUserBooking
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.EditBookingRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings/:bookingId            controllers.TimeBookingController.edit(orgId: models.OrganisationId,bookingId: models.BookingId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - user-bookings
+#  summary: Get current user's booking history for selected organisation
+#  operationId: getUserBookingListByOrganisation
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingV2'
+###
+GET /user-bookings/organisations/:orgId/bookings/history            controllers.TimeBookingHistoryController.getTimeBookingHistoryByUser(orgId: models.OrganisationId,from:org.joda.time.LocalDateTime, to:org.joda.time.LocalDateTime, limit: Option[Int], skip: Option[Int])
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-bookings
+#  summary: Get aggregated stats for current user in selected organisation
+#  operationId: getUserBookingAggregatedStatsByOrganisation
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingStats'
+###
+GET /user-bookings/organisations/:orgId/bookings/stats/aggregated                         controllers.TimeBookingStatisticsController.getAggregatedStatisticsByUser(orgId: models.OrganisationId,source: String, from:org.joda.time.LocalDate, to:org.joda.time.LocalDate, granularity: models.Granularity)
+
+###
+#  security:
+#     - cookieAuth: []
+#  tags:
+#     - user-bookings
+#  summary: Get current user's currently running booking
+#  operationId: getUserBookingCurrent
+#  responses:
+#     200:
+#       description: success
+#       content:
+#         application/json:
+#           schema:
+#             $ref: '#/components/schemas/models.CurrentUserTimeBooking'
+###
+GET /user-bookings/current                                  controllers.CurrentUserTimeBookingsController.getCurrentTimeBooking()
+
+###
+#  security:
+#     - cookieAuth: []
+#  tags:
+#    - user-bookings
+#  summary: Get currently running bookings of members in selected organisation
+#  operationId: getUserBookingCurrentListByOrganisation
+#  responses:
+#     200:
+#       description: success
+#       content:
+#         application/json:
+#           schema:
+#             $ref: '#/components/schemas/models.CurrentOrganisationTimeBookings'
+###
+GET /user-bookings/organisations/:orgId/current           			            controllers.OrganisationTimeBookingsController.getOrganisationTimeBooking(orgId: models.OrganisationId)
+
+###
+#  security:
+#     - cookieAuth: []
+#  tags:
+#     - user-bookings
+#  summary: Get latest bookings of members in selected organisation
+#  operationId: getUserBookingLatestListByOrganisation
+#  responses:
+#     200:
+#       description: success
+###
+GET /user-bookings/organisations/:orgId/latest						controllers.LatestUserTimeBookingsController.getLatestTimeBooking(orgId: models.OrganisationId,maxHistory:Int?=5)
+
+
+#######
+####### Current User Favorites #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-favorites
+#  summary: Get current user's favorite bookings list for the selected organisation
+#  operationId: getFavoriteBookingList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.UserFavorites'
+###
+GET /user-favorites/organisations/:orgId	                controllers.UserFavoritesController.getFavorites(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-favorites
+#  summary: Save a new favorite booking for the current user in the selected organisation
+#  operationId: addFavoriteBooking
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.FavoritesRequest'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.UserFavorites'
+###
+POST /user-favorites/organisations/:orgId                    controllers.UserFavoritesController.addFavorite(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-favorites
+#  summary: Remove a favorite booking for the current user from the selected organisation
+#  operationId: deleteFavoriteBooking
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.FavoritesRequest'
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /user-favorites/organisations/:orgId                    controllers.UserFavoritesController.removeFavorite(orgId: models.OrganisationId)
+
+#######
+####### Organisation Bookings #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - organisation-bookings
+#  summary: Get bookings for the selected organisation within the selected timeframe
+#  operationId: getOrganisationBookingList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingV2'
+###
+GET /organisation-bookings/organisations/:orgId/bookings/history                                           controllers.TimeBookingHistoryController.getTimeBookingHistoryByOrganisation(orgId: models.OrganisationId, from:org.joda.time.LocalDateTime, to:org.joda.time.LocalDateTime, limit: Option[Int], skip: Option[Int])
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - organisation-bookings
+#  summary: Get aggregated statistics about bookings for the selected organisation within the selected timeframe
+#  operationId: getOrganisationBookingAggregatedStats
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingStats'
+###
+GET /organisation-bookings/organisations/:orgId/bookings/stats/aggregated                                  controllers.TimeBookingStatisticsController.getAggregatedStatisticsByOrganisation(orgId: models.OrganisationId,source: String, from:org.joda.time.LocalDate, to:org.joda.time.LocalDate, granularity: models.Granularity)
+
+#######
+####### Project Bookings #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - project-bookings
+#  summary: Get statistics about bookings for the selected project within the selected timeframe
+#  operationId: getProjectBookingList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingV2'
+###
+GET /organisations/:orgId/projects/:projectId/bookings/history                       controllers.TimeBookingHistoryController.getTimeBookingHistoryByProject(orgId: models.OrganisationId, projectId: models.ProjectId, from:org.joda.time.LocalDateTime, to:org.joda.time.LocalDateTime, limit: Option[Int], skip: Option[Int])
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - project-bookings
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.BookingStats'
+###
+GET /organisations/:orgId/projects/:projectId/bookings/stats/aggregated             controllers.TimeBookingStatisticsController.getAggregatedStatisticsByProject(orgId: models.OrganisationId, projectId: models.ProjectId,source: String, from:org.joda.time.LocalDate, to:org.joda.time.LocalDate, granularity: models.Granularity)
+
+#######
+####### Projects #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - projects
+#  operationId: getProjectList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.Project'
+###
+GET /organisations/:orgId/projects                                      controllers.ProjectsController.getProjects(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - projects
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.CreateProject'
+#  responses:
+#    201:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Project'
+###
+POST /organisations/:orgId/projects                                      controllers.ProjectsController.createProject(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: update a project
+#  tags:
+#    - projects
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UpdateProject'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Project'
+###
+POST /organisations/:orgId/projects/:projectId                                               controllers.ProjectsController.updateProject(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: Deactivate a project
+#  tags:
+#    - projects
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /organisations/:orgId/projects/:projectId                           controllers.ProjectsController.deactivateProject(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - projects
+#  operationId: getProjectUserList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.UserStub'
+###
+GET /organisations/:orgId/projects/:projectId/users                     controllers.ProjectsController.getUsers(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - projects
+#  operationId: inviteProjectUser
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UserToProjectAssignment'
+#  responses:
+#    201:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.InvitationLink'
+###
+POST /organisations/:orgId/projects/:projectId/users                     controllers.ProjectsController.inviteUser(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - projects
+#  operationId: removeProjectUser
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /organisations/:orgId/projects/:projectId/users/:userId             controllers.ProjectsController.unassignUser(orgId: models.OrganisationId, projectId: models.ProjectId, userId: models.UserId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - projects
+#  summary: Remove current user's membership from selected project and selected organisation
+#  operationId: removeProjectOwnUser
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /organisations/:orgId/projects/:projectId/leave             controllers.ProjectsController.unassignMyUser(orgId: models.OrganisationId, projectId: models.ProjectId)
+
+
+#######
+####### Organisations #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: create an organisation
+#  tags: 
+#    - organisations
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.CreateOrganisation'
+#  responses:
+#    201:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Organisation'
+###
+POST /organisations                                               controllers.OrganisationsController.createOrganisation()
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - organisations
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Organisation'
+###
+GET /organisations/:orgId                                 controllers.OrganisationsController.getOrganisation(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: update an organisation
+#  tags:
+#    - organisations
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UpdateOrganisation'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Organisation'
+###
+POST /organisations/:orgId                                               controllers.OrganisationsController.updateOrganisation(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: delete/deactivate an organisation
+#  tags: 
+#    - organisations
+#  responses:
+#    200:
+#      description: success
+###
+DELETE /organisations/:orgId                                        controllers.OrganisationsController.deactivateOrganisation(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - organisations
+#  operationId: getOrganisationUserList
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.UserStub'
+###
+GET /organisations/:orgId/users                                  controllers.OrganisationsController.getUsers(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: assign a user to an organisation
+#  tags: 
+#    - organisations
+#  operationId: inviteOrganisationUser
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UserToOrganisationAssignment'
+#  responses:
+#    201:
+#      description: successfully created invitation
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.InvitationLink'
+###
+POST /organisations/:orgId/invite                                  controllers.OrganisationsController.inviteUser(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - organisations
+#  summary: Remove selected user's membership from selected organisation
+#  operationId: removeOrganisationUser
+#  responses:
+#    200:
+#      description: successfully removed user from organisation
+###
+DELETE /organisations/:orgId/users/:userId                           controllers.OrganisationsController.unassignUser(orgId: models.OrganisationId, userId: models.UserId)
+
+
+#######
+####### Invitations Private #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: get detail of an invitation
+#  operationId: getInvitation
+#  tags: 
+#    - invitations-private
+#  responses:
+#    400:
+#      description: invalid invitation or invalid referenced user
+#    200:
+#      description: success if valid invitation
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Invitation'
+###
+GET /invitations/:invitationId                          controllers.InvitationsController.getDetails(invitationId: models.InvitationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - invitations-private
+#  operationId: acceptInvitation
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.AcceptInvitationRequest'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Invitation'
+###
+POST /invitations/:invitationId/accept                  controllers.InvitationsController.accept(invitationId: models.InvitationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags: 
+#    - invitations-private
+#  operationId: declineInvitation
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Invitation'
+###
+POST /invitations/:invitationId/decline                 controllers.InvitationsController.decline(invitationId: models.InvitationId)
+
+#######
+####### Invitations Public #######
+#######
+
+###
+#  tags:
+#    - invitations-public
+#  summary: get status of an invitation
+#  operationId: getInvitationStatus
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.InvitationStatusResponse'
+#    400:
+#      description: invalid or non existing invitation
+###
+GET /invitations/:invitationId/status               controllers.InvitationsController.getStatus(invitationId: models.InvitationId)
+
+###
+#  tags:
+#    - invitations-public
+#  summary: --------please annotate------
+#  operationId: registerInvitationUser
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UserRegistration'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.Invitation'
+###
+POST /invitations/:invitationId/register                controllers.InvitationsController.registerUser(invitationId: models.InvitationId)
+
+
+#######
+####### Static Files #######
+#######
+
+# ~~~~
+# Map static resources from the /public folder to the /assets URL path
+
+### NoDocs ###
+GET /assets/*file                          controllers.Assets.versioned(path="/public", file: Asset)
+
+#######
+####### OpenAPI | Swagger #######
+#######
+
+### NoDocs ###
+GET /docs/swagger-ui/*file        controllers.Assets.at(path:String="/public/lib/swagger-ui", file:String)
+

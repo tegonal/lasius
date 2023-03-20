@@ -1,0 +1,60 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "airbnb",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:prettier/recommended",
+    "plugin:@next/next/recommended",
+    "next/core-web-vitals"
+  ],
+  "plugins": ["@typescript-eslint", "react", "@emotion", "prettier", "license-header"],
+  "rules": {
+    "license-header/header": [ "error", "./scripts/licenseHeader.js" ],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "no-use-before-define": "off",
+    "class-methods-use-this": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-use-before-define": ["error"],
+    "import/extensions": "off",
+    "import/named": "off",
+    "import/namespace": "off",
+    "import/newline-after-import": 1,
+    "import/no-duplicates": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/no-named-as-default-member": "off",
+    "import/no-named-as-default": "off",
+    "import/no-unresolved": "off",
+    "import/no-useless-path-segments": 1,
+    "import/order": "off",
+    "import/prefer-default-export": "off",
+    "no-console": "off",
+    "no-nested-ternary": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off",
+    "no-unused-vars": "off",
+    "operator-linebreak": "off",
+    "prettier/prettier": "error",
+    "react/destructuring-assignment": "off",
+    "react/display-name": "off",
+    "react/jsx-filename-extension": 0,
+    "react/jsx-props-no-spreading": "off",
+    "react/prop-types": "off",
+    "react/require-default-props": "off",
+    "react/react-in-jsx-scope": "off",
+    "import/no-cycle": "off",
+    "react/function-component-definition": "off",
+    "react/jsx-no-useless-fragment": "off",
+    "react/no-invalid-html-attribute": "off",
+    "react/no-unused-prop-types": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "warn",
+    "@typescript-eslint/no-empty-function": ["warn", { "allow": ["arrowFunctions"] }]
+  }
+}

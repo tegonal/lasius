@@ -1,0 +1,8 @@
+# misc global
+.bsp
+target
+.vscode
+.idea
+.history
+**/common_old.json
+.DS_Store

@@ -1,0 +1,81 @@
+---
+- type: org\.joda\.time\.DateTime
+  specAsParameter:
+    - type: string
+      format: date-time
+      pattern: yyyy-MM-dd'T'HH:mm:ss.SSSZZ
+- type: datetime
+  specAsParameter:
+    - type: string
+      format: date-time
+      pattern: yyyy-MM-dd'T'HH:mm:ss.SSSZZ
+- type: org\.joda\.time\.LocalDateTime
+  specAsParameter:
+    - type: string
+      pattern: yyyy-MM-dd'T'HH:mm:ss.SSS
+- type: localdatetime
+  specAsParameter:
+    - type: string
+      pattern: yyyy-MM-dd'T'HH:mm:ss.SSS
+- type: org\.joda\.time\.LocalDate
+  specAsParameter:
+    - type: string
+      pattern: yyyy-MM-dd
+- type: localdate
+  specAsParameter:
+    - type: string
+      pattern: yyyy-MM-dd
+- type: datetimezone
+  specAsParameter:
+    - type: string
+- type: duration
+  specAsParameter:
+    - type: number
+- type: java\.net\.uri
+  specAsParameter:
+    - type: string
+- type: models\.OrganisationId
+  specAsParameter:
+    - type: string
+- type: models\.UserId
+  specAsParameter:
+    - type: string
+- type: models\.BookingId
+  specAsParameter:
+    - type: string
+- type: models\.InvitationId
+  specAsParameter:
+    - type: string
+- type: models\.ProjectId
+  specAsParameter:
+    - type: string
+- type: models\.TagId
+  specAsParameter:
+    - type: string
+- type: i
+  specAsParameter:
+    - type: string
+- type: models\.InvitationStatus
+  specAsParameter:
+    - type: string
+      enum: [ UnregisteredUser,InvitationOk ]
+- type: models\.OrganisationRole
+  specAsParameter:
+    - type: string
+      enum: [ OrganisationMember,OrganisationAdministrator ]
+- type: models\.ProjectRole
+  specAsParameter:
+    - type: string
+      enum: [ ProjectMember,ProjectAdministrator ]
+- type: models\.UserRole
+  specAsParameter:
+    - type: string
+      enum: [ FreeUser,Administrator ]
+- type: models\.InvitationOutcomeStatus
+  specAsParameter:
+    - type: string
+      enum: [ InvitationAccepted,InvitationDeclined ]
+- type: models\.Granularity
+  specAsParameter:
+    - type: string
+      enum: [ All, Year, Month, Week, Day ]

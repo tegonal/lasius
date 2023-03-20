@@ -1,0 +1,31 @@
+name: Build frontend application
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+  push:
+    paths:
+      - 'frontend/**'
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+jobs:
+  build-frontend:
+    name: Build frontend application for amd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: build frontend
+        working-directory: ./frontend
+        run: |
+          npm --version
+          yarn --version
+          node ./scripts/updatePackageJsonVersion.js $CI_COMMIT_SHORT_SHA
+          yarn workspaces focus
+          yarn run lint
+          yarn run build

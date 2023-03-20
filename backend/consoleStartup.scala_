@@ -1,0 +1,43 @@
+// start with sbt test:console
+// the load this file with :load consoleStartup.scala
+// If you want to experiment with stuff in BookingStatisticsRepositorySpec.scala
+// implicit val executionContext = ExecutionContext.Implicits.global
+// val bsrs = new repositories.BookingStatisticsRepositorySpec
+// import bsrs._
+
+
+import org.joda.time._
+import org.joda.time.format.DateTimeFormat
+import scala.concurrent.duration.{Duration => SDuration, _}
+import scala.concurrent._
+import play.api.libs.json._
+import mongo.{EmbedMongo, LazyMongo}
+import models._
+import BaseFormat._
+import core.DefaultReactiveMongoApi
+import reactivemongo.bson.BSONObjectID
+import reactivemongo.api.collections.bson.BSONCollection
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.modules.reactivemongo.ReactiveMongoApi
+import mongo._
+import core.DefaultReactiveMongoApi
+
+
+
+implicit val executionContext = ExecutionContext.Implicits.global
+lazy val dbName = BSONObjectID.generate.stringify
+val port = LazyMongo.port
+
+implicit lazy val app = new GuiceApplicationBuilder()
+  .configure(Map(
+    ("mongodb.uri", s"mongodb://localhost:${port}/${dbName}"),
+    ("mongodb.channels", "1"),
+    ("akka.contrib.persistence.mongodb.mongo.urls",
+     List(s"localhost:${port}")),
+    ("akka.contrib.persistence.mongodb.mongo.db", dbName)
+  ))
+  .build()
+
+lazy val reactiveMongoApi = app.injector.instanceOf[ReactiveMongoApi]
+DefaultReactiveMongoApi.initialize(reactiveMongoApi)
+

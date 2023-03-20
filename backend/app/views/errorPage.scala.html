@@ -1,0 +1,13 @@
+@(ex: Throwable)(implicit lang: Lang)
+
+@import java.io.{StringWriter, PrintWriter}
+
+<!DOCTYPE html>
+<html>
+<body>
+	<div class="jumbotron">
+		<h1>@ex</h1>
+		<p>@ex.getCause.getMessage</p>
+	</div>
+</body>
+</html>
