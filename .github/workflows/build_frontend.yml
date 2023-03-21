@@ -25,7 +25,7 @@ jobs:
         run: |
           npm --version
           yarn --version
-          node ./scripts/updatePackageJsonVersion.js $CI_COMMIT_SHORT_SHA
+          node ./scripts/updatePackageJsonVersion.js ${{github.ref_name}}
           yarn workspaces focus
           yarn run lint
           yarn run build
