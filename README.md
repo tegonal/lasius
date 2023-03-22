@@ -42,7 +42,7 @@ Lasius is a modern web application with a backend written in Scala and a NextJS 
 We plan to implement the following features in the near future (no specific order, no ETA):
 
 * [ ] Make GitLab and Jira integration configurable in the frontend (currently hardcoded)
-* [ ] Add support for other GitHub issue tracker
+* [ ] Add support for GitHub issue tracker
 * [ ] Make tags and labels configuration configurable in the frontend (currently hardcoded)
 * [ ] Add support for sending E-Mails via SMTP for password reset, invitation links, etc.
 * [ ] Quick onboarding for new users with basic usage instructions
@@ -50,13 +50,13 @@ We plan to implement the following features in the near future (no specific orde
 
 If you plan to use Lasius for your company or organisation, and you depend on one of the above features, we are happy to discuss sponsoring the development.
 
-Follow the repository to get notified about new releases.
+Watch this repository to get notified about new releases.
 
 # History
 
 The development of Lasius started in 2015. It is the exclusive time tracking tool of Tegonal, an experienced software development team based in Bern (Switzerland). We developed Lasius because there was no tool available in 2015 and, to be honest, because we just wanted to build something new and nice :-)
 
-Our time tracker had to be based on open source components, meet our high privacy standards and be able to be hosted wherever we wanted. The feature set of Lasius has been continuously adapted to our needs in everyday project work. As is often the case with internal tools, we got the tool to the point where it was usable for us internally, with limitations that could be identified and transferred internally. For a long time, we didn't find the time to complete the tool to the point where we could release it alongside our day-to-day work for our customers. When a large customer project ended unexpectedly, we suddenly had a lot of time to work on internal projects. We seized the opportunity, rewrote the entire front-end code and released Lasius to the public.
+Our time tracker had to be based on open source components, meet our high privacy standards and be able to be hosted wherever we wanted. The feature set of Lasius has been continuously adapted to our needs in everyday project work and we are happy that we can share it with you.
 
 # Development 
 ## Requirements
@@ -137,6 +137,6 @@ As we are strongly committed to open source software, we make Lasius available t
 
 # Support
 
-If you you would like us to run Lasius for you and are willing to pay for the service, you can contact us here: <https://tegonal.com>
+If you would like us to set up or run Lasius for you then please contact us here for an offer: <https://tegonal.com>
 
 If you need help, discover a bug or have a feature request, please open an issue in this repo.
