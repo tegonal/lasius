@@ -17,22 +17,28 @@
  *
  */
 
-import React from 'react';
-import { Box, Heading, Paragraph } from 'theme-ui';
-import { useTranslation } from 'next-i18next';
+import {
+  DEV,
+  LASIUS_TELEMETRY_MATOMO_HOST,
+  LASIUS_TELEMETRY_MATOMO_ID,
+} from 'projectConfig/constants';
+import { logger } from 'lib/logger';
+import { matomoEventUrl } from 'lib/telemetry/matomoEventUrl';
 
-export const WorkingHoursRightColumn: React.FC = () => {
-  const { t } = useTranslation('common');
-  return (
-    <Box sx={{ width: '100%', px: 4, pt: 3 }}>
-      <Heading as="h2" variant="heading">
-        {t('Working hours')}
-      </Heading>
-      <Paragraph variant="infoText">
-        {t(
-          'The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.'
-        )}
-      </Paragraph>
-    </Box>
-  );
+type TelemetryComponent = string;
+type TelemetryAction = string;
+type TelemetryName = string;
+export type TelemetryEvent = [TelemetryComponent, TelemetryAction, TelemetryName];
+
+export const telemetryEvent = async (event: TelemetryEvent) => {
+  const url = matomoEventUrl(event);
+  if (DEV) {
+    logger.info('[Telemetry]', url);
+    return Promise.resolve();
+  }
+  if (!LASIUS_TELEMETRY_MATOMO_ID || !LASIUS_TELEMETRY_MATOMO_HOST) {
+    logger.info('[Telemetry] Not enabled');
+    return Promise.resolve();
+  }
+  return fetch(matomoEventUrl(event), { method: 'GET' });
 };

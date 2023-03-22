@@ -29,6 +29,8 @@ import { FormElement } from 'components/forms/formElement';
 import { useSignOut } from 'components/system/hooks/useSignOut';
 import { ModelsInvitationStatusResponse } from 'lib/api/lasius';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
+import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
+import { useAsync } from 'react-async-hook';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -38,6 +40,10 @@ export const InvitationOtherSession: React.FC<Props> = ({ invitation }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
   const { signOut } = useSignOut();
+
+  useAsync(async () => {
+    await telemetryEvent(['Invitation', 'Join', 'FailedWrongSession']);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -49,7 +55,7 @@ export const InvitationOtherSession: React.FC<Props> = ({ invitation }) => {
       <Logo />
       <BoxWarning>
         {t(
-          'This invitation was created for another User. Either sign out and refresh or forward the invitation link to the user {{email}}',
+          'This invitation has been created for someone else. Either log out and refresh, or forward the invitation link to the user {{email}}',
           { email: invitation.invitation.invitedEmail }
         )}
       </BoxWarning>

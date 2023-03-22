@@ -34,6 +34,7 @@ import { updateUserProfile } from 'lib/api/lasius/user/user';
 import { useProfile } from 'lib/api/hooks/useProfile';
 import { useIsClient } from 'usehooks-ts';
 import { useToast } from 'components/toasts/hooks/useToast';
+import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
 
 type Form = {
   email: string;
@@ -57,10 +58,15 @@ export const AccountForm: React.FC = () => {
   }, [email, firstName, hookForm, lastName]);
 
   const onSubmit = async () => {
+    if (LASIUS_DEMO_MODE === 'true') {
+      addToast({ message: t('Profile changes are not allowed in demo mode'), type: 'ERROR' });
+      setIsSubmitting(false);
+      return;
+    }
     const data = hookForm.getValues();
     setIsSubmitting(true);
     await updateUserProfile(data);
-    addToast({ message: t('Account information updated'), type: 'SUCCESS' });
+    addToast({ message: t('Account settings updated'), type: 'SUCCESS' });
     setIsSubmitting(false);
   };
 
@@ -69,7 +75,7 @@ export const AccountForm: React.FC = () => {
   return (
     <Box sx={{ width: '100%', px: 4, pt: 3 }}>
       <Heading as="h2" variant="heading">
-        {t('Profile information')}
+        {t('Account Settings')}
       </Heading>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form onSubmit={hookForm.handleSubmit(onSubmit)} onKeyDown={(e) => preventEnterOnForm(e)}>

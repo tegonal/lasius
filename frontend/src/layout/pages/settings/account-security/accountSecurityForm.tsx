@@ -35,6 +35,7 @@ import { updateUserPassword } from 'lib/api/lasius/user/user';
 import { useProfile } from 'lib/api/hooks/useProfile';
 import { useIsClient } from 'usehooks-ts';
 import { useToast } from 'components/toasts/hooks/useToast';
+import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
 
 type Form = {
   password: string;
@@ -62,6 +63,12 @@ export const AccountSecurityForm: React.FC = () => {
   };
 
   const onSubmit = async (data: any) => {
+    if (LASIUS_DEMO_MODE === 'true') {
+      addToast({ message: t('Profile changes are not allowed in demo mode'), type: 'ERROR' });
+      resetForm();
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(true);
     const { password, newPassword } = data;
     const payload = {
@@ -84,7 +91,7 @@ export const AccountSecurityForm: React.FC = () => {
   return (
     <Box sx={{ width: '100%', px: 4, pt: 3 }}>
       <Heading as="h2" variant="heading">
-        {t('Account security')}
+        {t('Account Security')}
       </Heading>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form onSubmit={hookForm.handleSubmit(onSubmit)} onKeyDown={(e) => preventEnterOnForm(e)}>

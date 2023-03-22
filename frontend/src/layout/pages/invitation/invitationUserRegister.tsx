@@ -37,6 +37,7 @@ import { plannedWorkingHoursStub } from 'lib/stubPlannedWorkingHours';
 import { random } from 'lodash';
 import { registerInvitationUser } from 'lib/api/lasius/invitations-public/invitations-public';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
+import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -73,6 +74,7 @@ export const InvitationUserRegister: React.FC<Props> = ({ invitation }) => {
 
   const onSubmit = async () => {
     const data = getValues();
+    await telemetryEvent(['Invitation', 'UserRegistration', 'Sent']);
     setIsSubmitting(true);
     const response = await registerInvitationUser(invitation.invitation.id, {
       key: `${data.firstName[0]}.${data.lastName}-${random(1, 999)}`,
@@ -103,7 +105,7 @@ export const InvitationUserRegister: React.FC<Props> = ({ invitation }) => {
       {error && <BoxWarning>{t(error as any)}</BoxWarning>}
       <BoxInfo>
         {t(
-          'You have been invited by {{inviter}} to create an account so that you can use Lasius to record your working hours.',
+          'You have been invited by {{inviter}} to create an account so that you can use Lasius to track your working hours.',
           { inviter: invitation.invitation.createdBy.key }
         )}
       </BoxInfo>

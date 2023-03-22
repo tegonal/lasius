@@ -17,22 +17,12 @@
  *
  */
 
-import React from 'react';
-import { Box, Heading, Paragraph } from 'theme-ui';
-import { useTranslation } from 'next-i18next';
+import httpProxy from 'http-proxy';
+import { DEV, LASIUS_TELEMETRY_MATOMO_HOST } from 'projectConfig/constants';
 
-export const WorkingHoursRightColumn: React.FC = () => {
-  const { t } = useTranslation('common');
-  return (
-    <Box sx={{ width: '100%', px: 4, pt: 3 }}>
-      <Heading as="h2" variant="heading">
-        {t('Working hours')}
-      </Heading>
-      <Paragraph variant="infoText">
-        {t(
-          'The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.'
-        )}
-      </Paragraph>
-    </Box>
-  );
-};
+export const proxy = httpProxy.createProxyServer({
+  target: `https://${LASIUS_TELEMETRY_MATOMO_HOST}`,
+  autoRewrite: true,
+  changeOrigin: true,
+  secure: !DEV,
+});

@@ -31,7 +31,7 @@ const OfflinePage: NextPage = () => {
     <LoginLayout>
       <BoxWarning>
         {t(
-          'You are offline. This app requires online connectivity. It will refresh automatically as soon as a network connection is detected.'
+          'You are offline. This application requires an online connection. It will update automatically when a network connection is detected.'
         )}
       </BoxWarning>
     </LoginLayout>

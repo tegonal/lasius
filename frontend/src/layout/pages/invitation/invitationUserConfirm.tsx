@@ -41,6 +41,7 @@ import {
   ModelsJoinProjectInvitation,
 } from 'lib/api/lasius';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
+import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -71,6 +72,7 @@ export const InvitationUserConfirm: React.FC<Props> = ({ invitation }) => {
   }, [organisations]);
 
   const handleAcceptInvite = async () => {
+    await telemetryEvent(['Invitation', 'Join', 'Accept']);
     await acceptInvitation(invitation.invitation.id, {
       organisationReference: orgAssignment,
     });
@@ -79,6 +81,7 @@ export const InvitationUserConfirm: React.FC<Props> = ({ invitation }) => {
   };
 
   const handleRejectInvite = async () => {
+    await telemetryEvent(['Invitation', 'Join', 'Reject']);
     await declineInvitation(invitation.invitation.id);
     await router.push('/');
     await router.reload();

@@ -20,6 +20,7 @@
 import { ThemeUIStyleObject } from 'theme-ui';
 import { themeRadii } from 'styles/theme/radii';
 import { effects } from 'styles/theme/effects';
+import { defaultAnchorStyle } from 'styles/theme/text';
 
 export const themeComponentStyles: Record<string, ThemeUIStyleObject> = {
   cardContainer: {
@@ -43,5 +44,6 @@ export const themeComponentStyles: Record<string, ThemeUIStyleObject> = {
     width: ['100%', '375px'],
     p: 3,
     borderRadius: themeRadii.small,
+    ...defaultAnchorStyle,
   },
 };

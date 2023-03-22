@@ -21,7 +21,14 @@ const withPWA = require('next-pwa')({
 
 const { ENVIRONMENT } = process.env;
 
-const { LASIUS_API_WEBSOCKET_URL, LASIUS_API_URL, LASIUS_API_URL_INTERNAL } = process.env;
+const {
+  LASIUS_API_WEBSOCKET_URL,
+  LASIUS_API_URL,
+  LASIUS_API_URL_INTERNAL,
+  LASIUS_TELEMETRY_MATOMO_HOST,
+  LASIUS_TELEMETRY_MATOMO_ID,
+  LASIUS_DEMO_MODE,
+} = process.env;
 
 const nextConfiguration = {
   redirects,
@@ -51,6 +58,9 @@ const nextConfiguration = {
     LASIUS_API_WEBSOCKET_URL,
     LASIUS_API_URL,
     LASIUS_API_URL_INTERNAL,
+    LASIUS_TELEMETRY_MATOMO_HOST,
+    LASIUS_TELEMETRY_MATOMO_ID,
+    LASIUS_DEMO_MODE,
   },
   headers: async () => [
     {

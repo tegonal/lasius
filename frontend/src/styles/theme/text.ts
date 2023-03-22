@@ -21,12 +21,12 @@ import { darken } from '@theme-ui/color';
 import { ThemeUIStyleObject } from 'theme-ui';
 import { flexRowJustifyBetweenAlignCenter } from 'styles/shortcuts';
 
-const deafaultAnchorStyle: ThemeUIStyleObject = {
+export const defaultAnchorStyle: ThemeUIStyleObject = {
   'a, a:link': {
-    color: 'primary',
+    color: 'text',
   },
   'a:hover, a:active, a:visited': {
-    color: 'primary',
+    color: 'text',
     textDecoration: 'none',
   },
 };
@@ -35,37 +35,37 @@ export const themeText: Record<string, ThemeUIStyleObject> = {
   paragraph: {
     fontSize: 2,
     paddingBottom: 3,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   normal: {
     // default
     fontSize: 2,
     paddingBottom: 3,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   lead: {
     fontSize: [3, 4],
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   footnote: {
     fontSize: 1,
     opacity: 0.5,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   small: {
     fontSize: 1,
     opacity: 0.5,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   caption: {
     fontSize: 2,
     paddingBottom: 3,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   infoText: {
     fontSize: 2,
     mb: 4,
-    ...deafaultAnchorStyle,
+    ...defaultAnchorStyle,
   },
   heading: {
     // default

@@ -23,9 +23,16 @@ import { LoginLayout } from 'layout/pages/login/loginLayout';
 import { Logo } from 'components/logo';
 import { BoxWarning } from 'components/shared/notifications/boxWarning';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
+import { useAsync } from 'react-async-hook';
+import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
 
 export const InvitationInvalid: React.FC = () => {
   const { t } = useTranslation('common');
+
+  useAsync(async () => {
+    await telemetryEvent(['Invitation', 'Join', 'FailedInvitationExpired']);
+  }, []);
+
   return (
     <LoginLayout>
       <Logo />

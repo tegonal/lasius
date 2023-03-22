@@ -17,22 +17,18 @@
  *
  */
 
-import React from 'react';
-import { Box, Heading, Paragraph } from 'theme-ui';
-import { useTranslation } from 'next-i18next';
+import { LASIUS_TELEMETRY_MATOMO_ID } from 'projectConfig/constants';
+import { TelemetryEvent } from 'lib/telemetry/telemetryEvent';
 
-export const WorkingHoursRightColumn: React.FC = () => {
-  const { t } = useTranslation('common');
-  return (
-    <Box sx={{ width: '100%', px: 4, pt: 3 }}>
-      <Heading as="h2" variant="heading">
-        {t('Working hours')}
-      </Heading>
-      <Paragraph variant="infoText">
-        {t(
-          'The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.'
-        )}
-      </Paragraph>
-    </Box>
-  );
+export const matomoEventUrl = (event: TelemetryEvent) => {
+  // see https://developer.matomo.org/api-reference/tracking-api
+  const matomoUrlParams = new URLSearchParams({
+    idsite: LASIUS_TELEMETRY_MATOMO_ID,
+    rec: '1',
+    action_name: event.join(' / '),
+    cookie: '0',
+    rand: `${window.crypto.getRandomValues(new Uint32Array(1))[0]}`,
+    res: `${window.screen.width}x${window.screen.height}`,
+  });
+  return `/api/ping/event?${matomoUrlParams.toString()}`;
 };

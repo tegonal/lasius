@@ -43,9 +43,10 @@ export const TegonalFooter: React.FC = () => {
       <Box sx={{ fontSize: 1 }}>
         <Trans
           t={t}
-          i18nKey="Developed by <0>Tegonal</0>, released under <1>AGPL 3.0</1>"
+          i18nKey="Developed by <0>Tegonal</0>, available on <1>GitHub</1>, released under <2>AGPL 3.0</2>"
           components={[
             <Link key="tegonalLink" target="_blank" href="https://tegonal.com" />,
+            <Link key="gitHubLink" target="_blank" href="https://github.com/tegonal/lasius" />,
             <Link
               key="agplLink"
               target="_blank"

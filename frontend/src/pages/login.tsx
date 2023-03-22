@@ -17,7 +17,7 @@
  *
  */
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button, Input, Label } from 'theme-ui';
 import { isEmailAddress } from 'lib/validators';
@@ -32,11 +32,15 @@ import { FormBody } from 'components/forms/formBody';
 import { BoxWarning } from 'components/shared/notifications/boxWarning';
 import { useRouter } from 'next/router';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import { LoginError } from 'dynamicTranslationStrings';
 import { logger } from 'lib/logger';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
 import { BoxInfo } from 'components/shared/notifications/boxInfo';
+import { P } from 'components/tags/p';
+import { Link } from '@theme-ui/components';
+import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
+import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
 
 const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +66,8 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
   }, [setFocus]);
 
   const onSubmit = async () => {
+    await telemetryEvent(['Login', 'Submit', 'Start']);
+
     const data = getValues();
     setIsSubmitting(true);
 
@@ -76,6 +82,7 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
       setError('usernameOrPasswordWrong');
       setValue('password', '');
       setFocus('email');
+      await telemetryEvent(['Login', 'Submit', 'Fail']);
       logger.log(res);
     }
 
@@ -85,6 +92,7 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
     }
 
     if (!res?.error && res?.url) {
+      await telemetryEvent(['Login', 'Submit', 'Success']);
       await router.push(res.url);
     }
 
@@ -98,8 +106,26 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
       {registered && (
         <BoxInfo>
           {t(
-            'Thank you for registering. You can now log in with your e-mail address and password. Welcome to Lasius!'
+            'Thank you for registering. You can now log in using your email address and password. Welcome to Lasius!'
           )}
+        </BoxInfo>
+      )}
+      {LASIUS_DEMO_MODE === 'true' && (
+        <BoxInfo>
+          <P>
+            {t(
+              'Welcome to the Lasius demo instance. Use "demo1@lasius.ch" and password "demo" to log in and have a look around. The demo instance is reset once a day.'
+            )}
+          </P>
+          <P>
+            <Trans
+              t={t}
+              i18nKey="We appreciate your feedback. Please leave a comment on <0>GitHub</0>"
+              components={[
+                <Link key="gitHubLink" target="_blank" href="https://github.com/tegonal/lasius" />,
+              ]}
+            />
+          </P>
         </BoxInfo>
       )}
       <CardContainer>

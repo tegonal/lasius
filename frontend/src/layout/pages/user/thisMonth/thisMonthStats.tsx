@@ -49,14 +49,14 @@ export const ThisMonthStats: React.FC = () => {
         <StatsTileHours value={week.hours} label={t('Hours')} />
         <StatsTileNumber value={week.elements} label={t('Bookings')} />
         <StatsTileHours value={week.plannedWorkingHours} label={t('Expected hours')} />
-        <StatsTileNumber value={week.fulfilledPercentage} label={t('% of expected')} />
+        <StatsTileNumber value={week.fulfilledPercentage} label={t('% of planned hours')} />
       </Grid>
       <Heading variant="headingUnderlinedMuted">{t('Selected day')}</Heading>
       <Grid sx={{ gap: 3, gridTemplateColumns: '1fr 1fr', width: '100%', pb: 4 }}>
         <StatsTileHours value={day.hours} label={t('Hours')} />
         <StatsTileNumber value={day.elements} label={t('Bookings')} />
         <StatsTileHours value={day.plannedWorkingHours} label={t('Expected hours')} />
-        <StatsTileNumber value={day.fulfilledPercentage} label={t('% of expected')} />
+        <StatsTileNumber value={day.fulfilledPercentage} label={t('% of planned hours')} />
       </Grid>
     </Box>
   );

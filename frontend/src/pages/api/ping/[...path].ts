@@ -17,22 +17,33 @@
  *
  */
 
-import React from 'react';
-import { Box, Heading, Paragraph } from 'theme-ui';
-import { useTranslation } from 'next-i18next';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { proxy } from 'lib/telemetry/matomo-proxy';
 
-export const WorkingHoursRightColumn: React.FC = () => {
-  const { t } = useTranslation('common');
-  return (
-    <Box sx={{ width: '100%', px: 4, pt: 3 }}>
-      <Heading as="h2" variant="heading">
-        {t('Working hours')}
-      </Heading>
-      <Paragraph variant="infoText">
-        {t(
-          'The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.'
-        )}
-      </Paragraph>
-    </Box>
-  );
+export default function stats(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+  return new Promise((resolve, reject) => {
+    switch (true) {
+      case req.url?.includes('/api/ping/script.js'):
+        req.url = req.url?.replace('/api/ping/script.js', '/matomo.js');
+        break;
+      case req.url?.includes('/api/ping/ping'):
+        req.url = req.url?.replace('/api/ping/ping', '/matomo.php');
+        break;
+      default:
+        break;
+    }
+
+    proxy.once('error', (err: any) => {
+      console.error(err);
+      reject(err);
+    });
+
+    proxy.web(req, res);
+  });
+}
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
 };

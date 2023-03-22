@@ -31,6 +31,9 @@ export const {
   LASIUS_API_WEBSOCKET_URL,
   LASIUS_API_URL,
   LASIUS_API_URL_INTERNAL,
+  LASIUS_TELEMETRY_MATOMO_HOST,
+  LASIUS_TELEMETRY_MATOMO_ID,
+  LASIUS_DEMO_MODE,
 } = publicRuntimeConfig as { [key: string]: string };
 
 export const DEV = ENVIRONMENT !== 'production';

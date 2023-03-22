@@ -45,7 +45,7 @@ export const MyProjectsRightColumn: React.FC = () => {
       </Heading>
       <Paragraph variant="infoText">
         {t(
-          'Projects which you are a member of and able to book time in. Limited by the currently selected organisation.'
+          'Projects where you are a member and can book time. Restricted by the currently selected organisation.'
         )}
       </Paragraph>
       <FormElement>
