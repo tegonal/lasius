@@ -26,8 +26,8 @@ export default function stats(req: NextApiRequest, res: NextApiResponse): Promis
       case req.url?.includes('/api/ping/script.js'):
         req.url = req.url?.replace('/api/ping/script.js', '/matomo.js');
         break;
-      case req.url?.includes('/api/ping/ping'):
-        req.url = req.url?.replace('/api/ping/ping', '/matomo.php');
+      case req.url?.includes('/api/ping/event'):
+        req.url = req.url?.replace('/api/ping/event', '/matomo.php');
         break;
       default:
         break;

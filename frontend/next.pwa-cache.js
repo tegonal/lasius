@@ -104,6 +104,7 @@ module.exports = [
       // never cache API calls. we use useSWR for that.
       if (pathname.startsWith('/backend/')) return true;
       if (pathname.startsWith('/api/auth/')) return true;
+      if (pathname.startsWith('/api/ping/event')) return true;
       if (pathname.startsWith('/api/')) return true;
       return false;
     },
