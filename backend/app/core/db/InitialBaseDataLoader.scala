@@ -111,7 +111,7 @@ class InitialBaseDataLoader @Inject() (
 
   protected def initializeUser(org: Organisation, project: Project)(implicit
       dbSession: DBSession,
-      userReference: UserReference): Future[BSONObjectID] = {
+      userReference: UserReference): Future[Unit] = {
 
     val userOrg = UserOrganisation(
       org.getReference(),

@@ -55,9 +55,8 @@ trait BaseRepository[T <: BaseEntity[ID], ID <: BaseId[_]]
   def failoverStrategy: FailoverStrategy =
     FailoverStrategy(initialDelay = 100 milliseconds, retries = 16)
 
-  def upsert(t: T)(implicit
-      writer: Writes[ID],
-      dbSession: DBSession): Future[BSONObjectID]
+  def upsert(
+      t: T)(implicit writer: Writes[ID], dbSession: DBSession): Future[Unit]
 
   def bulkInsert(ts: List[T])(implicit
       dbSession: DBSession): Future[List[BSONObjectID]]
@@ -169,20 +168,13 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID],
     remove(Json.obj("id" -> id))
   }
 
-  def upsert(t: T)(implicit
-      writer: Writes[ID],
-      dbSession: DBSession): Future[BSONObjectID] = {
+  def upsert(
+      t: T)(implicit writer: Writes[ID], dbSession: DBSession): Future[Unit] = {
     val obj = format.writes(t).as[JsObject]
-    val objectWithId = if ((obj \ "_id").isEmpty) {
-      val id = BSONObjectID.generate()
-      (obj ++ Json.obj("_id" -> id), id)
-    } else {
-      (obj, extractId(obj))
-    }
     coll
       .update(ordered = true)
-      .one(Json.obj("id" -> t.id), objectWithId._1, upsert = true)
-      .map(_ => objectWithId._2)
+      .one(Json.obj("id" -> t.id), obj, upsert = true)
+      .map(_ => ())
   }
 
   def bulkInsert(ts: List[T])(implicit

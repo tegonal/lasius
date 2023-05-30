@@ -294,7 +294,8 @@ class UserTimeBookingAggregate(
           withinTransaction { implicit dbSession =>
             for {
               _ <- bookingHistoryRepository.deleteByUserReference(userReference)
-              _ <- bookingHistoryRepository.bulkInsert(s.bookings.toList)
+              _ <- bookingHistoryRepository.bulkInsert(
+                s.bookings.filter(_.end.isDefined).toList)
             } yield ()
           },
           Duration.create(5, MINUTES)
