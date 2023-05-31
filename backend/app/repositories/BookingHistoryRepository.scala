@@ -143,7 +143,7 @@ class BookingHistoryMongoRepository @Inject() ()(
 
   override def upsert(t: BookingV2)(implicit
       writer: Writes[BookingId],
-      dbSession: DBSession): Future[BSONObjectID] = {
+      dbSession: DBSession): Future[Unit] = {
     logger.debug(s"insertBooking[$t]")
     super.upsert(t)
   }
