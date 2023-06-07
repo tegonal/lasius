@@ -17,28 +17,9 @@
  *
  */
 
-import {
-  DEV,
-  LASIUS_TELEMETRY_MATOMO_HOST,
-  LASIUS_TELEMETRY_MATOMO_ID,
-} from 'projectConfig/constants';
-import { logger } from 'lib/logger';
-import { matomoEventUrl } from 'lib/telemetry/matomoEventUrl';
+import { ModelsTag } from 'lib/api/lasius';
 
-type TelemetryComponent = string;
-type TelemetryAction = string;
-type TelemetryName = string;
-export type TelemetryEvent = [TelemetryComponent, TelemetryAction, TelemetryName];
-
-export const telemetryEvent = async (event: TelemetryEvent) => {
-  const url = matomoEventUrl(event);
-  if (DEV) {
-    logger.info('[Telemetry]', url);
-    return Promise.resolve();
-  }
-  if (!LASIUS_TELEMETRY_MATOMO_ID || !LASIUS_TELEMETRY_MATOMO_HOST) {
-    logger.info('[Telemetry] Not enabled');
-    return Promise.resolve();
-  }
-  return fetch(matomoEventUrl(event), { method: 'GET' });
+export const BookingCategoriesTagsEdit: React.FC<{ tags: ModelsTag[] }> = ({ tags }) => {
+  console.log(tags);
+  return <div>BookingCategoriesTagsEdit</div>;
 };

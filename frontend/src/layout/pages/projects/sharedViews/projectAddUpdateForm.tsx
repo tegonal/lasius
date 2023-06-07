@@ -50,6 +50,8 @@ type FormValues = {
 export const ProjectAddUpdateForm: React.FC<Props> = ({ item, onSave, onCancel, mode }) => {
   const { t } = useTranslation('common');
 
+  console.log(item);
+
   const hookForm = useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedOrganisationId } = useOrganisation();

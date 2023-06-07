@@ -39,10 +39,13 @@ import { TegonalFooter } from 'components/shared/tegonalFooter';
 import { BoxInfo } from 'components/shared/notifications/boxInfo';
 import { P } from 'components/tags/p';
 import { Link } from '@theme-ui/components';
-import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
 import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
+  const plausible = usePlausible<LasiusPlausibleEvents>();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<keyof typeof LoginError>();
   const { t } = useTranslation('common');
@@ -66,7 +69,11 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
   }, [setFocus]);
 
   const onSubmit = async () => {
-    await telemetryEvent(['Login', 'Submit', 'Start']);
+    plausible('login', {
+      props: {
+        status: 'start',
+      },
+    });
 
     const data = getValues();
     setIsSubmitting(true);
@@ -82,7 +89,11 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
       setError('usernameOrPasswordWrong');
       setValue('password', '');
       setFocus('email');
-      await telemetryEvent(['Login', 'Submit', 'Fail']);
+      plausible('login', {
+        props: {
+          status: 'failed',
+        },
+      });
       logger.log(res);
     }
 
@@ -92,7 +103,11 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
     }
 
     if (!res?.error && res?.url) {
-      await telemetryEvent(['Login', 'Submit', 'Success']);
+      plausible('login', {
+        props: {
+          status: 'success',
+        },
+      });
       await router.push(res.url);
     }
 

@@ -41,7 +41,8 @@ import {
   ModelsJoinProjectInvitation,
 } from 'lib/api/lasius';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
-import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -52,6 +53,7 @@ export const InvitationUserConfirm: React.FC<Props> = ({ invitation }) => {
   const router = useRouter();
   const [orgAssignment, setOrgAssignment] = useState<ModelsEntityReference>();
   const { selectedOrganisation, organisations } = useOrganisation();
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   useEffect(() => {
     if (
@@ -72,7 +74,11 @@ export const InvitationUserConfirm: React.FC<Props> = ({ invitation }) => {
   }, [organisations]);
 
   const handleAcceptInvite = async () => {
-    await telemetryEvent(['Invitation', 'Join', 'Accept']);
+    plausible('invitation', {
+      props: {
+        status: 'accept',
+      },
+    });
     await acceptInvitation(invitation.invitation.id, {
       organisationReference: orgAssignment,
     });
@@ -81,7 +87,11 @@ export const InvitationUserConfirm: React.FC<Props> = ({ invitation }) => {
   };
 
   const handleRejectInvite = async () => {
-    await telemetryEvent(['Invitation', 'Join', 'Reject']);
+    plausible('invitation', {
+      props: {
+        status: 'reject',
+      },
+    });
     await declineInvitation(invitation.invitation.id);
     await router.push('/');
     await router.reload();

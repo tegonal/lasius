@@ -22,6 +22,7 @@ export { default } from 'next-auth/middleware';
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|login|join|icon|fonts|symbols.svg|social-card.png|sw.js|fallback.*.js|workbox.*.js|manifest.json|favicon.ico).*)',
+    // '/((?!_next|api/auth).*)(.+)',
+    // '/((?!api|_next/static|login|join|icon|fonts|symbols.svg|social-card.png|sw.js|fallback.*.js|workbox.*.js|manifest.json|favicon.ico).*)',
   ],
 };

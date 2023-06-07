@@ -29,6 +29,8 @@ import useModal from 'components/modal/hooks/useModal';
 import { MODAL_SELECT_ORGANISATION } from 'components/shared/selectUserOrganisation';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { noop } from 'lodash';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 type Props = {
   onSelect?: (organisation: ModelsEntityReference) => void;
@@ -39,8 +41,10 @@ export const SelectUserOrganisationModal: React.FC<Props> = ({ selected, onSelec
   const { t } = useTranslation('common');
   const { selectedOrganisationId, organisations, setSelectedOrganisation } = useOrganisation();
   const { closeModal } = useModal(MODAL_SELECT_ORGANISATION);
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   const selectOrganisation = async (orgReference: ModelsEntityReference) => {
+    plausible('organisation', { props: { status: 'selected' } });
     await setSelectedOrganisation(orgReference);
     onSelect(orgReference);
     closeModal();

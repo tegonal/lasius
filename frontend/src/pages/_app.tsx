@@ -36,7 +36,12 @@ import { BundleVersionCheck } from 'components/system/bundleVersionCheck';
 import { LasiusBackendWebsocketEventHandler } from 'components/system/lasiusBackendWebsocketEventHandler';
 import { StoreContextProvider, useStore } from 'storeContext/store';
 import { Error } from 'components/error';
-import { SOCIAL_MEDIA_CARD_IMAGE_URL } from 'projectConfig/constants';
+import {
+  DEV,
+  LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+  LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
+  SOCIAL_MEDIA_CARD_IMAGE_URL,
+} from 'projectConfig/constants';
 import { SWRConfig } from 'swr';
 import { DefaultSeo } from 'next-seo';
 import { swrLogger } from 'lib/api/swrRequestLogger';
@@ -50,6 +55,7 @@ import { removeAccessibleCookies } from 'lib/removeAccessibleCookies';
 import { getServerSideRequestHeaders } from 'lib/api/hooks/useTokensWithAxiosRequests';
 import { logger } from 'lib/logger';
 import dynamic from 'next/dynamic';
+import PlausibleProvider from 'next-plausible';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -105,44 +111,53 @@ const App = ({
         }}
       >
         <SessionProvider session={session}>
-          <CookieCutter />
-          <Head>
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
-            />
-            <title>Lasius</title>
-          </Head>
-          <StoreContextProvider>
-            <LazyMotion features={loadFeatures}>
-              <ThemeProvider theme={theme}>
-                <DefaultSeo
-                  openGraph={{
-                    images: [{ url: SOCIAL_MEDIA_CARD_IMAGE_URL }],
-                  }}
-                />
-                {globalStyles}
-                {statusCode > 302 ? (
-                  <Error statusCode={statusCode} />
-                ) : (
-                  getLayout(<Component {...pageProps} />)
-                )}
-                <BrowserOnlineStatusCheck />
-                <LasiusBackendOnlineCheck />
-                <LasiusPwaUpdater />
-                <BundleVersionCheck />
-                <Toasts />
-                {lasiusIsLoggedIn && (
-                  <>
-                    <BootstrapTasks />
-                    <LasiusBackendWebsocketStatus />
-                    <LasiusBackendWebsocketEventHandler />
-                    <DevInfoBadge />
-                  </>
-                )}
-              </ThemeProvider>
-            </LazyMotion>
-          </StoreContextProvider>
+          <PlausibleProvider
+            domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
+            customDomain={LASIUS_TELEMETRY_PLAUSIBLE_HOST}
+            enabled={
+              !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN
+            }
+            trackLocalhost={DEV}
+          >
+            <CookieCutter />
+            <Head>
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
+              />
+              <title>Lasius</title>
+            </Head>
+            <StoreContextProvider>
+              <LazyMotion features={loadFeatures}>
+                <ThemeProvider theme={theme}>
+                  <DefaultSeo
+                    openGraph={{
+                      images: [{ url: SOCIAL_MEDIA_CARD_IMAGE_URL }],
+                    }}
+                  />
+                  {globalStyles}
+                  {statusCode > 302 ? (
+                    <Error statusCode={statusCode} />
+                  ) : (
+                    getLayout(<Component {...pageProps} />)
+                  )}
+                  <BrowserOnlineStatusCheck />
+                  <LasiusBackendOnlineCheck />
+                  <LasiusPwaUpdater />
+                  <BundleVersionCheck />
+                  <Toasts />
+                  {lasiusIsLoggedIn && (
+                    <>
+                      <BootstrapTasks />
+                      <LasiusBackendWebsocketStatus />
+                      <LasiusBackendWebsocketEventHandler />
+                      <DevInfoBadge />
+                    </>
+                  )}
+                </ThemeProvider>
+              </LazyMotion>
+            </StoreContextProvider>
+          </PlausibleProvider>
         </SessionProvider>
       </SWRConfig>
     </>

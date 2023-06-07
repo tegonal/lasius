@@ -37,7 +37,8 @@ import { plannedWorkingHoursStub } from 'lib/stubPlannedWorkingHours';
 import { random } from 'lodash';
 import { registerInvitationUser } from 'lib/api/lasius/invitations-public/invitations-public';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
-import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -49,6 +50,7 @@ export const InvitationUserRegister: React.FC<Props> = ({ invitation }) => {
   const [error, setError] = useState('');
   const { t } = useTranslation('common');
   const router = useRouter();
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   const {
     register,
@@ -74,7 +76,13 @@ export const InvitationUserRegister: React.FC<Props> = ({ invitation }) => {
 
   const onSubmit = async () => {
     const data = getValues();
-    await telemetryEvent(['Invitation', 'UserRegistration', 'Sent']);
+
+    plausible('invitation', {
+      props: {
+        status: 'registered',
+      },
+    });
+
     setIsSubmitting(true);
     const response = await registerInvitationUser(invitation.invitation.id, {
       key: `${data.firstName[0]}.${data.lastName}-${random(1, 999)}`,

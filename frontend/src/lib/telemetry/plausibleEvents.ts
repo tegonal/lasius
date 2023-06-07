@@ -17,12 +17,9 @@
  *
  */
 
-import httpProxy from 'http-proxy';
-import { DEV, LASIUS_TELEMETRY_MATOMO_HOST } from 'projectConfig/constants';
-
-export const proxy = httpProxy.createProxyServer({
-  target: `https://${LASIUS_TELEMETRY_MATOMO_HOST}`,
-  autoRewrite: true,
-  changeOrigin: true,
-  secure: !DEV,
-});
+export type LasiusPlausibleEvents = {
+  uiAction: { name: string };
+  login: { status: string };
+  organisation: { status: string };
+  invitation: { status: string };
+};

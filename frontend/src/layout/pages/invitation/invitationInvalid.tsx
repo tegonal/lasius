@@ -23,15 +23,18 @@ import { LoginLayout } from 'layout/pages/login/loginLayout';
 import { Logo } from 'components/logo';
 import { BoxWarning } from 'components/shared/notifications/boxWarning';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
-import { useAsync } from 'react-async-hook';
-import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 export const InvitationInvalid: React.FC = () => {
   const { t } = useTranslation('common');
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
-  useAsync(async () => {
-    await telemetryEvent(['Invitation', 'Join', 'FailedInvitationExpired']);
-  }, []);
+  plausible('invitation', {
+    props: {
+      status: 'invalid',
+    },
+  });
 
   return (
     <LoginLayout>

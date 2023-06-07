@@ -8,6 +8,7 @@ const { redirects } = require('./next.redirects');
 const { generateBuildId, generateBuildIdSync } = require('./next.buildId');
 const { i18n } = require('./next-i18next.config');
 const { runtimeCaching } = require('./next.pwa-cache');
+const { withPlausibleProxy } = require('next-plausible');
 
 const withPWA = require('next-pwa')({
   dest: 'public',
@@ -25,8 +26,8 @@ const {
   LASIUS_API_WEBSOCKET_URL,
   LASIUS_API_URL,
   LASIUS_API_URL_INTERNAL,
-  LASIUS_TELEMETRY_MATOMO_HOST,
-  LASIUS_TELEMETRY_MATOMO_ID,
+  LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+  LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
   LASIUS_DEMO_MODE,
 } = process.env;
 
@@ -58,8 +59,8 @@ const nextConfiguration = {
     LASIUS_API_WEBSOCKET_URL,
     LASIUS_API_URL,
     LASIUS_API_URL_INTERNAL,
-    LASIUS_TELEMETRY_MATOMO_HOST,
-    LASIUS_TELEMETRY_MATOMO_ID,
+    LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+    LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
     LASIUS_DEMO_MODE,
   },
   headers: async () => [
@@ -78,4 +79,13 @@ const nextConfiguration = {
 };
 
 // module.exports = withPWA(withBundleAnalyzer(nextConfiguration));
-module.exports = withPWA(nextConfiguration);
+module.exports = withPWA(
+  withPlausibleProxy({
+    subdirectory: 's',
+    scriptName: 'p',
+    domain: LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
+    customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+    trackLocalhost: ENVIRONMENT !== 'production',
+    enabled: !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
+  })(nextConfiguration)
+);

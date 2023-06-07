@@ -29,8 +29,8 @@ import { FormElement } from 'components/forms/formElement';
 import { useSignOut } from 'components/system/hooks/useSignOut';
 import { ModelsInvitationStatusResponse } from 'lib/api/lasius';
 import { TegonalFooter } from 'components/shared/tegonalFooter';
-import { telemetryEvent } from 'lib/telemetry/telemetryEvent';
-import { useAsync } from 'react-async-hook';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 type Props = {
   invitation: ModelsInvitationStatusResponse;
@@ -41,9 +41,13 @@ export const InvitationOtherSession: React.FC<Props> = ({ invitation }) => {
   const router = useRouter();
   const { signOut } = useSignOut();
 
-  useAsync(async () => {
-    await telemetryEvent(['Invitation', 'Join', 'FailedWrongSession']);
-  }, []);
+  const plausible = usePlausible<LasiusPlausibleEvents>();
+
+  plausible('invitation', {
+    props: {
+      status: 'wrongUser',
+    },
+  });
 
   const handleSignOut = async () => {
     await signOut();
