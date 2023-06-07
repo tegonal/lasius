@@ -28,6 +28,8 @@ export const config = {
     '/organisation/(.*)',
     '/project',
     '/project/(.*)',
+    '/projects',
+    '/projects/(.*)',
     '/settings',
     '/settings/(.*)',
     // '/((?!api|_next/static|login|join|icon|fonts|symbols.svg|social-card.png|sw.js|fallback.*.js|workbox.*.js|manifest.json|favicon.ico).*)',

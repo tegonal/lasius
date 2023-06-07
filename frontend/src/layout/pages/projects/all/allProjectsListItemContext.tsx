@@ -37,6 +37,7 @@ import { deactivateProject } from 'lib/api/lasius/projects/projects';
 import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
 import { ProjectAddUpdateForm } from 'layout/pages/projects/sharedViews/projectAddUpdateForm';
 import { ModelsProject } from 'lib/api/lasius';
+import { ProjectAddUpdateTagsForm } from 'layout/pages/projects/sharedViews/projectAddUpdateTagsForm';
 
 type Props = {
   item: ModelsProject;
@@ -47,6 +48,7 @@ export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
   const manageModal = useModal(`ManageProjectMembersModal-${item.id}`);
   const statsModal = useModal(`StatsModal-${item.id}`);
   const exportModal = useModal(`ExportModal-${item.id}`);
+  const tagModal = useModal(`TagModal-${item.id}`);
   const { handleCloseAll, currentOpenContextMenuId } = useContextMenu();
 
   const { t } = useTranslation('common');
@@ -68,6 +70,11 @@ export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
 
   const manageMembers = () => {
     manageModal.openModal();
+    handleCloseAll();
+  };
+
+  const manageTags = () => {
+    tagModal.openModal();
     handleCloseAll();
   };
 
@@ -127,6 +134,16 @@ export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
                 <ContextCompactButtonWrapper>
                   <Button
                     variant="contextIcon"
+                    title={t('Edit tags')}
+                    aria-label={t('Edit tags')}
+                    onClick={() => manageTags()}
+                  >
+                    <Icon name="tags-double-interface-essential" size={24} />
+                  </Button>
+                </ContextCompactButtonWrapper>
+                <ContextCompactButtonWrapper>
+                  <Button
+                    variant="contextIcon"
                     title={t('Deactivate project')}
                     aria-label={t('Deactivate project')}
                     onClick={() => handleDeactivateProject()}
@@ -140,7 +157,15 @@ export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
           )}
         </AnimatePresence>
       </ContextCompactBody>
-      <ModalResponsive modalId={updateModal.modalId}>
+      <ModalResponsive modalId={tagModal.modalId} autoSize>
+        <ProjectAddUpdateTagsForm
+          mode="update"
+          item={item}
+          onSave={tagModal.closeModal}
+          onCancel={tagModal.closeModal}
+        />
+      </ModalResponsive>
+      <ModalResponsive modalId={updateModal.modalId} autoSize>
         <ProjectAddUpdateForm
           mode="update"
           item={item}

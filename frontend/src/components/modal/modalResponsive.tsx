@@ -111,6 +111,16 @@ export const ModalResponsive: React.FC<Props> = ({
 
   useEventListener('keydown', handleEscape);
 
+  const modalContainer = {
+    ...modalContainerStyle,
+    ...(autoSize && {
+      maxWidth: ['100%', '100%', '80%'],
+      width: ['100%', '100%', 'auto'],
+      height: 'auto',
+    }),
+    ...(minHeight && { height: minHeight }),
+  };
+
   return (
     <Portal selector="#modal">
       <AnimatePresence>
@@ -125,11 +135,7 @@ export const ModalResponsive: React.FC<Props> = ({
             id={modalId}
           >
             <ModalContainer
-              sx={{
-                ...modalContainerStyle,
-                ...(autoSize && { width: 'auto', maxWidth: 'auto', height: 'auto' }),
-                ...(minHeight && { height: minHeight }),
-              }}
+              sx={modalContainer}
               initial={{ opacity: 0, y: '100vh' }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: '100vh' }}

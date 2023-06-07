@@ -39,6 +39,7 @@ import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
 import { ManageProjectMembers } from 'layout/pages/projects/sharedViews/manageMembers';
 import { ContextButtonLeaveProject } from 'components/contextMenuBar/buttons/contextButtonLeaveProject';
 import { ContextButtonDeactivateProject } from 'components/contextMenuBar/buttons/contextButtonDeactivateProject';
+import { ProjectAddUpdateTagsForm } from 'layout/pages/projects/sharedViews/projectAddUpdateTagsForm';
 
 type Props = {
   item: ModelsUserProject;
@@ -49,6 +50,7 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
   const manageModal = useModal(`ManageProjectMembersModal-${item.projectReference.id}`);
   const statsModal = useModal(`StatsModal-${item.projectReference.id}`);
   const exportModal = useModal(`ExportModal-${item.projectReference.id}`);
+  const tagModal = useModal(`TagModal-${item.projectReference.id}`);
   const { handleCloseAll, currentOpenContextMenuId } = useContextMenu();
 
   const { t } = useTranslation('common');
@@ -65,6 +67,11 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
 
   const manageMembers = () => {
     manageModal.openModal();
+    handleCloseAll();
+  };
+
+  const manageTags = () => {
+    tagModal.openModal();
     handleCloseAll();
   };
 
@@ -121,6 +128,16 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
                     <Icon name="pencil-2-interface-essential" size={24} />
                   </Button>
                 </ContextCompactButtonWrapper>
+                <ContextCompactButtonWrapper>
+                  <Button
+                    variant="contextIcon"
+                    title={t('Edit tags')}
+                    aria-label={t('Edit tags')}
+                    onClick={() => manageTags()}
+                  >
+                    <Icon name="tags-double-interface-essential" size={24} />
+                  </Button>
+                </ContextCompactButtonWrapper>
                 <ContextButtonDeactivateProject item={item} variant="compact" />
                 <ContextButtonLeaveProject item={item} variant="compact" />
                 <ContextButtonClose variant="compact" />
@@ -135,6 +152,14 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
           item={item}
           onSave={updateModal.closeModal}
           onCancel={updateModal.closeModal}
+        />
+      </ModalResponsive>
+      <ModalResponsive modalId={tagModal.modalId} autoSize>
+        <ProjectAddUpdateTagsForm
+          mode="update"
+          item={item}
+          onSave={tagModal.closeModal}
+          onCancel={tagModal.closeModal}
         />
       </ModalResponsive>
       <ModalResponsive modalId={manageModal.modalId} autoSize>

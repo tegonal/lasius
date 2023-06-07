@@ -19,7 +19,55 @@
 
 import { ModelsTag } from 'lib/api/lasius';
 
-export const BookingCategoriesTagsEdit: React.FC<{ tags: ModelsTag[] }> = ({ tags }) => {
-  console.log(tags);
-  return <div>BookingCategoriesTagsEdit</div>;
-};
+export const tagGroupTemplate: ModelsTag[] = [
+  {
+    id: 'Administration',
+    type: 'TagGroup',
+    relatedTags: [
+      {
+        id: 'Non-Billable',
+        type: 'SimpleTag',
+      },
+    ],
+  },
+  {
+    id: 'Development',
+    type: 'TagGroup',
+    relatedTags: [
+      {
+        id: 'Billable',
+        type: 'SimpleTag',
+      },
+    ],
+  },
+  {
+    id: 'Design',
+    type: 'TagGroup',
+    relatedTags: [
+      {
+        id: 'Billable',
+        type: 'SimpleTag',
+      },
+    ],
+  },
+  {
+    id: 'Project Management',
+    type: 'TagGroup',
+    relatedTags: [
+      {
+        id: 'Billable',
+        type: 'SimpleTag',
+      },
+    ],
+  },
+  {
+    id: 'Maintenance & Support',
+    type: 'TagGroup',
+    relatedTags: [
+      {
+        id: 'Billable',
+        type: 'SimpleTag',
+      },
+    ],
+  },
+];

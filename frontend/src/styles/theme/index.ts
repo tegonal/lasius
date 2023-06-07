@@ -84,6 +84,12 @@ export const theme: Theme = {
     },
   },
   alerts: {
+    info: {
+      variant: 'alerts.default',
+      bg: 'muted',
+      color: 'text',
+      fontWeight: 400,
+    },
     'toast-SUCCESS': {
       variant: 'alerts.default',
       justifyContent: 'space-between',

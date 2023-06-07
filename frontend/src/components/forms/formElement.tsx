@@ -22,9 +22,10 @@ import { Box } from 'theme-ui';
 
 type Props = {
   children: React.ReactNode;
+  sx?: any;
 };
 
-export const FormElement: React.FC<Props> = ({ children }) => {
+export const FormElement: React.FC<Props> = ({ children, sx = {} }) => {
   return (
     <Box
       sx={{
@@ -32,6 +33,7 @@ export const FormElement: React.FC<Props> = ({ children }) => {
         width: '100%',
         position: 'relative',
         '&:last-child>button': { mt: 3 },
+        ...sx,
       }}
     >
       {children}

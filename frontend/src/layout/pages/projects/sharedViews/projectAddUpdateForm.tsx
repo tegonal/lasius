@@ -18,12 +18,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box, Input, Label } from 'theme-ui';
+import { Input, Label } from 'theme-ui';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@theme-ui/components';
 import { FormBody } from 'components/forms/formBody';
 import { FormElement } from 'components/forms/formElement';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { FormErrorBadge } from 'components/forms/formErrorBadge';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import {
@@ -44,16 +44,20 @@ type Props = {
 };
 
 type FormValues = {
-  projectName: string;
+  projectKey: string;
 };
 
 export const ProjectAddUpdateForm: React.FC<Props> = ({ item, onSave, onCancel, mode }) => {
   const { t } = useTranslation('common');
 
-  console.log(item);
+  const hookForm = useForm<FormValues>({
+    defaultValues: {
+      projectKey: '',
+    },
+  });
 
-  const hookForm = useForm<FormValues>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [originalProjectName, setOriginalProjectName] = useState('');
   const { selectedOrganisationId } = useOrganisation();
   const { addToast } = useToast();
 
@@ -68,22 +72,24 @@ export const ProjectAddUpdateForm: React.FC<Props> = ({ item, onSave, onCancel, 
 
   useEffect(() => {
     if (item) {
-      hookForm.setValue('projectName', projectKey);
+      hookForm.setValue('projectKey', projectKey);
+      setOriginalProjectName(projectKey);
     }
   }, [hookForm, item, projectKey]);
 
   const onSubmit = async () => {
     setIsSubmitting(true);
-    const { projectName } = hookForm.getValues();
-    if (mode === 'add' && projectName) {
+    const { projectKey } = hookForm.getValues();
+
+    if (mode === 'add' && projectKey) {
       await createProject(projectOrganisationId, {
-        key: projectName,
+        key: projectKey,
         bookingCategories: [],
       });
     } else if (mode === 'update' && item) {
       await updateProject(projectOrganisationId, projectId, {
         ...item,
-        key: projectName,
+        ...(projectKey !== originalProjectName && { key: projectKey }),
       });
     }
     addToast({ message: t('Project updated'), type: 'SUCCESS' });
@@ -94,24 +100,25 @@ export const ProjectAddUpdateForm: React.FC<Props> = ({ item, onSave, onCancel, 
   };
 
   return (
-    <Box sx={{ width: '100%', position: 'relative' }}>
+    <FormProvider {...hookForm}>
       <form onSubmit={hookForm.handleSubmit(onSubmit)}>
         <FormBody>
           <FormElement>
-            <Label htmlFor="projectName">{t('Project name')}</Label>
-            <Input {...hookForm.register('projectName', { required: true })} autoComplete="off" />
-            <FormErrorBadge error={hookForm.formState.errors.projectName} />
-          </FormElement>
-          <FormElement>
-            <Button type="submit" disabled={isSubmitting} sx={{ position: 'relative', zIndex: 0 }}>
-              {t('Save')}
-            </Button>
-            <Button type="button" variant="secondary" onClick={onCancel}>
-              {t('Cancel')}
-            </Button>
+            <Label htmlFor="projectKey">{t('Project name')}</Label>
+            <Input {...hookForm.register('projectKey', { required: true })} autoComplete="off" />
+            <FormErrorBadge error={hookForm.formState.errors.projectKey} />
           </FormElement>
         </FormBody>
+
+        <FormElement>
+          <Button type="submit" disabled={isSubmitting} sx={{ position: 'relative', zIndex: 0 }}>
+            {t('Save')}
+          </Button>
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            {t('Cancel')}
+          </Button>
+        </FormElement>
       </form>
-    </Box>
+    </FormProvider>
   );
 };

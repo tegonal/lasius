@@ -18,20 +18,22 @@
  */
 
 import React from 'react';
-import { Flex } from 'theme-ui';
+import { Flex, ThemeUIStyleObject } from 'theme-ui';
 import { flexColumnJustifyCenterAlignCenter } from 'styles/shortcuts';
 
 type Props = {
   children: React.ReactNode;
+  sx?: ThemeUIStyleObject;
 };
 
-export const FormBody: React.FC<Props> = ({ children }) => {
+export const FormBody: React.FC<Props> = ({ children, sx = {} }) => {
   return (
     <Flex
       sx={{
         label: 'FormBody',
         ...flexColumnJustifyCenterAlignCenter([2, 3]),
         width: '100%',
+        ...sx,
       }}
     >
       {children}

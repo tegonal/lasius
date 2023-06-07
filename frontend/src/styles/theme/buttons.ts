@@ -71,7 +71,7 @@ export const themeButtons: Record<string, ThemeUIStyleObject> = {
     },
   },
   secondarySmall: {
-    variant: 'buttons.primary',
+    variant: 'buttons.secondary',
     fontSize: 1,
     py: '4px',
   },
