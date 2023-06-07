@@ -17,7 +17,7 @@
  *
  */
 
-import { getWorkingHoursWeekdayString } from 'lib/dates';
+import { formatISOLocale, getWorkingHoursWeekdayString } from 'lib/dates';
 import { eachDayOfInterval, lastDayOfMonth, lastDayOfWeek } from 'date-fns';
 import { plannedWorkingHoursStub } from 'lib/stubPlannedWorkingHours';
 import { getPlannedWorkingHoursForDateRange } from 'lib/api/functions/getPlannedWorkingHoursForDateRange';
@@ -39,7 +39,9 @@ export const getCeilingValues = (
 ) => {
   switch (granularity) {
     case 'Day': {
-      const weekday = getWorkingHoursWeekdayString(`${item.year}-${item.month}-${item.day}`);
+      const weekday = getWorkingHoursWeekdayString(
+        formatISOLocale(new Date(item.year as number, item.month as number, item.day as number))
+      );
       return plannedWorkingHours[weekday];
     }
     case 'Week': {

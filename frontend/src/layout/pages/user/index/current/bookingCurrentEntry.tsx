@@ -48,6 +48,7 @@ import { BookingCurrentNoBooking } from 'layout/pages/user/index/current/booking
 import { useIsClient } from 'usehooks-ts';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { AnimateChange } from 'components/shared/motion/animateChange';
+import { useStore } from 'storeContext/store';
 
 type Props = {
   inContainer?: boolean;
@@ -58,6 +59,7 @@ export const BookingCurrentEntry: React.FC<Props> = ({ inContainer = false }) =>
   const { mutate } = useSWRConfig();
   const { selectedOrganisationId } = useOrganisation();
   const isClient = useIsClient();
+  const store = useStore();
 
   const { data } = useGetUserBookingCurrent({ swr: { enabled: isClient } });
 
@@ -67,6 +69,7 @@ export const BookingCurrentEntry: React.FC<Props> = ({ inContainer = false }) =>
         end: formatISOLocale(new Date()),
       });
       await mutate(getGetUserBookingCurrentKey());
+      store.dispatch({ type: 'calendar.setSelectedDate', payload: formatISOLocale(new Date()) });
     }
   };
 
@@ -89,7 +92,7 @@ export const BookingCurrentEntry: React.FC<Props> = ({ inContainer = false }) =>
         >
           <Flex sx={flexRowJustifyStartAlignCenter([2, 2, 3])}>
             <Button
-              onClick={() => stop()}
+              onClick={stop}
               variant="stopRecording"
               title={t('Stop recording current time booking')}
             >

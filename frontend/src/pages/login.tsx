@@ -42,10 +42,12 @@ import { Link } from '@theme-ui/components';
 import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
 import { usePlausible } from 'next-plausible';
 import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
+import { useStore } from 'storeContext/store';
+import { formatISOLocale } from 'lib/dates';
 
 const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
   const plausible = usePlausible<LasiusPlausibleEvents>();
-
+  const store = useStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<keyof typeof LoginError>();
   const { t } = useTranslation('common');
@@ -108,6 +110,8 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
           status: 'success',
         },
       });
+
+      store.dispatch({ type: 'calendar.setSelectedDate', payload: formatISOLocale(new Date()) });
       await router.push(res.url);
     }
 

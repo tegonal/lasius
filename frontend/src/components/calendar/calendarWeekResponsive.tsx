@@ -44,6 +44,10 @@ export const CalendarWeekResponsive: React.FC = () => {
   const isClient = useIsClient();
 
   useEffect(() => {
+    setSelectedDay(store.state.calendar.selectedDate);
+  }, [store.state.calendar.selectedDate]);
+
+  useEffect(() => {
     setWeek(getWeekOfDate(selectedDay));
   }, [selectedDay]);
 

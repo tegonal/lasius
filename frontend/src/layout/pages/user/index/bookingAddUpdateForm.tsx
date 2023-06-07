@@ -32,7 +32,6 @@ import {
   getMinutes,
   isAfter,
   isBefore,
-  isFuture,
   isToday,
   setHours,
   setMinutes,
@@ -119,7 +118,6 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
     //  Register validators with element names
     hookForm.register('start', {
       validate: {
-        startInPast: (v) => !isFuture(new Date(v)),
         startBeforeEnd: (v) => isBefore(new Date(v), new Date(hookForm.getValues('end'))),
       },
     });

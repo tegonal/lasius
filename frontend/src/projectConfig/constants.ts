@@ -70,6 +70,7 @@ export const COOKIE_NAMES = {
 export type COOKIE_NAMES = typeof COOKIE_NAMES;
 
 export const WEBSOCKET_EVENT = {
+  UserLoggedOutV2: 'UserLoggedOutV2',
   CurrentOrganisationTimeBookings: 'CurrentOrganisationTimeBookings',
   CurrentUserTimeBookingEvent: 'CurrentUserTimeBookingEvent',
   FavoriteAdded: 'FavoriteAdded',

@@ -100,6 +100,10 @@ export const LasiusBackendWebsocketEventHandler: React.FC = () => {
           addToast({ message: t('Booking removed'), type: 'SUCCESS' });
           break;
 
+        case type === WEBSOCKET_EVENT.UserLoggedOutV2:
+          logger.info('[AppWebsocketEventHandler][UserLoggedOutV2]');
+          break;
+
         case type === WEBSOCKET_EVENT.UserTimeBookingHistoryEntryAdded:
           addToast({ message: t('Booking added'), type: 'SUCCESS' });
           break;
