@@ -28,16 +28,27 @@ import {
   endOfQuarter,
   endOfWeek,
   endOfYear,
+  endOfYesterday,
   startOfDay,
   startOfMonth,
   startOfQuarter,
   startOfWeek,
   startOfYear,
+  startOfYesterday,
 } from 'date-fns';
 
 const t = (s: string) => s;
 
 export const dateOptions = [
+  {
+    name: t('Yesterday'),
+    dateRangeFn: (_day: Date) => {
+      return {
+        from: formatISOLocale(startOfYesterday()),
+        to: formatISOLocale(endOfYesterday()),
+      };
+    },
+  },
   {
     name: t('This week'),
     dateRangeFn: (day: Date) => {

@@ -103,7 +103,7 @@ export const BookingHistoryItemContext: React.FC<Props> = ({
                       variant="contextIcon"
                       onClick={() => deleteItem()}
                     >
-                      <Icon name="remove-circle-interface-essential" size={24} />
+                      <Icon name="bin-2-alternate-interface-essential" size={24} />
                     </Button>
                   </ContextCompactButtonWrapper>
                 )}
