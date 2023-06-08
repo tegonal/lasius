@@ -31,12 +31,16 @@ import { BookingDuration } from 'layout/pages/user/index/bookingDuration';
 import { BookingItemContext } from 'layout/pages/user/index/list/bookingItemContext';
 import { Responsively } from 'components/shared/responsively';
 import { ModelsBooking } from 'lib/api/lasius';
+import { useTranslation } from 'next-i18next';
+import { Icon } from 'components/shared/icon';
+import { ToolTip } from 'components/shared/toolTip';
 
 type Props = {
-  item: ModelsBooking;
+  item: ModelsBooking & { overlapsWithNext?: ModelsBooking };
 };
 
 export const BookingItem: React.FC<Props> = ({ item }) => {
+  const { t } = useTranslation();
   return (
     <Flex
       sx={{
@@ -44,8 +48,13 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
         ...flexRowJustifyBetweenAlignCenter(2),
         px: [2, 2, 4],
         py: [3, 3, 4],
-        borderBottom: '1px solid',
-        borderBottomColor: 'containerTextColorMuted',
+        ...(item.overlapsWithNext
+          ? { borderBottom: '8px dotted', borderBottomColor: 'error' }
+          : {
+              borderBottom: '1px solid',
+              borderBottomColor: 'containerTextColorMuted',
+            }),
+        position: 'relative',
       }}
     >
       <Flex sx={{ flexDirection: 'column', gap: 1 }}>
@@ -67,6 +76,23 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
         </Responsively>
         <BookingItemContext item={item} />
       </Flex>
+      {item.overlapsWithNext && (
+        <Flex
+          sx={{
+            position: 'absolute',
+            inset: 'auto 0 0 0',
+            width: '100%',
+            fontSize: 1,
+            textAlign: 'center',
+            color: 'error',
+            justifyContent: 'center',
+          }}
+        >
+          <ToolTip toolTipContent={t('Bookings overlap')}>
+            <Icon name="time-clock-three-interface-essential" size={24} />
+          </ToolTip>
+        </Flex>
+      )}
     </Flex>
   );
 };

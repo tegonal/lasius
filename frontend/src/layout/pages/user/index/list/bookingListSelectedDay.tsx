@@ -29,7 +29,7 @@ import { useIsClient } from 'usehooks-ts';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useStore } from 'storeContext/store';
 import { stringHash } from 'lib/stringHash';
-import { sortBookingsByDate } from 'lib/api/functions/sortBookingsByDate';
+import { flagOverlappingBookings } from 'lib/api/functions/flagOverlappingBookings';
 
 export const BookingListSelectedDay: React.FC = () => {
   const { selectedOrganisationId } = useOrganisation();
@@ -48,7 +48,9 @@ export const BookingListSelectedDay: React.FC = () => {
     }
   );
 
-  const sortedList = useMemo(() => sortBookingsByDate(data || []), [data]);
+  const sortedList = useMemo(() => flagOverlappingBookings(data || []), [data]);
+
+  console.log(sortedList);
 
   if (!isClient) return null;
 
