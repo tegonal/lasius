@@ -31,7 +31,15 @@ export const ContainerColumnsDesktop: React.FC<Props> = ({ children }) => {
       sx={{
         label: 'ContainerColumnsDesktop',
         gap: 0,
-        gridTemplateColumns: '1fr 2.25fr 1fr',
+        gridTemplateColumns: [
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 310px) minmax(max-content, auto) minmax(200px, 310px)',
+          'minmax(200px, 340px) minmax(max-content, auto) minmax(200px, 340px)',
+        ],
         ...fullWidthHeight(),
         overflow: 'auto',
       }}

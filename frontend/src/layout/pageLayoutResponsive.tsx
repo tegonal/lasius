@@ -31,9 +31,10 @@ export const PageLayoutResponsive: React.FC<Props> = ({ children }) => {
         label: 'PageLayoutResponsive',
         gridTemplateRows: ['116px auto', '116px auto', '148px auto'],
         height: '100%',
-        width: ['100%', '100%', 800, 1440],
+        width: ['100%', '100%', '100%', '100%', '100%', 1400, 1500],
         margin: '0 auto',
         pt: [2, 2, 0],
+        px: [2, 2, 3, 4, 4, 0],
         overflow: 'visible',
         gap: 0,
       }}

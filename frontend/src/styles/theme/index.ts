@@ -28,7 +28,7 @@ import { lighten } from '@theme-ui/color';
 import { outline, resetAutoFillStyle } from 'styles/shortcuts';
 
 export const theme: Theme = {
-  breakpoints: ['540px', '720px', '960px', '1140px'], // 540px 720px 960px 1140px (bootstrap 4)
+  breakpoints: ['540px', '720px', '960px', '1140px', '1440px', '1680px'], // 540px 720px 960px 1140px (bootstrap 4)
   space: [0, 4, 8, 16, 32, 64, 128, 256, 512],
   fonts: {
     body: 'Roboto, "Open Sans", sans-serif',

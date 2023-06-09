@@ -37,7 +37,7 @@ const NavigationButton: React.FC<{ item: NavigationRouteType }> = ({ item }) => 
   return (
     <Button
       key={item.name}
-      sx={{ label: 'NavigationButton' }}
+      sx={{ label: 'NavigationButton', textAlign: 'left', lineHeight: '1.2rem' }}
       variant={router.route === item.route ? 'iconTextActive' : 'iconText'}
       onClick={() => router.push(item.route)}
     >

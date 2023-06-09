@@ -40,7 +40,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { locale = '' } = context;
   const UA = context.req.headers['user-agent'];
   const isMobile = Boolean(
-    UA?.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i)
+    UA?.match(/Android|BlackBerry|iPhone|iPod|Opera Mini|IEMobile|WPDesktop/i)
   );
 
   return {
