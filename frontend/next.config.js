@@ -82,10 +82,7 @@ const nextConfiguration = {
 module.exports = withPWA(
   withPlausibleProxy({
     subdirectory: 's',
-    scriptName: 'p',
-    domain: LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
+    scriptName: 'p.js',
     customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
-    trackLocalhost: ENVIRONMENT !== 'production',
-    enabled: !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
   })(nextConfiguration)
 );

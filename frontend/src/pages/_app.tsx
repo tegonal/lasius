@@ -38,7 +38,6 @@ import { StoreContextProvider, useStore } from 'storeContext/store';
 import { Error } from 'components/error';
 import {
   DEV,
-  LASIUS_TELEMETRY_PLAUSIBLE_HOST,
   LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
   SOCIAL_MEDIA_CARD_IMAGE_URL,
 } from 'projectConfig/constants';
@@ -111,28 +110,23 @@ const App = ({
         }}
       >
         <SessionProvider session={session}>
-          <PlausibleProvider
-            domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
-            customDomain={LASIUS_TELEMETRY_PLAUSIBLE_HOST}
-            enabled={
-              !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN
-            }
-            trackLocalhost={DEV}
-            selfHosted
-            trackOutboundLinks
-            trackFileDownloads
-          >
-            <CookieCutter />
-            <Head>
-              <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
-              />
-              <title>Lasius</title>
-            </Head>
-            <StoreContextProvider>
-              <LazyMotion features={loadFeatures}>
-                <ThemeProvider theme={theme}>
+          <CookieCutter />
+          <Head>
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
+            />
+            <title>Lasius</title>
+          </Head>
+          <StoreContextProvider>
+            <LazyMotion features={loadFeatures}>
+              <ThemeProvider theme={theme}>
+                <PlausibleProvider
+                  domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
+                  enabled={!!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
+                  trackLocalhost={DEV}
+                  trackOutboundLinks
+                >
                   <DefaultSeo
                     openGraph={{
                       images: [{ url: SOCIAL_MEDIA_CARD_IMAGE_URL }],
@@ -157,10 +151,10 @@ const App = ({
                       <DevInfoBadge />
                     </>
                   )}
-                </ThemeProvider>
-              </LazyMotion>
-            </StoreContextProvider>
-          </PlausibleProvider>
+                </PlausibleProvider>
+              </ThemeProvider>
+            </LazyMotion>
+          </StoreContextProvider>
         </SessionProvider>
       </SWRConfig>
     </>
