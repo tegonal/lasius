@@ -29,6 +29,7 @@ import { useIsClient } from 'usehooks-ts';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useStore } from 'storeContext/store';
 import { augmentBookingsList } from 'lib/api/functions/augmentBookingsList';
+import { stringHash } from 'lib/stringHash';
 
 export const BookingListSelectedDay: React.FC = () => {
   const { selectedOrganisationId } = useOrganisation();
@@ -59,9 +60,9 @@ export const BookingListSelectedDay: React.FC = () => {
       {hasNoData ? (
         <DataFetchEmpty />
       ) : (
-        <AnimateList hash={calendar.selectedDate}>
+        <AnimateList popLayout>
           {sortedList.map((item) => (
-            <BookingItem key={item.bookingHash} item={item} />
+            <BookingItem key={stringHash(item)} item={item} />
           ))}
         </AnimateList>
       )}

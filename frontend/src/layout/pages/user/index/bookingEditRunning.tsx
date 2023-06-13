@@ -30,13 +30,16 @@ import { DEFAULT_STRING_VALUE } from 'projectConfig/constants';
 import { FormProvider, useForm } from 'react-hook-form';
 import { ModelsTags } from 'types/common';
 import { formatISOLocale } from 'lib/dates';
-import { isFuture } from 'date-fns';
+import { addSeconds, isFuture } from 'date-fns';
 import { logger } from 'lib/logger';
 import { updateUserBooking } from 'lib/api/lasius/user-bookings/user-bookings';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useProjects } from 'lib/api/hooks/useProjects';
 import { useGetTagsByProject } from 'lib/api/lasius/user-organisations/user-organisations';
 import { ModelsBooking } from 'lib/api/lasius';
+import { IconNames } from 'types/iconNames';
+import { useGetBookingLatest } from 'lib/api/hooks/useGetBookingLatest';
+import { useStore } from 'storeContext/store';
 
 type Props = {
   item: ModelsBooking;
@@ -59,6 +62,11 @@ export const BookingEditRunning: React.FC<Props> = ({ item, onSave, onCancel }) 
       start: '',
     },
   });
+  const {
+    state: { calendar },
+  } = useStore();
+  const { data: latestBooking } = useGetBookingLatest(calendar.selectedDate);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedOrganisationId } = useOrganisation();
   const { projectSuggestions } = useProjects();
@@ -115,6 +123,14 @@ export const BookingEditRunning: React.FC<Props> = ({ item, onSave, onCancel }) 
     return () => subscription.unsubscribe();
   }, [hookForm]);
 
+  const presetStart = latestBooking
+    ? {
+        presetLabel: t('Use end time of latest booking as start time for this one'),
+        presetDate: formatISOLocale(addSeconds(new Date(latestBooking?.end?.dateTime || ''), 1)),
+        presetIcon: 'move-left-1' as IconNames,
+      }
+    : {};
+
   return (
     <Box sx={{ width: '100%', position: 'relative' }}>
       <FormProvider {...hookForm}>
@@ -140,6 +156,7 @@ export const BookingEditRunning: React.FC<Props> = ({ item, onSave, onCancel }) 
                     startInPast: (v) => !isFuture(new Date(v)),
                   },
                 }}
+                {...presetStart}
               />
             </FormElement>
             <FormElement>

@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { Flex } from 'theme-ui';
+import { Box } from 'theme-ui';
 
 type Props = {
   children: React.ReactNode;
@@ -26,19 +26,16 @@ type Props = {
 
 export const BookingListWrapper: React.FC<Props> = ({ children }) => {
   return (
-    <Flex
+    <Box
       sx={{
         position: 'relative',
         label: 'BookingListWrapper',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
         pt: 24,
         pb: [96, 0],
         userSelect: 'none',
       }}
     >
       {children}
-    </Flex>
+    </Box>
   );
 };

@@ -19,6 +19,7 @@
 
 import React from 'react';
 import { AnimatePresence, m } from 'framer-motion';
+import { stringHash } from 'lib/stringHash';
 
 const item = {
   hidden: { opacity: 0, transition: { duration: 0.5 } },
@@ -26,17 +27,21 @@ const item = {
   exit: { opacity: 0, transition: { duration: 0.5 } },
 };
 
+function getComponentKey(component: React.ReactElement, index: number) {
+  if (typeof component === 'object' && component !== null && component.key != null) {
+    return stringHash(component.key);
+  }
+  return stringHash(index);
+}
+
 type Props = {
-  children: React.ReactNode;
-  hash?: string;
-  useAvailableSpace?: boolean;
+  children: React.ReactElement[];
   popLayout?: boolean;
 };
-export const AnimateList: React.FC<Props> = ({ children, hash, useAvailableSpace, popLayout }) => {
-  const style = useAvailableSpace ? { width: '100%', height: '100%' } : {};
+export const AnimateList: React.FC<Props> = ({ children, popLayout }) => {
   const mode = popLayout ? 'popLayout' : undefined;
   return (
-    <AnimatePresence key={hash} mode={mode}>
+    <AnimatePresence mode={mode}>
       {React.Children.map(children, (child, idx) => (
         <m.div
           exit="exit"
@@ -44,7 +49,7 @@ export const AnimateList: React.FC<Props> = ({ children, hash, useAvailableSpace
           animate="show"
           variants={item}
           custom={idx}
-          style={style}
+          key={getComponentKey(child, idx)}
         >
           {child}
         </m.div>

@@ -239,20 +239,25 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
     return () => subscription.unsubscribe();
   }, [hookForm]);
 
-  const presetStart = {
-    presetLabel:
-      mode === 'add'
-        ? t('Use end time of latest booking as start time for this one')
-        : t('Use end time of previous booking as start time for this one'),
-    presetDate:
-      mode === 'add'
-        ? formatISOLocale(addSeconds(new Date(latestBooking?.end?.dateTime || ''), 1))
-        : formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
-    presetIcon: 'move-left-1' as IconNames,
-  };
+  const presetStart =
+    mode === 'addBetween'
+      ? {}
+      : {
+          presetLabel:
+            mode === 'add'
+              ? t('Use end time of latest booking as start time for this one')
+              : t('Use end time of previous booking as start time for this one'),
+          presetDate:
+            mode === 'add'
+              ? formatISOLocale(addSeconds(new Date(latestBooking?.end?.dateTime || ''), 1))
+              : formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
+          presetIcon: 'move-left-1' as IconNames,
+        };
 
   const presetEnd =
     mode === 'add'
+      ? {}
+      : mode === 'addBetween'
       ? {}
       : {
           presetLabel: t('Use start time of next booking as end time for this one'),
