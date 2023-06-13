@@ -24,24 +24,24 @@ import { DataListHeaderItem } from 'components/dataList/dataListHeaderItem';
 import { DataListField } from 'components/dataList/dataListField';
 import { Text } from '@theme-ui/components';
 import { DataListRow } from 'components/dataList/dataListRow';
+import { AllProjectsListItemContext } from 'layout/pages/organisation/projects/allProjectsListItemContext';
 import { AvatarProject } from 'components/shared/avatar/avatarProject';
-import { ROLES } from 'projectConfig/constants';
-import { MyProjectsListItemMemberContext } from 'layout/pages/projects/my/myProjectsListItemMemberContext';
-import { UserRoles } from 'dynamicTranslationStrings';
-import { MyProjectsListItemAdministratorContext } from 'layout/pages/projects/my/myProjectsListItemAdministratorContext';
-import { useProjects } from 'lib/api/hooks/useProjects';
-import { DataFetchEmpty } from 'components/shared/fetchState/dataFetchEmpty';
+import { useOrganisation } from 'lib/api/hooks/useOrganisation';
+import { useGetProjectList } from 'lib/api/lasius/projects/projects';
+import { orderBy } from 'lodash';
 import { useIsClient } from 'usehooks-ts';
+import { DataFetchEmpty } from 'components/shared/fetchState/dataFetchEmpty';
 import { stringHash } from 'lib/stringHash';
 
-export const MyProjectsList: React.FC = () => {
+export const AllProjectsList: React.FC = () => {
   const { t } = useTranslation('common');
-  const { userProjects } = useProjects();
+  const { selectedOrganisationId } = useOrganisation();
+  const { data } = useGetProjectList(selectedOrganisationId);
   const isClient = useIsClient();
 
   if (!isClient) return null;
 
-  if (userProjects().length === 0) {
+  if (!data || data?.length === 0) {
     return <DataFetchEmpty />;
   }
 
@@ -51,26 +51,22 @@ export const MyProjectsList: React.FC = () => {
         <DataListRow>
           <DataListHeaderItem />
           <DataListHeaderItem>{t('Name')}</DataListHeaderItem>
-          <DataListHeaderItem>{t('Role')}</DataListHeaderItem>
+          <DataListHeaderItem>{t('Status')}</DataListHeaderItem>
           <DataListHeaderItem />
         </DataListRow>
-        {userProjects().map((item) => (
+        {orderBy(data, (data) => data.key).map((item) => (
           <DataListRow key={stringHash(item)}>
             <DataListField width={90}>
-              <AvatarProject name={item.projectReference.key} />
+              <AvatarProject name={item.key} />
             </DataListField>
             <DataListField>
-              <Text>{item.projectReference.key}</Text>
+              <Text>{item.key}</Text>
             </DataListField>
             <DataListField>
-              <Text>{UserRoles[item.role]}</Text>
+              <Text>{item.active ? t('Active') : t('Inactive')}</Text>
             </DataListField>
             <DataListField>
-              {item.role === ROLES.PROJECT_ADMIN ? (
-                <MyProjectsListItemAdministratorContext item={item} />
-              ) : (
-                <MyProjectsListItemMemberContext item={item} />
-              )}
+              <AllProjectsListItemContext item={item} />
             </DataListField>
           </DataListRow>
         ))}

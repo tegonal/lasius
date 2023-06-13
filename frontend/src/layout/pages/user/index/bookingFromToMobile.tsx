@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { Box, Flex } from 'theme-ui';
+import { Flex } from 'theme-ui';
 import { FormatDate } from 'components/shared/formatDate';
 import { ModelsBooking } from 'lib/api/lasius';
 import { Icon } from 'components/shared/icon';
@@ -27,19 +27,19 @@ type Props = {
   item: ModelsBooking;
 };
 
-export const BookingFromTo: React.FC<Props> = ({ item }) => {
+export const BookingFromToMobile: React.FC<Props> = ({ item }) => {
   const { start, end } = item;
   return (
-    <Flex sx={{ lineHeight: 'normal', flexDirection: 'column', gap: 2 }}>
-      <Box>
-        <FormatDate date={end?.dateTime || ''} format="time" />
-      </Box>
-      <Flex sx={{ gap: 2, justifyContent: 'center', alignItems: 'center' }}>
-        <Icon name="expand-vertical-4" size={16} />
-      </Flex>
-      <Box>
+    <Flex sx={{ lineHeight: 'normal', flexDirection: 'row', gap: 2 }}>
+      <Flex sx={{ justifyContent: 'center', alignItems: 'center' }}>
         <FormatDate date={start.dateTime} format="time" />
-      </Box>
+      </Flex>
+      <Flex sx={{ justifyContent: 'center', alignItems: 'center' }}>
+        <Icon name="expand-horizontal-4" size={16} />
+      </Flex>
+      <Flex sx={{ justifyContent: 'center', alignItems: 'center' }}>
+        <FormatDate date={end?.dateTime || ''} format="time" />
+      </Flex>
     </Flex>
   );
 };

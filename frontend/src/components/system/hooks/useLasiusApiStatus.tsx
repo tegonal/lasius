@@ -51,9 +51,6 @@ export const useLasiusApiStatus = () => {
 
   const handleOnline = () => {
     setStatus(CONNECTION_STATUS.CONNECTED);
-    if (browserStatus === CONNECTION_STATUS.CONNECTED) {
-      plausible('error', { props: { status: 'apiConnection', message: 'connectionEstablished' } });
-    }
   };
 
   const handleOffline = () => {

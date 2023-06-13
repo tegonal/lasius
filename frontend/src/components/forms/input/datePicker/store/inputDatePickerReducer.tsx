@@ -50,6 +50,9 @@ export const inputDatePickerReducer = (state: Store, action: InputDatePickerActi
     case 'setMinutes':
       newState = { minutes: action.payload };
       break;
+    case 'setSeconds':
+      newState = { seconds: action.payload };
+      break;
     default:
       throw new Error('Invalid action type');
   }
@@ -62,7 +65,7 @@ export const inputDatePickerReducer = (state: Store, action: InputDatePickerActi
     toNumber(merged.days),
     toNumber(merged.hours),
     toNumber(merged.minutes),
-    0
+    toNumber(merged.seconds)
   );
 
   newState = { ...newState, ...dateToObj(newState.date) };

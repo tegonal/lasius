@@ -24,7 +24,7 @@ import { FormElement } from 'components/forms/formElement';
 import { Button } from '@theme-ui/components';
 import { ModalResponsive } from 'components/modal/modalResponsive';
 import useModal from 'components/modal/hooks/useModal';
-import { ProjectAddUpdateForm } from 'layout/pages/projects/sharedViews/projectAddUpdateForm';
+import { ProjectAddUpdateForm } from 'layout/shared/projects/projectAddUpdateForm';
 import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
 
 export const MyProjectsRightColumn: React.FC = () => {

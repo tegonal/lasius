@@ -80,11 +80,14 @@ export const InputDatePickerComponent: React.FC<InputDatePickerComponentProps> =
           <Box sx={{ flexShrink: 0 }}>
             {label && <Box>{label}</Box>}
             {hasPreset && (
-              <ToolTip toolTipContent={presetLabel}>
+              <Flex sx={{ alignItems: 'center', gap: 2 }}>
                 <Button variant="secondarySmall" type="button" onClick={onPresetClick}>
                   <Icon name={presetIcon} size={16} />
                 </Button>
-              </ToolTip>
+                <ToolTip toolTipContent={presetLabel}>
+                  <Icon name="information-circle" size={18} />
+                </ToolTip>
+              </Flex>
             )}
           </Box>
         )}

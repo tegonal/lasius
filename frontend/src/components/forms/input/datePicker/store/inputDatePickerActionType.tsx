@@ -25,4 +25,5 @@ export type InputDatePickerActionType =
   | { type: 'setMonth'; payload: string }
   | { type: 'setDay'; payload: string }
   | { type: 'setHours'; payload: string }
-  | { type: 'setMinutes'; payload: string };
+  | { type: 'setMinutes'; payload: string }
+  | { type: 'setSeconds'; payload: string };

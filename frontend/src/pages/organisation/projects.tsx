@@ -18,7 +18,7 @@
  */
 
 import { GetServerSideProps } from 'next';
-import { AllProjectsLayout } from 'layout/pages/projects/all/allProjectsLayout';
+import { AllProjectsLayout } from 'layout/pages/organisation/projects/allProjectsLayout';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { LayoutDesktop } from 'layout/layoutDesktop';
 import { NextPageWithLayout } from 'pages/_app';

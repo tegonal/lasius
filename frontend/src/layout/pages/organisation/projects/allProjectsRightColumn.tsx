@@ -25,7 +25,7 @@ import { Button } from '@theme-ui/components';
 import { ModalResponsive } from 'components/modal/modalResponsive';
 import useModal from 'components/modal/hooks/useModal';
 import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
-import { ProjectAddUpdateForm } from 'layout/pages/projects/sharedViews/projectAddUpdateForm';
+import { ProjectAddUpdateForm } from 'layout/shared/projects/projectAddUpdateForm';
 
 export const AllProjectsRightColumn: React.FC = () => {
   const { t } = useTranslation('common');

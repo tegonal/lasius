@@ -32,15 +32,13 @@ export const ROUTES = {
     STATS: '/user/stats',
     LISTS: '/user/lists',
     WORKING_HOURS: '/user/working-hours',
-  },
-  PROJECTS: {
-    MY: '/projects/my',
-    ALL: '/projects/all',
+    PROJECTS: '/user/projects',
   },
   ORGANISATION: {
     CURRENT: '/organisation/current',
     LISTS: '/organisation/lists',
     STATS: '/organisation/stats',
+    PROJECTS: '/organisation/projects',
   },
   SETTINGS: {
     ACCOUNT: '/settings/account',
@@ -75,6 +73,7 @@ export const NAVIGATION: NavigationType = [
         name: t('Bookings'),
         icon: 'stopwatch-interface-essential',
       },
+      { route: ROUTES.USER.PROJECTS, name: t('Projects'), icon: 'folder-files-folders' },
       {
         route: ROUTES.USER.WORKING_HOURS,
         name: t('Working hours'),
@@ -98,25 +97,6 @@ export const NAVIGATION: NavigationType = [
     ],
   },
   {
-    level: 'projects',
-    component: <NavigationTabContent branch="projects" />,
-    icon: 'folder-files-folders',
-    name: t('View projects and manage them'),
-    routes: [
-      {
-        route: ROUTES.PROJECTS.MY,
-        name: t('My projects'),
-        icon: 'folder-files-folders',
-      },
-      {
-        route: ROUTES.PROJECTS.ALL,
-        name: t('All projects'),
-        icon: 'folder-settings-files-folders',
-        restrictTo: [ROLES.ORGANISATION_ADMIN],
-      },
-    ],
-  },
-  {
     level: 'organisation',
     component: <NavigationTabContent branch="organisation" />,
     icon: 'human-resources-search-team-work-office-companies',
@@ -124,8 +104,14 @@ export const NAVIGATION: NavigationType = [
     routes: [
       {
         route: ROUTES.ORGANISATION.CURRENT,
-        name: t('Current organisation'),
+        name: t('Organisation'),
         icon: 'human-resources-search-team-work-office-companies',
+      },
+      {
+        route: ROUTES.ORGANISATION.PROJECTS,
+        name: t('Projects'),
+        icon: 'folder-settings-files-folders',
+        restrictTo: [ROLES.ORGANISATION_ADMIN],
       },
       {
         route: ROUTES.ORGANISATION.LISTS,

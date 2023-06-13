@@ -26,5 +26,6 @@ export const dateToObj = (date: Date) => {
     days: date.getDate().toString(),
     hours: date.getHours().toString(),
     minutes: date.getMinutes().toString(),
+    seconds: date.getSeconds().toString(),
   };
 };

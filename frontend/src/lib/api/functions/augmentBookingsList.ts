@@ -37,14 +37,14 @@ export const augmentBookingsList = (bookings: ModelsBooking[]): Item => {
     const hasNextItem = index < sortedBookings.length - 1;
 
     if (nextBooking && booking.end && nextBooking.end) {
-      const isOverlapping = !isBefore(
-        new Date(nextBooking.end.dateTime),
-        new Date(booking.start.dateTime)
-      );
+      console.log(nextBooking.end.dateTime, booking.start.dateTime);
+      const isOverlapping =
+        nextBooking.end.dateTime !== booking.start.dateTime &&
+        !isBefore(new Date(nextBooking.end.dateTime), new Date(booking.start.dateTime));
 
       const hasGap =
         differenceInMinutes(new Date(booking.start.dateTime), new Date(nextBooking.end.dateTime)) >
-        3;
+        1;
 
       return {
         ...booking,

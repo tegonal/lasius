@@ -21,36 +21,34 @@ import React from 'react';
 import { Box, Button } from 'theme-ui';
 import { Icon } from 'components/shared/icon';
 import { AnimatePresence } from 'framer-motion';
-
+import { ModalResponsive } from 'components/modal/modalResponsive';
 import { useTranslation } from 'next-i18next';
 import { ContextCompactAnimatePresence } from 'components/contextMenuBar/contextCompactAnimatePresence';
 import { ContextCompactBar } from 'components/contextMenuBar/contextCompactBar';
 import { ContextCompactButtonWrapper } from 'components/contextMenuBar/contextCompactButtonWrapper';
 import { ContextCompactBody } from 'components/contextMenuBar/contextCompactBody';
-import { ModelsUserProject } from 'lib/api/lasius';
 import useModal from 'components/modal/hooks/useModal';
-import { ModalResponsive } from 'components/modal/modalResponsive';
-import { ProjectAddUpdateForm } from 'layout/pages/projects/sharedViews/projectAddUpdateForm';
+import { ManageProjectMembers } from 'layout/shared/projects/manageMembers';
 import { FormElement } from 'components/forms/formElement';
-import { ProjectBookingsCsvExport } from '../sharedViews/projectBookingsCsvExport';
+import { ProjectBookingsCsvExport } from 'layout/shared/projects/projectBookingsCsvExport';
 import { ContextButtonOpen } from 'components/contextMenuBar/buttons/contextButtonOpen';
 import { ContextButtonClose } from 'components/contextMenuBar/buttons/contextButtonClose';
+import { deactivateProject } from 'lib/api/lasius/projects/projects';
 import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
-import { ManageProjectMembers } from 'layout/pages/projects/sharedViews/manageMembers';
-import { ContextButtonLeaveProject } from 'components/contextMenuBar/buttons/contextButtonLeaveProject';
-import { ContextButtonDeactivateProject } from 'components/contextMenuBar/buttons/contextButtonDeactivateProject';
-import { ProjectAddUpdateTagsForm } from 'layout/pages/projects/sharedViews/projectAddUpdateTagsForm';
+import { ProjectAddUpdateForm } from 'layout/shared/projects/projectAddUpdateForm';
+import { ModelsProject } from 'lib/api/lasius';
+import { ProjectAddUpdateTagsForm } from 'layout/shared/projects/projectAddUpdateTagsForm';
 
 type Props = {
-  item: ModelsUserProject;
+  item: ModelsProject;
 };
 
-export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }) => {
-  const updateModal = useModal(`EditProjectModal-${item.projectReference.id}`);
-  const manageModal = useModal(`ManageProjectMembersModal-${item.projectReference.id}`);
-  const statsModal = useModal(`StatsModal-${item.projectReference.id}`);
-  const exportModal = useModal(`ExportModal-${item.projectReference.id}`);
-  const tagModal = useModal(`TagModal-${item.projectReference.id}`);
+export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
+  const updateModal = useModal(`EditProjectModal-${item.id}`);
+  const manageModal = useModal(`ManageProjectMembersModal-${item.id}`);
+  const statsModal = useModal(`StatsModal-${item.id}`);
+  const exportModal = useModal(`ExportModal-${item.id}`);
+  const tagModal = useModal(`TagModal-${item.id}`);
   const { handleCloseAll, currentOpenContextMenuId } = useContextMenu();
 
   const { t } = useTranslation('common');
@@ -62,6 +60,11 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
 
   const showExport = () => {
     exportModal.openModal();
+    handleCloseAll();
+  };
+
+  const handleDeactivateProject = async () => {
+    await deactivateProject(item.organisationReference.id, item.id);
     handleCloseAll();
   };
 
@@ -83,9 +86,9 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
   return (
     <>
       <ContextCompactBody>
-        <ContextButtonOpen hash={item.projectReference.id} />
+        <ContextButtonOpen hash={item.id} />
         <AnimatePresence>
-          {currentOpenContextMenuId === item.projectReference.id && (
+          {currentOpenContextMenuId === item.id && (
             <ContextCompactAnimatePresence>
               <ContextCompactBar>
                 <ContextCompactButtonWrapper>
@@ -138,28 +141,36 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
                     <Icon name="tags-double-interface-essential" size={24} />
                   </Button>
                 </ContextCompactButtonWrapper>
-                <ContextButtonDeactivateProject item={item} variant="compact" />
-                <ContextButtonLeaveProject item={item} variant="compact" />
+                <ContextCompactButtonWrapper>
+                  <Button
+                    variant="contextIcon"
+                    title={t('Deactivate project')}
+                    aria-label={t('Deactivate project')}
+                    onClick={() => handleDeactivateProject()}
+                  >
+                    <Icon name="bin-2-alternate-interface-essential" size={24} />
+                  </Button>
+                </ContextCompactButtonWrapper>
                 <ContextButtonClose variant="compact" />
               </ContextCompactBar>
             </ContextCompactAnimatePresence>
           )}
         </AnimatePresence>
       </ContextCompactBody>
-      <ModalResponsive modalId={updateModal.modalId}>
-        <ProjectAddUpdateForm
-          mode="update"
-          item={item}
-          onSave={updateModal.closeModal}
-          onCancel={updateModal.closeModal}
-        />
-      </ModalResponsive>
       <ModalResponsive modalId={tagModal.modalId} autoSize>
         <ProjectAddUpdateTagsForm
           mode="update"
           item={item}
           onSave={tagModal.closeModal}
           onCancel={tagModal.closeModal}
+        />
+      </ModalResponsive>
+      <ModalResponsive modalId={updateModal.modalId}>
+        <ProjectAddUpdateForm
+          mode="update"
+          item={item}
+          onSave={updateModal.closeModal}
+          onCancel={updateModal.closeModal}
         />
       </ModalResponsive>
       <ModalResponsive modalId={manageModal.modalId} autoSize>
@@ -183,7 +194,7 @@ export const MyProjectsListItemAdministratorContext: React.FC<Props> = ({ item }
         </FormElement>
       </ModalResponsive>
       <ModalResponsive modalId={exportModal.modalId} autoSize>
-        <ProjectBookingsCsvExport item={item.projectReference} />
+        <ProjectBookingsCsvExport item={item} />
         <FormElement>
           <Button type="button" variant="secondary" onClick={exportModal.closeModal}>
             {t('Cancel')}

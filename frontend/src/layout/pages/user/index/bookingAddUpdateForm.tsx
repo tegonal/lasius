@@ -28,7 +28,7 @@ import { InputSelectAutocomplete } from 'components/forms/input/inputSelectAutoc
 import { InputTagsAutocomplete } from 'components/forms/input/inputTagsAutocomplete';
 import {
   addHours,
-  addMinutes,
+  addSeconds,
   getHours,
   getMinutes,
   isAfter,
@@ -134,7 +134,7 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
 
     if (mode === 'add' && itemReference) {
       const reference = new Date(itemReference.end?.dateTime || '');
-      hookForm.setValue('start', formatISOLocale(addMinutes(reference, 1)));
+      hookForm.setValue('start', formatISOLocale(addSeconds(reference, 1)));
       hookForm.setValue('end', formatISOLocale(addHours(reference, 1)));
 
       hookForm.setValue('projectId', '');
@@ -145,11 +145,11 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
       logger.info('addBetween');
       hookForm.setValue(
         'start',
-        formatISOLocale(addMinutes(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1))
+        formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1))
       );
       hookForm.setValue(
         'end',
-        formatISOLocale(addMinutes(new Date(itemReference?.start?.dateTime || ''), -1))
+        formatISOLocale(addSeconds(new Date(itemReference?.start?.dateTime || ''), -1))
       );
 
       hookForm.setValue('projectId', '');
@@ -246,8 +246,8 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
         : t('Use end time of previous booking as start time for this one'),
     presetDate:
       mode === 'add'
-        ? formatISOLocale(addMinutes(new Date(latestBooking?.end?.dateTime || ''), 1))
-        : formatISOLocale(addMinutes(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
+        ? formatISOLocale(addSeconds(new Date(latestBooking?.end?.dateTime || ''), 1))
+        : formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
     presetIcon: 'move-left-1' as IconNames,
   };
 
@@ -257,7 +257,7 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
       : {
           presetLabel: t('Use start time of next booking as end time for this one'),
           presetDate: formatISOLocale(
-            addMinutes(new Date(bookingAfterCurrent?.start?.dateTime || ''), -1)
+            addSeconds(new Date(bookingAfterCurrent?.start?.dateTime || ''), -1)
           ),
           presetIcon: 'move-right-1' as IconNames,
         };

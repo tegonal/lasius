@@ -38,6 +38,7 @@ import { ModalResponsive } from 'components/modal/modalResponsive';
 import { BookingAddUpdateForm } from 'layout/pages/user/index/bookingAddUpdateForm';
 import { Button } from '@theme-ui/components';
 import { augmentBookingsList } from 'lib/api/functions/augmentBookingsList';
+import { BookingFromToMobile } from 'layout/pages/user/index/bookingFromToMobile';
 
 type ItemType = ReturnType<typeof augmentBookingsList>[number];
 
@@ -57,7 +58,7 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
         label: 'BookingItem',
         ...flexRowJustifyBetweenAlignCenter(2),
         px: [2, 2, 4],
-        py: [3, 3, 4],
+        py: [3, 3, 3],
         ...(item.overlapsWithNext
           ? { borderBottom: '4px dotted', borderBottomColor: 'warning' }
           : {
@@ -75,7 +76,7 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
         <BookingName item={item} />
         <TagList items={item.tags} />
       </Flex>
-      <Flex sx={{ ...flexRowJustifyStartAlignCenter([2, 2, 4]), height: '100%', flexShrink: 0 }}>
+      <Flex sx={{ ...flexRowJustifyStartAlignCenter([3, 3, 4]), height: '100%', flexShrink: 0 }}>
         <Responsively mode="show" on={['md', 'lg']}>
           <Flex sx={{ ...flexRowJustifyStartAlignCenter([2, 2, 4]), height: '100%' }}>
             <BookingFromTo item={item} />
@@ -83,8 +84,8 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
           </Flex>
         </Responsively>
         <Responsively mode="show" on={['xs', 'sm']}>
-          <Flex sx={{ ...flexColumnJustifyCenterAlignEnd(1), height: '100%' }}>
-            <BookingFromTo item={item} />
+          <Flex sx={{ ...flexColumnJustifyCenterAlignEnd(2), height: '100%' }}>
+            <BookingFromToMobile item={item} />
             <BookingDuration item={item} />
           </Flex>
         </Responsively>
@@ -116,7 +117,7 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
               width={240}
             >
               <Button variant="icon" type="button" onClick={editModal.openModal}>
-                <Icon name="alert-triangle" size={20} />
+                <Icon name="alert-triangle" size={18} />
               </Button>
             </ToolTip>
           </Box>
@@ -146,7 +147,7 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
               title={t('Add booking')}
               onClick={addModal.openModal}
             >
-              <Icon name="add-circle" size={20} />
+              <Icon name="add-circle" size={18} />
             </Button>
           </Box>
         </Flex>
@@ -181,7 +182,7 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
                 title={t('Insert booking')}
                 onClick={addBetweenModal.openModal}
               >
-                <Icon name="add-circle" size={20} />
+                <Icon name="expand-vertical-4" size={18} />
               </Button>
             </ToolTip>
           </Box>

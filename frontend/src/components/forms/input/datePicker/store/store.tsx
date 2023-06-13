@@ -32,6 +32,7 @@ export type Store = initializerType & {
   days: string;
   hours: string;
   minutes: string;
+  seconds: string;
   isoString: string;
 };
 

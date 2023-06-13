@@ -20,11 +20,11 @@
 import React from 'react';
 import { layoutColumnStyle } from 'styles/shortcuts';
 import { themeRadii } from 'styles/theme/radii';
-import { MyProjectsRightColumn } from 'layout/pages/projects/my/myProjectsRightColumn';
-import { MyProjectsList } from 'layout/pages/projects/my/myProjectsList';
+import { AllProjectsRightColumn } from 'layout/pages/organisation/projects/allProjectsRightColumn';
+import { AllProjectsList } from 'layout/pages/organisation/projects/allProjectsList';
 import { ScrollContainer } from 'components/scrollContainer';
 
-export const MyProjectsLayout: React.FC = () => {
+export const AllProjectsLayout: React.FC = () => {
   return (
     <>
       <ScrollContainer
@@ -33,7 +33,7 @@ export const MyProjectsLayout: React.FC = () => {
           pt: 4,
         }}
       >
-        <MyProjectsList />
+        <AllProjectsList />
       </ScrollContainer>
       <ScrollContainer
         sx={{
@@ -42,7 +42,7 @@ export const MyProjectsLayout: React.FC = () => {
           borderTopRightRadius: themeRadii.large,
         }}
       >
-        <MyProjectsRightColumn />
+        <AllProjectsRightColumn />
       </ScrollContainer>
     </>
   );
