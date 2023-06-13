@@ -78,15 +78,6 @@ const nextConfiguration = {
   ],
 };
 
-console.log({
-  subdirectory: 's',
-  scriptName: 'p',
-  domain: LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
-  customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
-  trackLocalhost: ENVIRONMENT !== 'production',
-  enabled: !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
-});
-
 // module.exports = withPWA(withBundleAnalyzer(nextConfiguration));
 module.exports = withPWA(
   withPlausibleProxy({

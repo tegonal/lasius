@@ -102,15 +102,6 @@ const App = ({
     }
   }, [lasiusIsLoggedIn]);
 
-  const plausibleConfig = {
-    domain: LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
-    customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
-    enabled: !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
-    trackLocalhost: DEV,
-  };
-
-  console.log(plausibleConfig);
-
   return (
     <>
       <SWRConfig
@@ -120,7 +111,17 @@ const App = ({
         }}
       >
         <SessionProvider session={session}>
-          <PlausibleProvider {...plausibleConfig}>
+          <PlausibleProvider
+            domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
+            customDomain={LASIUS_TELEMETRY_PLAUSIBLE_HOST}
+            enabled={
+              !!LASIUS_TELEMETRY_PLAUSIBLE_HOST && !!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN
+            }
+            trackLocalhost={DEV}
+            selfHosted
+            trackOutboundLinks
+            trackFileDownloads
+          >
             <CookieCutter />
             <Head>
               <meta

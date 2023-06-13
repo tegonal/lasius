@@ -1,7 +1,7 @@
 {
   "name": "lasius-frontend",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lasius NextJS Frontend Application Server",
   "author": "tegonal.com <info@tegonal.com>",
   "license": "AGPL 3.0",

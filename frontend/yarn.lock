@@ -5471,9 +5471,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.428":
-  version: 1.4.428
-  resolution: "electron-to-chromium@npm:1.4.428"
-  checksum: ec0f7d856eb0ffcbf55487b8ca4c8bb0cda5f7be26ea4db48bcbd3accbc1145c63f2e241df7a8c560b7f32d8f39d6e0420df56b0faf4cb69a949e81257a8e7c4
+  version: 1.4.429
+  resolution: "electron-to-chromium@npm:1.4.429"
+  checksum: b887d0a214962adeea167f3215155cb831704a18035e9424c11df8a816938a564af228a4a3e431939e3ea978783d21b9ea52a7926ce133e2f6533c751389869b
   languageName: node
   linkType: hard
 
@@ -5517,12 +5517,12 @@ __metadata:
   linkType: hard
 
 "enhanced-resolve@npm:^5.12.0":
-  version: 5.14.1
-  resolution: "enhanced-resolve@npm:5.14.1"
+  version: 5.15.0
+  resolution: "enhanced-resolve@npm:5.15.0"
   dependencies:
     graceful-fs: ^4.2.4
     tapable: ^2.2.0
-  checksum: ad2a31928b6649eed40d364838449587f731baa63863e83d2629bebaa8be1eabac18b90f89c1784bc805b0818363e99b22547159edd485d7e5ccf18cdc640642
+  checksum: fbd8cdc9263be71cc737aa8a7d6c57b43d6aa38f6cc75dde6fcd3598a130cc465f979d2f4d01bb3bf475acb43817749c79f8eef9be048683602ca91ab52e4f11
   languageName: node
   linkType: hard
 
