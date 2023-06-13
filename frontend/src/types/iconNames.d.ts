@@ -1,6 +1,8 @@
 /* eslint-disable license-header/header */
 export type IconNames =
+  | 'add-circle'
   | 'add-interface-essential'
+  | 'alert-triangle'
   | 'arrow-down-1-arrows-diagrams'
   | 'arrow-left-1-arrows-diagrams'
   | 'arrow-right-1-arrows-diagrams'
@@ -19,9 +21,12 @@ export type IconNames =
   | 'folder-files-folders'
   | 'folder-settings-files-folders'
   | 'human-resources-search-team-work-office-companies'
+  | 'insert-row'
   | 'lock-1-interface-essential'
   | 'logout-2-interface-essential'
   | 'logout-interface-essential'
+  | 'move-left-1'
+  | 'move-right-1'
   | 'multiple-actions-add-users'
   | 'navigation-menu-vertical-interface-essential'
   | 'on-error-sad-arrows-diagrams'

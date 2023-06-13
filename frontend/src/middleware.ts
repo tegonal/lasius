@@ -21,6 +21,7 @@
 export { default } from 'next-auth/middleware';
 
 export const config = {
+  //  Require authentication for the following routes
   matcher: [
     '/user',
     '/user/(.*)',
@@ -32,6 +33,5 @@ export const config = {
     '/projects/(.*)',
     '/settings',
     '/settings/(.*)',
-    // '/((?!api|_next/static|login|join|icon|fonts|symbols.svg|social-card.png|sw.js|fallback.*.js|workbox.*.js|manifest.json|favicon.ico).*)',
   ],
 };

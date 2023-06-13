@@ -133,7 +133,7 @@ export const BookingEditRunning: React.FC<Props> = ({ item, onSave, onCancel }) 
             <FormElement>
               <InputDatePicker
                 name="start"
-                label={t('Starting time')}
+                label={t('Starts')}
                 withDate={false}
                 rules={{
                   validate: {

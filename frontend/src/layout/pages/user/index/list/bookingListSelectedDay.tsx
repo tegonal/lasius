@@ -28,8 +28,7 @@ import { DataFetchValidates } from 'components/shared/fetchState/dataFetchValida
 import { useIsClient } from 'usehooks-ts';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useStore } from 'storeContext/store';
-import { stringHash } from 'lib/stringHash';
-import { flagOverlappingBookings } from 'lib/api/functions/flagOverlappingBookings';
+import { augmentBookingsList } from 'lib/api/functions/augmentBookingsList';
 
 export const BookingListSelectedDay: React.FC = () => {
   const { selectedOrganisationId } = useOrganisation();
@@ -48,9 +47,7 @@ export const BookingListSelectedDay: React.FC = () => {
     }
   );
 
-  const sortedList = useMemo(() => flagOverlappingBookings(data || []), [data]);
-
-  console.log(sortedList);
+  const sortedList = useMemo(() => augmentBookingsList(data || []), [data]);
 
   if (!isClient) return null;
 
@@ -64,7 +61,7 @@ export const BookingListSelectedDay: React.FC = () => {
       ) : (
         <AnimateList hash={calendar.selectedDate}>
           {sortedList.map((item) => (
-            <BookingItem key={stringHash(item)} item={item} />
+            <BookingItem key={item.bookingHash} item={item} />
           ))}
         </AnimateList>
       )}

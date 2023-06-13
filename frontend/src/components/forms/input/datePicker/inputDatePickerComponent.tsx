@@ -27,13 +27,21 @@ import { DatePickerFieldHours } from 'components/forms/input/datePicker/datePick
 import { DatePickerFieldMinutes } from 'components/forms/input/datePicker/datePickerFieldMinutes';
 import { DatePickerFieldSeparator } from 'components/forms/input/datePicker/datePickerFieldSeparator';
 import { DatePickerCalendar } from 'components/forms/input/datePicker/datePickerCalendar';
+import { IsoDateString } from 'lib/api/apiDateHandling';
+import { Button } from '@theme-ui/components';
+import { ToolTip } from 'components/shared/toolTip';
+import { Icon } from 'components/shared/icon';
+import { IconNames } from 'types/iconNames';
 
 export type InputDatePickerComponentProps = {
   name: string;
   rules?: { validate: Record<string, (value: string) => boolean> };
-  label?: any;
+  label?: string;
   withDate?: boolean;
   withTime?: boolean;
+  presetDate?: IsoDateString;
+  presetLabel?: string;
+  presetIcon?: IconNames;
 };
 
 export const InputDatePickerComponent: React.FC<InputDatePickerComponentProps> = ({
@@ -41,9 +49,18 @@ export const InputDatePickerComponent: React.FC<InputDatePickerComponentProps> =
   label,
   withDate = true,
   withTime = true,
+  presetDate,
+  presetLabel,
+  presetIcon = 'alert-triangle',
 }) => {
   const parentFormContext = useFormContext();
   if (!parentFormContext) return null;
+
+  const hasPreset = presetDate && presetLabel;
+
+  const onPresetClick = () => {
+    parentFormContext.setValue(name, presetDate);
+  };
 
   return (
     <>
@@ -59,7 +76,18 @@ export const InputDatePickerComponent: React.FC<InputDatePickerComponentProps> =
           pt: [1, 0],
         }}
       >
-        {label && <Box sx={{ flexShrink: 0 }}>{label}</Box>}
+        {(label || hasPreset) && (
+          <Box sx={{ flexShrink: 0 }}>
+            {label && <Box>{label}</Box>}
+            {hasPreset && (
+              <ToolTip toolTipContent={presetLabel}>
+                <Button variant="secondarySmall" type="button" onClick={onPresetClick}>
+                  <Icon name={presetIcon} size={16} />
+                </Button>
+              </ToolTip>
+            )}
+          </Box>
+        )}
         <Flex
           sx={{
             width: ['100%', 'fit-content'],

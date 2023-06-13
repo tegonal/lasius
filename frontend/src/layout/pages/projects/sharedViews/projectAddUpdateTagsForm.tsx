@@ -204,6 +204,7 @@ export const ProjectAddUpdateTagsForm: React.FC<Props> = ({ item, onSave, onCanc
   return (
     <FormProvider {...hookForm}>
       <Box sx={{ width: 'auto', position: 'relative' }}>
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <form onSubmit={hookForm.handleSubmit(onSubmit)} onKeyDown={(e) => preventEnterOnForm(e)}>
           <Grid gap={4} sx={{ gridTemplateColumns: 'auto 240px', width: '100%' }}>
             <Box>

@@ -114,7 +114,12 @@ export const BookingHistoryItemContext: React.FC<Props> = ({
         </AnimatePresence>
       </ContextCompactBody>
       <ModalResponsive modalId={modalId}>
-        <BookingAddUpdateForm mode="update" item={item} onSave={closeModal} onCancel={closeModal} />
+        <BookingAddUpdateForm
+          mode="update"
+          itemUpdate={item}
+          onSave={closeModal}
+          onCancel={closeModal}
+        />
       </ModalResponsive>
     </>
   );

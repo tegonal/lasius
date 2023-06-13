@@ -17,33 +17,22 @@
  *
  */
 
-import { ModelsBooking } from 'lib/api/lasius';
+import { apiTimespanDay, IsoDateString } from 'lib/api/apiDateHandling';
+import { useGetUserBookingListByOrganisation } from 'lib/api/lasius/user-bookings/user-bookings';
+import { useMemo } from 'react';
+import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { sortBookingsByDate } from 'lib/api/functions/sortBookingsByDate';
-import { isBefore } from 'date-fns';
 
-export const flagOverlappingBookings = (
-  bookings: ModelsBooking[]
-): (ModelsBooking & { overlapsWithNext?: ModelsBooking })[] => {
-  const sortedBookings = sortBookingsByDate(bookings);
+export const useGetBookingLatest = (selectedDay: IsoDateString) => {
+  const { selectedOrganisationId } = useOrganisation();
+  const { data: bookings } = useGetUserBookingListByOrganisation(
+    selectedOrganisationId,
+    apiTimespanDay(selectedDay)
+  );
+  const sorted = sortBookingsByDate(bookings || []);
+  const latestBooking = useMemo(() => sorted[0], [sorted]);
 
-  return sortedBookings.map((booking, index) => {
-    const nextBooking = sortedBookings[index + 1];
-
-    if (nextBooking && booking.end && nextBooking.end) {
-      const isOverlapping = !isBefore(
-        new Date(nextBooking.end.dateTime),
-        new Date(booking.start.dateTime)
-      );
-      if (isOverlapping) {
-        console.log('isOverlapping');
-      }
-
-      return {
-        ...booking,
-        overlapsWithNext: isOverlapping ? nextBooking : undefined,
-      };
-    }
-
-    return booking;
-  });
+  return {
+    data: latestBooking || null,
+  };
 };

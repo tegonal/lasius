@@ -165,7 +165,7 @@ export const AllProjectsListItemContext: React.FC<Props> = ({ item }) => {
           onCancel={tagModal.closeModal}
         />
       </ModalResponsive>
-      <ModalResponsive modalId={updateModal.modalId} autoSize>
+      <ModalResponsive modalId={updateModal.modalId}>
         <ProjectAddUpdateForm
           mode="update"
           item={item}

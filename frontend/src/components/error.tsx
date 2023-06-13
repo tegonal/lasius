@@ -21,8 +21,19 @@ import React from 'react';
 
 import { Box, Flex, Heading } from 'theme-ui';
 import { PageError } from 'dynamicTranslationStrings';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 export const Error: React.FC<{ statusCode: number }> = ({ statusCode }) => {
+  const plausible = usePlausible<LasiusPlausibleEvents>();
+
+  plausible('error', {
+    props: {
+      status: statusCode.toString(),
+      message: PageError[statusCode.toString()],
+    },
+  });
+
   return (
     <Flex sx={{ label: 'Error', height: '66vh', justifyContent: 'center', alignItems: 'center' }}>
       <Box
@@ -37,7 +48,7 @@ export const Error: React.FC<{ statusCode: number }> = ({ statusCode }) => {
         </Heading>
       </Box>
       <Box p={3}>
-        <p>{PageError[statusCode as 404 | 500 | 401]}</p>
+        <p>{PageError[statusCode.toString() || 'undefined']}</p>
       </Box>
     </Flex>
   );

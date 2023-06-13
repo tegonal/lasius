@@ -44,10 +44,11 @@ export const FormError = {
   fromBeforeTo: t('Must be before the "to" date'),
 };
 
-export const PageError = {
+export const PageError: Record<string, string> = {
   404: t('Page not found'),
   500: t('Internal server error'),
   401: t('Unauthorized'),
+  undefined: t('Something went wrong'),
 };
 
 export const UserRoles = {

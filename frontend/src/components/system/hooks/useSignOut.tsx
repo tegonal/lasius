@@ -22,16 +22,24 @@ import { signOut as nextAuthSignOut } from 'next-auth/react';
 import { useIsClient } from 'usehooks-ts';
 import { useStore } from 'storeContext/store';
 import { signOut } from 'lib/api/lasius/authentication/authentication';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 export const useSignOut = () => {
   const { dispatch } = useStore();
   const isClient = useIsClient();
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   const _signOut = async () => {
     if (isClient) {
       await signOut();
       await removeAccessibleCookies();
       dispatch({ type: 'reset' });
+      plausible('logout', {
+        props: {
+          status: 'success',
+        },
+      });
       await nextAuthSignOut({ callbackUrl: '/login' });
     }
   };

@@ -22,15 +22,23 @@ import { useColorMode } from 'theme-ui';
 import { Button } from '@theme-ui/components';
 import { Icon } from 'components/shared/icon';
 import { themeColorModes } from 'styles/theme/colors';
+import { usePlausible } from 'next-plausible';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
 
 export const ColorModeToggle: React.FC = () => {
   const [mode, setMode] = useColorMode();
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   const toggleMode = () => {
     const idx = themeColorModes.indexOf(mode);
     const newMode =
       idx + 1 < themeColorModes.length ? themeColorModes[idx + 1] : themeColorModes[0];
     setMode(newMode);
+    plausible('uiAction', {
+      props: {
+        name: 'colorModeToggle',
+      },
+    });
   };
 
   return (

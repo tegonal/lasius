@@ -25,6 +25,8 @@ import { lasiusAxiosInstance } from 'lib/api/lasiusAxiosInstance';
 import { useBrowserConnectionStatus } from 'components/system/hooks/useBrowserConnectionStatus';
 import { getGetConfigurationKey } from 'lib/api/lasius/general/general';
 import { logger } from 'lib/logger';
+import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
+import { usePlausible } from 'next-plausible';
 
 const testApiConnection = async () => {
   try {
@@ -45,13 +47,20 @@ const testApiConnection = async () => {
 export const useLasiusApiStatus = () => {
   const [status, setStatus] = React.useState(CONNECTION_STATUS.CONNECTED);
   const { status: browserStatus } = useBrowserConnectionStatus();
+  const plausible = usePlausible<LasiusPlausibleEvents>();
 
   const handleOnline = () => {
     setStatus(CONNECTION_STATUS.CONNECTED);
+    if (browserStatus === CONNECTION_STATUS.CONNECTED) {
+      plausible('error', { props: { status: 'apiConnection', message: 'connectionEstablished' } });
+    }
   };
 
   const handleOffline = () => {
     setStatus(CONNECTION_STATUS.DISCONNECTED);
+    if (browserStatus === CONNECTION_STATUS.CONNECTED) {
+      plausible('error', { props: { status: 'apiConnection', message: 'connectionLost' } });
+    }
   };
 
   useInterval(async () => {

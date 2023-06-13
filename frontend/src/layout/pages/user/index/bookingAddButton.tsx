@@ -18,7 +18,6 @@
  */
 
 import React from 'react';
-import { Box } from 'theme-ui';
 import { ModalResponsive } from 'components/modal/modalResponsive';
 import { BookingAddUpdateForm } from 'layout/pages/user/index/bookingAddUpdateForm';
 import { Button } from '@theme-ui/components';
@@ -30,8 +29,8 @@ export const BookingAddButton: React.FC = () => {
   const { t } = useTranslation('common');
   return (
     <>
-      <Button onClick={openModal}>
-        <Box>{t('Create a booking')}</Box>
+      <Button onClick={openModal} variant="secondary">
+        {t('Create a booking')}
       </Button>
       <ModalResponsive modalId={modalId}>
         <BookingAddUpdateForm mode="add" onSave={closeModal} onCancel={closeModal} />

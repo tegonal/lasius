@@ -33,6 +33,7 @@ export const BookingListWrapper: React.FC<Props> = ({ children }) => {
         flexDirection: 'column',
         width: '100%',
         height: '100%',
+        pt: 24,
         pb: [96, 0],
         userSelect: 'none',
       }}

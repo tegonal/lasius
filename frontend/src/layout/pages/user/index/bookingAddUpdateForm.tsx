@@ -28,6 +28,7 @@ import { InputSelectAutocomplete } from 'components/forms/input/inputSelectAutoc
 import { InputTagsAutocomplete } from 'components/forms/input/inputTagsAutocomplete';
 import {
   addHours,
+  addMinutes,
   getHours,
   getMinutes,
   isAfter,
@@ -50,10 +51,15 @@ import { useProjects } from 'lib/api/hooks/useProjects';
 import { useGetTagsByProject } from 'lib/api/lasius/user-organisations/user-organisations';
 import useModal from 'components/modal/hooks/useModal';
 import { ModelsBooking } from 'lib/api/lasius';
+import { useGetAdjacentBookings } from 'lib/api/hooks/useGetAdjacentBookings';
+import { useGetBookingLatest } from 'lib/api/hooks/useGetBookingLatest';
+import { IconNames } from 'types/iconNames';
+import { logger } from 'lib/logger';
 
 type Props = {
-  item?: ModelsBooking;
-  mode: 'add' | 'update';
+  itemUpdate?: ModelsBooking;
+  itemReference?: ModelsBooking;
+  mode: 'add' | 'update' | 'addBetween';
   onSave: () => void;
   onCancel: () => void;
 };
@@ -65,7 +71,13 @@ type FormValues = {
   tags: ModelsTags[];
 };
 
-export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCancel }) => {
+export const BookingAddUpdateForm: React.FC<Props> = ({
+  itemUpdate,
+  itemReference,
+  mode,
+  onSave,
+  onCancel,
+}) => {
   const { t } = useTranslation('common');
   const {
     state: { calendar },
@@ -78,8 +90,13 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
       start: '',
     },
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { selectedOrganisationId } = useOrganisation();
+  const { previous: bookingBeforeCurrent, next: bookingAfterCurrent } = useGetAdjacentBookings(
+    itemUpdate || itemReference
+  );
+  const { data: latestBooking } = useGetBookingLatest(calendar.selectedDate);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { projectSuggestions } = useProjects();
   const { data: projectTags } = useGetTagsByProject(
     selectedOrganisationId,
@@ -89,14 +106,14 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
   const previousEndDate = useRef('');
 
   useEffect(() => {
-    if (item) {
-      hookForm.setValue('projectId', item.projectReference.id);
-      hookForm.setValue('tags', item.tags);
-      hookForm.setValue('start', formatISOLocale(new Date(item.start.dateTime)));
-      hookForm.setValue('end', formatISOLocale(new Date(item?.end?.dateTime || '')));
+    if (itemUpdate) {
+      hookForm.setValue('projectId', itemUpdate.projectReference.id);
+      hookForm.setValue('tags', itemUpdate.tags);
+      hookForm.setValue('start', formatISOLocale(new Date(itemUpdate.start.dateTime)));
+      hookForm.setValue('end', formatISOLocale(new Date(itemUpdate?.end?.dateTime || '')));
       hookForm.trigger();
     }
-    if (mode === 'add') {
+    if (mode === 'add' && !itemReference) {
       if (!isToday(new Date(calendar.selectedDate))) {
         const end = formatISOLocale(setHours(new Date(calendar.selectedDate), 12));
         hookForm.setValue('start', formatISOLocale(setHours(new Date(calendar.selectedDate), 8)));
@@ -110,6 +127,30 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
         hookForm.setValue('end', end);
         previousEndDate.current = end;
       }
+
+      hookForm.setValue('projectId', '');
+      hookForm.setValue('tags', []);
+    }
+
+    if (mode === 'add' && itemReference) {
+      const reference = new Date(itemReference.end?.dateTime || '');
+      hookForm.setValue('start', formatISOLocale(addMinutes(reference, 1)));
+      hookForm.setValue('end', formatISOLocale(addHours(reference, 1)));
+
+      hookForm.setValue('projectId', '');
+      hookForm.setValue('tags', []);
+    }
+
+    if (mode === 'addBetween' && itemReference) {
+      logger.info('addBetween');
+      hookForm.setValue(
+        'start',
+        formatISOLocale(addMinutes(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1))
+      );
+      hookForm.setValue(
+        'end',
+        formatISOLocale(addMinutes(new Date(itemReference?.start?.dateTime || ''), -1))
+      );
 
       hookForm.setValue('projectId', '');
       hookForm.setValue('tags', []);
@@ -129,12 +170,14 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
     });
   }, [
     hookForm,
-    item?.projectReference.id,
-    item?.tags,
-    item?.start.dateTime,
-    item,
+    itemUpdate?.projectReference.id,
+    itemUpdate?.tags,
+    itemUpdate?.start.dateTime,
+    itemUpdate,
     mode,
     calendar.selectedDate,
+    itemReference,
+    bookingBeforeCurrent?.end?.dateTime,
   ]);
 
   const onSubmit = async () => {
@@ -147,17 +190,17 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
     setIsSubmitting(true);
 
     const payload = {
-      ...(item || {}),
+      ...(itemUpdate || {}),
       start,
       end,
       projectId,
       tags,
     };
 
-    if (mode === 'add') {
+    if (mode === 'add' || mode === 'addBetween') {
       await addUserBookingByOrganisation(selectedOrganisationId, payload);
-    } else if (mode === 'update' && item) {
-      await updateUserBooking(selectedOrganisationId, item.id, payload);
+    } else if (mode === 'update' && itemUpdate) {
+      await updateUserBooking(selectedOrganisationId, itemUpdate.id, payload);
     }
 
     closeModal();
@@ -196,6 +239,29 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
     return () => subscription.unsubscribe();
   }, [hookForm]);
 
+  const presetStart = {
+    presetLabel:
+      mode === 'add'
+        ? t('Use end time of latest booking as start time for this one')
+        : t('Use end time of previous booking as start time for this one'),
+    presetDate:
+      mode === 'add'
+        ? formatISOLocale(addMinutes(new Date(latestBooking?.end?.dateTime || ''), 1))
+        : formatISOLocale(addMinutes(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
+    presetIcon: 'move-left-1' as IconNames,
+  };
+
+  const presetEnd =
+    mode === 'add'
+      ? {}
+      : {
+          presetLabel: t('Use start time of next booking as end time for this one'),
+          presetDate: formatISOLocale(
+            addMinutes(new Date(bookingAfterCurrent?.start?.dateTime || ''), -1)
+          ),
+          presetIcon: 'move-right-1' as IconNames,
+        };
+
   return (
     <FormProvider {...hookForm}>
       <Box sx={{ width: '100%', position: 'relative' }}>
@@ -212,10 +278,10 @@ export const BookingAddUpdateForm: React.FC<Props> = ({ item, mode, onSave, onCa
               <InputTagsAutocomplete name="tags" suggestions={projectTags} />
             </FormElement>
             <FormElement>
-              <InputDatePicker name="start" label={t('Starting time')} withDate />
+              <InputDatePicker name="start" label={t('Starts')} withDate {...presetStart} />
             </FormElement>
             <FormElement>
-              <InputDatePicker name="end" label={t('Ending time')} withDate />
+              <InputDatePicker name="end" label={t('Ends')} withDate {...presetEnd} />
             </FormElement>
             <FormElement>
               <Button type="submit" disabled={isSubmitting}>

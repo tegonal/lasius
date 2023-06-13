@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { Flex } from 'theme-ui';
+import { Box, Flex } from 'theme-ui';
 import {
   flexColumnJustifyCenterAlignEnd,
   flexRowJustifyBetweenAlignCenter,
@@ -30,17 +30,27 @@ import { TagList } from 'components/shared/tagList';
 import { BookingDuration } from 'layout/pages/user/index/bookingDuration';
 import { BookingItemContext } from 'layout/pages/user/index/list/bookingItemContext';
 import { Responsively } from 'components/shared/responsively';
-import { ModelsBooking } from 'lib/api/lasius';
 import { useTranslation } from 'next-i18next';
 import { Icon } from 'components/shared/icon';
 import { ToolTip } from 'components/shared/toolTip';
+import useModal from 'components/modal/hooks/useModal';
+import { ModalResponsive } from 'components/modal/modalResponsive';
+import { BookingAddUpdateForm } from 'layout/pages/user/index/bookingAddUpdateForm';
+import { Button } from '@theme-ui/components';
+import { augmentBookingsList } from 'lib/api/functions/augmentBookingsList';
+
+type ItemType = ReturnType<typeof augmentBookingsList>[number];
 
 type Props = {
-  item: ModelsBooking & { overlapsWithNext?: ModelsBooking };
+  item: ItemType;
 };
 
 export const BookingItem: React.FC<Props> = ({ item }) => {
   const { t } = useTranslation();
+  const editModal = useModal(`EditModal-${item.id}`);
+  const addModal = useModal(`AddModal-${item.id}`);
+  const addBetweenModal = useModal(`AddBetweenModal-${item.id}`);
+
   return (
     <Flex
       sx={{
@@ -49,11 +59,15 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
         px: [2, 2, 4],
         py: [3, 3, 4],
         ...(item.overlapsWithNext
-          ? { borderBottom: '8px dotted', borderBottomColor: 'error' }
+          ? { borderBottom: '4px dotted', borderBottomColor: 'warning' }
           : {
               borderBottom: '1px solid',
               borderBottomColor: 'containerTextColorMuted',
             }),
+        ...(item.isMostRecent && {
+          borderTop: '1px solid',
+          borderTopColor: 'containerTextColorMuted',
+        }),
         position: 'relative',
       }}
     >
@@ -81,18 +95,122 @@ export const BookingItem: React.FC<Props> = ({ item }) => {
           sx={{
             position: 'absolute',
             inset: 'auto 0 0 0',
-            width: '100%',
-            fontSize: 1,
             textAlign: 'center',
-            color: 'error',
             justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          <ToolTip toolTipContent={t('Bookings overlap')}>
-            <Icon name="time-clock-three-interface-essential" size={24} />
-          </ToolTip>
+          <Box
+            sx={{
+              position: 'absolute',
+              color: 'warning',
+              backgroundColor: 'containerBackground',
+              padding: 1,
+              borderRadius: '50%',
+            }}
+          >
+            <ToolTip
+              toolTipContent={t(
+                'These two bookings overlap. Click to edit the top one and adjust the time.'
+              )}
+              width={240}
+            >
+              <Button variant="icon" type="button" onClick={editModal.openModal}>
+                <Icon name="alert-triangle" size={20} />
+              </Button>
+            </ToolTip>
+          </Box>
         </Flex>
       )}
+      {item.isMostRecent && (
+        <Flex
+          sx={{
+            position: 'absolute',
+            inset: '0 0 auto 0',
+            textAlign: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              backgroundColor: 'containerBackground',
+              padding: 1,
+              borderRadius: '50%',
+            }}
+          >
+            <Button
+              variant="icon"
+              type="button"
+              title={t('Add booking')}
+              onClick={addModal.openModal}
+            >
+              <Icon name="add-circle" size={20} />
+            </Button>
+          </Box>
+        </Flex>
+      )}
+      {item.allowInsert && (
+        <Flex
+          sx={{
+            position: 'absolute',
+            inset: 'auto 0 0 0',
+            textAlign: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              backgroundColor: 'containerBackground',
+              padding: 1,
+              borderRadius: '50%',
+            }}
+          >
+            <ToolTip
+              toolTipContent={t(
+                'There is a gap between these two bookings. Click to add a booking in between.'
+              )}
+              width={240}
+            >
+              <Button
+                variant="icon"
+                type="button"
+                title={t('Insert booking')}
+                onClick={addBetweenModal.openModal}
+              >
+                <Icon name="add-circle" size={20} />
+              </Button>
+            </ToolTip>
+          </Box>
+        </Flex>
+      )}
+      <ModalResponsive modalId={editModal.modalId}>
+        <BookingAddUpdateForm
+          mode="update"
+          itemUpdate={item}
+          onSave={editModal.closeModal}
+          onCancel={editModal.closeModal}
+        />
+      </ModalResponsive>
+      <ModalResponsive modalId={addModal.modalId}>
+        <BookingAddUpdateForm
+          mode="add"
+          itemReference={item}
+          onSave={addModal.closeModal}
+          onCancel={addModal.closeModal}
+        />
+      </ModalResponsive>
+      <ModalResponsive modalId={addBetweenModal.modalId}>
+        <BookingAddUpdateForm
+          mode="addBetween"
+          itemReference={item}
+          onSave={addBetweenModal.closeModal}
+          onCancel={addBetweenModal.closeModal}
+        />
+      </ModalResponsive>
     </Flex>
   );
 };

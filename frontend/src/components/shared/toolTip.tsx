@@ -30,6 +30,7 @@ type Props = {
   toolTipContent: React.ReactNode | string;
   offset?: number;
   placement?: 'top' | 'bottom' | 'left' | 'right';
+  width?: number | 'auto';
 };
 
 /**
@@ -44,6 +45,7 @@ export const ToolTip: React.FC<Props> = ({
   toolTipContent,
   offset = 8,
   placement = 'top',
+  width = 'auto',
 }) => {
   const visible = useBoolean(false);
 
@@ -91,7 +93,7 @@ export const ToolTip: React.FC<Props> = ({
             {...attributes.popper}
           >
             {({ close }) => (
-              <Badge variant="tooltip" onClick={() => close()}>
+              <Badge variant="tooltip" onClick={() => close()} sx={{ width }}>
                 {toolTipContent}
               </Badge>
             )}
