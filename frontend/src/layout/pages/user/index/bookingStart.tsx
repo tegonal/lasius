@@ -33,6 +33,8 @@ import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useProjects } from 'lib/api/hooks/useProjects';
 import { useGetTagsByProject } from 'lib/api/lasius/user-organisations/user-organisations';
 import useModal from 'components/modal/hooks/useModal';
+import { formatISOLocale } from 'lib/dates';
+import { roundToNearestMinutes } from 'date-fns';
 
 type FormValues = {
   projectId: string;
@@ -67,6 +69,7 @@ export const BookingStart: React.FC = () => {
       await startUserBookingCurrent(selectedOrganisationId, {
         projectId,
         tags,
+        start: formatISOLocale(roundToNearestMinutes(new Date(), { roundingMethod: 'floor' })),
       });
       closeModal();
       resetComponent();

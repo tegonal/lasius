@@ -49,6 +49,7 @@ import { useIsClient } from 'usehooks-ts';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { AnimateChange } from 'components/shared/motion/animateChange';
 import { useStore } from 'storeContext/store';
+import { roundToNearestMinutes } from 'date-fns';
 
 type Props = {
   inContainer?: boolean;
@@ -66,7 +67,7 @@ export const BookingCurrentEntry: React.FC<Props> = ({ inContainer = false }) =>
   const stop = async () => {
     if (data?.booking?.id) {
       await stopUserBookingCurrent(selectedOrganisationId, data.booking.id, {
-        end: formatISOLocale(new Date()),
+        end: formatISOLocale(roundToNearestMinutes(new Date(), { roundingMethod: 'floor' })),
       });
       await mutate(getGetUserBookingCurrentKey());
       store.dispatch({ type: 'calendar.setSelectedDate', payload: formatISOLocale(new Date()) });

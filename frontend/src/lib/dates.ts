@@ -113,14 +113,11 @@ export const durationAsString = (start: IsoDateString, end: IsoDateString) => {
     days = 0,
     hours = 0,
     minutes = 0,
-    seconds = 0,
   } = intervalToDuration({
     start: new Date(start),
     end: new Date(end),
   });
-  return `${padTimeSegment(days * 24 + hours)}:${padTimeSegment(minutes)}.${padTimeSegment(
-    seconds
-  )}`;
+  return `${padTimeSegment(days * 24 + hours)}:${padTimeSegment(minutes)}`;
 };
 
 /**

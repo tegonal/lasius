@@ -27,11 +27,11 @@ import { durationAsString, formatISOLocale } from 'lib/dates';
 type Props = { startDate: string };
 
 export const BookingDurationCounter: React.FC<Props> = ({ startDate }) => {
-  const [duration, setDuration] = useState<string>(`00:00.00`);
+  const [duration, setDuration] = useState<string>(`00:00`);
 
   useInterval(() => {
     setDuration(durationAsString(startDate, formatISOLocale(new Date())));
-  }, 1000);
+  }, 25000);
 
   return (
     <Flex sx={{ ...flexRowJustifyStartAlignCenter(1), lineHeight: 'normal' }}>

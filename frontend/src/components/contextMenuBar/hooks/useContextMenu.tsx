@@ -26,18 +26,29 @@ import {
 } from 'lib/api/lasius';
 import {
   deleteUserBooking,
+  getGetUserBookingCurrentKey,
   startUserBookingCurrent,
+  stopUserBookingCurrent,
+  useGetUserBookingCurrent,
 } from 'lib/api/lasius/user-bookings/user-bookings';
 import { useStore } from 'storeContext/store';
 import useModal from 'components/modal/hooks/useModal';
 import { useToast } from 'components/toasts/hooks/useToast';
 import { useTranslation } from 'next-i18next';
+import { formatISOLocale } from 'lib/dates';
+import { roundToNearestMinutes } from 'date-fns';
+import { useIsClient } from 'usehooks-ts';
+import { mutate } from 'swr';
 
 export const useContextMenu = () => {
   const { dispatch, state } = useStore();
   const { closeModal } = useModal('BookingAddMobileModal');
   const { addToast } = useToast();
   const { t } = useTranslation('common');
+  const isClient = useIsClient();
+  const store = useStore();
+
+  const { data: currentBooking } = useGetUserBookingCurrent({ swr: { enabled: isClient } });
 
   const handleOpenContextMenu = (hash: string) => {
     dispatch({ type: 'context.open', payload: hash });
@@ -70,7 +81,19 @@ export const useContextMenu = () => {
       tags = item.booking.tags;
     }
 
-    await startUserBookingCurrent(selectedOrganisationId, { projectId, tags });
+    if (currentBooking?.booking?.id) {
+      await stopUserBookingCurrent(selectedOrganisationId, currentBooking.booking.id, {
+        end: formatISOLocale(roundToNearestMinutes(new Date(), { roundingMethod: 'floor' })),
+      });
+      await mutate(getGetUserBookingCurrentKey());
+      store.dispatch({ type: 'calendar.setSelectedDate', payload: formatISOLocale(new Date()) });
+    }
+
+    await startUserBookingCurrent(selectedOrganisationId, {
+      projectId,
+      tags,
+      start: formatISOLocale(roundToNearestMinutes(new Date(), { roundingMethod: 'floor' })),
+    });
     handleCloseAll();
     closeModal();
   };

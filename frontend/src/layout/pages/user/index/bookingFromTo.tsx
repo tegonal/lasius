@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { Box, Flex } from 'theme-ui';
+import { Box, Flex, Text } from 'theme-ui';
 import { FormatDate } from 'components/shared/formatDate';
 import { ModelsBooking } from 'lib/api/lasius';
 import { Icon } from 'components/shared/icon';
@@ -30,15 +30,21 @@ type Props = {
 export const BookingFromTo: React.FC<Props> = ({ item }) => {
   const { start, end } = item;
   return (
-    <Flex sx={{ lineHeight: 'normal', flexDirection: 'column', gap: 2 }}>
+    <Flex sx={{ lineHeight: 'normal', flexDirection: 'column', gap: 1 }}>
       <Box>
-        <FormatDate date={end?.dateTime || ''} format="time" />
+        <Text variant="small">
+          <FormatDate date={end?.dateTime || ''} format="time" />
+        </Text>
       </Box>
-      <Flex sx={{ gap: 2, justifyContent: 'center', alignItems: 'center' }}>
-        <Icon name="expand-vertical-4" size={16} />
+      <Flex sx={{ gap: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text variant="small">
+          <Icon name="expand-vertical-4" size={12} />
+        </Text>
       </Flex>
       <Box>
-        <FormatDate date={start.dateTime} format="time" />
+        <Text variant="small">
+          <FormatDate date={start.dateTime} format="time" />
+        </Text>
       </Box>
     </Flex>
   );

@@ -171,6 +171,7 @@
   "The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.": "The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.",
   "There is a gap between these two bookings. Click to add a booking in between.": "There is a gap between these two bookings. Click to add a booking in between.",
   "These two bookings overlap. Click to edit the top one and adjust the time.": "These two bookings overlap. Click to edit the top one and adjust the time.",
+  "This booking's duration is zero": "This booking's duration is zero",
   "This invitation has been created for someone else. Either log out and refresh, or forward the invitation link to the user {{email}}": "This invitation has been created for someone else. Either log out and refresh, or forward the invitation link to the user {{email}}",
   "This invitation is no longer valid. It is best to contact the person who sent you the invitation link to get a new one.": "This invitation is no longer valid. It is best to contact the person who sent you the invitation link to get a new one.",
   "This month": "This month",
