@@ -28,7 +28,6 @@ import { InputSelectAutocomplete } from 'components/forms/input/inputSelectAutoc
 import { InputTagsAutocomplete } from 'components/forms/input/inputTagsAutocomplete';
 import {
   addHours,
-  addSeconds,
   getHours,
   getMinutes,
   isAfter,
@@ -134,7 +133,7 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
 
     if (mode === 'add' && itemReference) {
       const reference = new Date(itemReference.end?.dateTime || '');
-      hookForm.setValue('start', formatISOLocale(addSeconds(reference, 1)));
+      hookForm.setValue('start', formatISOLocale(reference));
       hookForm.setValue('end', formatISOLocale(addHours(reference, 1)));
 
       hookForm.setValue('projectId', '');
@@ -145,12 +144,9 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
       logger.info('addBetween');
       hookForm.setValue(
         'start',
-        formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1))
+        formatISOLocale(new Date(bookingBeforeCurrent?.end?.dateTime || ''))
       );
-      hookForm.setValue(
-        'end',
-        formatISOLocale(addSeconds(new Date(itemReference?.start?.dateTime || ''), -1))
-      );
+      hookForm.setValue('end', formatISOLocale(new Date(itemReference?.start?.dateTime || '')));
 
       hookForm.setValue('projectId', '');
       hookForm.setValue('tags', []);
@@ -249,8 +245,8 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
               : t('Use end time of previous booking as start time for this one'),
           presetDate:
             mode === 'add'
-              ? formatISOLocale(addSeconds(new Date(latestBooking?.end?.dateTime || ''), 1))
-              : formatISOLocale(addSeconds(new Date(bookingBeforeCurrent?.end?.dateTime || ''), 1)),
+              ? formatISOLocale(new Date(latestBooking?.end?.dateTime || ''))
+              : formatISOLocale(new Date(bookingBeforeCurrent?.end?.dateTime || '')),
           presetIcon: 'move-left-1' as IconNames,
         };
 
@@ -261,9 +257,7 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
       ? {}
       : {
           presetLabel: t('Use start time of next booking as end time for this one'),
-          presetDate: formatISOLocale(
-            addSeconds(new Date(bookingAfterCurrent?.start?.dateTime || ''), -1)
-          ),
+          presetDate: formatISOLocale(new Date(bookingAfterCurrent?.start?.dateTime || '')),
           presetIcon: 'move-right-1' as IconNames,
         };
 

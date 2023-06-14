@@ -38,10 +38,9 @@ const ProgressBar: React.FC<{ percentage: number; label: string }> = memo(
           <Box
             sx={{
               width: '100%',
-              height: 6,
+              height: 5,
               background: 'containerBackgroundLighter',
               fontSize: '10px',
-              borderRadius: 4,
               overflow: 'hidden',
             }}
           >
@@ -83,7 +82,7 @@ export const BookingDayStatsProgressBar: React.FC = () => {
   if (!isClient) return null;
 
   return (
-    <Box sx={{ width: '100%', px: 2 }}>
+    <Box sx={{ width: '100%' }}>
       <ProgressBar percentage={day.progressBarPercentage} label={label} />
     </Box>
   );

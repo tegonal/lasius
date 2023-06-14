@@ -23,14 +23,30 @@ import { Icon } from 'components/shared/icon';
 import { flexRowJustifyStartAlignCenter } from 'styles/shortcuts';
 import { durationAsString } from 'lib/dates';
 import { ModelsBooking } from 'lib/api/lasius';
+import { ToolTip } from 'components/shared/toolTip';
+import { useTranslation } from 'next-i18next';
 
 type Props = { item: ModelsBooking };
 
 export const BookingDuration: React.FC<Props> = ({ item }) => {
+  const duration = durationAsString(item.start.dateTime, item.end?.dateTime || '');
+  const durationIsZero = duration === '00:00';
+  const { t } = useTranslation();
   return (
-    <Flex sx={{ ...flexRowJustifyStartAlignCenter(1), lineHeight: 'normal' }}>
+    <Flex
+      sx={{
+        ...flexRowJustifyStartAlignCenter(1),
+        lineHeight: 'normal',
+        ...(durationIsZero && { color: 'warning' }),
+      }}
+    >
       <Icon name="time-clock-three-interface-essential" size={14} />
-      <Box>{durationAsString(item.start.dateTime, item.end?.dateTime || '')}</Box>
+      <Box>{duration}</Box>
+      {durationIsZero && (
+        <ToolTip toolTipContent={t("This booking's duration is zero")}>
+          <Icon name="alert-triangle" size={14} />
+        </ToolTip>
+      )}
     </Flex>
   );
 };

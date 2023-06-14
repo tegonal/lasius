@@ -47,8 +47,8 @@ export const HomeLayoutDesktop: React.FC = () => {
           gap: 1,
         }}
       >
-        <BookingCurrent />
         <BookingDayStatsProgressBar />
+        <BookingCurrent />
         <ScrollContainer>
           <BookingListSelectedDay />
         </ScrollContainer>

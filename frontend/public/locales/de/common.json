@@ -171,6 +171,7 @@
   "The amount of time you expect to book per day, by organisation, during a typical working week. This data is used to calculate your daily and weekly progress.": "Die Zeit, die Du pro Tag und Organisation während einer typischen Arbeitswoche buchen möchtest. Diese Daten werden verwendet, um deinen täglichen und wöchentlichen Fortschritt zu berechnen.",
   "There is a gap between these two bookings. Click to add a booking in between.": "Zwischen diesen beiden Buchungen besteht eine Lücke. Klicke hier, um eine Buchung dazwischen hinzuzufügen.",
   "These two bookings overlap. Click to edit the top one and adjust the time.": "Diese beiden Buchungen überschneiden sich. Klicke hier, um die obere zu bearbeiten und die Zeit anzupassen.",
+  "This booking's duration is zero": "Die Dauer dieser Buchung beträgt null.",
   "This invitation has been created for someone else. Either log out and refresh, or forward the invitation link to the user {{email}}": "Diese Einladung wurde für einen anderen Benutzer erstellt. Melde dich entweder ab und aktualisiere die Seite oder leite den Einladungslink an den Benutzer {{email}} weiter",
   "This invitation is no longer valid. It is best to contact the person who sent you the invitation link to get a new one.": "Diese Einladung ist nicht mehr gültig. Am besten wendest du dich an die Person, die dir den Einladungslink geschickt hat, um einen neuen zu erhalten.",
   "This month": "Dieser Monat",

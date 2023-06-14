@@ -30,7 +30,7 @@ export const BookingListWrapper: React.FC<Props> = ({ children }) => {
       sx={{
         position: 'relative',
         label: 'BookingListWrapper',
-        pt: 24,
+        pt: 2,
         pb: [96, 0],
         userSelect: 'none',
       }}

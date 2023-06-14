@@ -38,7 +38,7 @@ const nextConfiguration = {
   poweredByHeader: false,
   compiler: {
     emotion: {
-      sourceMap: true,
+      sourceMap: process.env.NODE_ENV === 'development',
       autoLabel: 'always',
       labelFormat: '[filename]',
     },
@@ -51,7 +51,7 @@ const nextConfiguration = {
       transform: 'date-fns/{{member}}',
     },
   },
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: process.env.NODE_ENV === 'development',
   reactStrictMode: true,
   publicRuntimeConfig: {
     BUILD_ID: generateBuildIdSync(),
@@ -79,10 +79,8 @@ const nextConfiguration = {
 };
 
 // module.exports = withPWA(withBundleAnalyzer(nextConfiguration));
-module.exports = withPWA(
-  withPlausibleProxy({
-    subdirectory: 's',
-    scriptName: 'p.js',
-    customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
-  })(nextConfiguration)
-);
+module.exports = withPlausibleProxy({
+  subdirectory: 's',
+  scriptName: 'p.js',
+  customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+})(withPWA(nextConfiguration));
