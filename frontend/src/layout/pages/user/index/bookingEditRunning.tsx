@@ -32,7 +32,10 @@ import { ModelsTags } from 'types/common';
 import { formatISOLocale } from 'lib/dates';
 import { addSeconds, isFuture } from 'date-fns';
 import { logger } from 'lib/logger';
-import { updateUserBooking } from 'lib/api/lasius/user-bookings/user-bookings';
+import {
+  getUserBookingCurrent,
+  updateUserBooking,
+} from 'lib/api/lasius/user-bookings/user-bookings';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { useProjects } from 'lib/api/hooks/useProjects';
 import { useGetTagsByProject } from 'lib/api/lasius/user-organisations/user-organisations';
@@ -40,6 +43,7 @@ import { ModelsBooking } from 'lib/api/lasius';
 import { IconNames } from 'types/iconNames';
 import { useGetBookingLatest } from 'lib/api/hooks/useGetBookingLatest';
 import { useStore } from 'storeContext/store';
+import { mutate } from 'swr';
 
 type Props = {
   item: ModelsBooking;
@@ -101,6 +105,7 @@ export const BookingEditRunning: React.FC<Props> = ({ item, onSave, onCancel }) 
     };
     try {
       await updateUserBooking(selectedOrganisationId, item.id, payload);
+      await mutate(getUserBookingCurrent());
       onSave();
     } catch (error) {
       logger.warn(error);

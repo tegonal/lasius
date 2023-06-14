@@ -17,7 +17,7 @@
  *
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Flex } from 'theme-ui';
 import { Icon } from 'components/shared/icon';
 import { flexRowJustifyStartAlignCenter } from 'styles/shortcuts';
@@ -28,6 +28,10 @@ type Props = { startDate: string };
 
 export const BookingDurationCounter: React.FC<Props> = ({ startDate }) => {
   const [duration, setDuration] = useState<string>(`00:00`);
+
+  useEffect(() => {
+    setDuration(durationAsString(startDate, formatISOLocale(new Date())));
+  }, [startDate]);
 
   useInterval(() => {
     setDuration(durationAsString(startDate, formatISOLocale(new Date())));
