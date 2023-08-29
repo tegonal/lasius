@@ -141,11 +141,16 @@ module.exports = [
   // },
   {
     urlPattern: ({ url }) => {
+      // eslint-disable-next-line no-restricted-globals
       const isSameOrigin = self.origin === url.origin;
       if (!isSameOrigin) return false;
       const { pathname } = url;
-      if (pathname.startsWith('/backend/')) return false;
-      if (pathname.startsWith('/api/')) return false;
+      if (
+        pathname.startsWith('/backend/') ||
+        pathname.startsWith('/api/') ||
+        pathname.startsWith('/s/api/')
+      )
+        return false;
       return true;
     },
     handler: 'NetworkFirst',

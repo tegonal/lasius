@@ -19,7 +19,7 @@
 
 import { AppContext, AppProps } from 'next/app';
 import Head from 'next/head';
-import { ThemeProvider } from 'theme-ui';
+import { ThemeUIProvider } from 'theme-ui';
 import { globalStyles } from 'styles/theme/globalStyles';
 import { theme } from 'styles/theme';
 import { getSession, SessionProvider } from 'next-auth/react';
@@ -120,7 +120,7 @@ const App = ({
           </Head>
           <StoreContextProvider>
             <LazyMotion features={loadFeatures}>
-              <ThemeProvider theme={theme}>
+              <ThemeUIProvider theme={theme}>
                 <PlausibleProvider
                   domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
                   enabled={!!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
@@ -152,7 +152,7 @@ const App = ({
                     </>
                   )}
                 </PlausibleProvider>
-              </ThemeProvider>
+              </ThemeUIProvider>
             </LazyMotion>
           </StoreContextProvider>
         </SessionProvider>

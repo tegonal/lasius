@@ -41,9 +41,7 @@ export const FavoriteListCompact: React.FC = () => {
         <DataFetchEmpty />
       ) : (
         <AnimateList>
-          {data?.favorites.map((item) => (
-            <FavoriteItem key={stringHash(item)} item={item} />
-          ))}
+          {data?.favorites.map((item) => <FavoriteItem key={stringHash(item)} item={item} />)}
         </AnimateList>
       )}
     </FavoriteListWrapper>
