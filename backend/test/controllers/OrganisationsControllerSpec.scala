@@ -269,8 +269,9 @@ class OrganisationsControllerSpec
         controller.inviteUser(controller.organisationId)(request)
 
       status(result) must equalTo(CREATED)
-      val invitationLink = contentAsJson(result).as[InvitationLink]
-      invitationLink.email === email
+      val invitationResult: InvitationResult =
+        contentAsJson(result).as[InvitationResult]
+      invitationResult.email === email
     }
   }
 

@@ -17,15 +17,18 @@
  *
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Flex, Grid, Heading } from 'theme-ui';
 import { useTranslation } from 'next-i18next';
 import { UserCard } from 'components/shared/manageUserCard';
 import { ManageUserInviteByEmailForm } from 'components/shared/manageUserInviteByEmailForm';
 import { FormGroup } from 'components/forms/formGroup';
-import { removeProjectUser, useGetProjectUserList } from 'lib/api/lasius/projects/projects';
+import { removeProjectUser, getProjectUserList } from 'lib/api/lasius/projects/projects';
 import { useOrganisation } from 'lib/api/hooks/useOrganisation';
 import { ModelsProject, ModelsUserProject } from 'lib/api/lasius';
+import { useProfile } from 'lib/api/hooks/useProfile';
+import { isAdminOfProject } from 'lib/api/functions/isAdminOfProject';
+import { ModelsUserStub } from 'lib/api/lasius';
 
 type Props = {
   item: ModelsProject | ModelsUserProject;
@@ -39,15 +42,23 @@ export const ManageProjectMembers: React.FC<Props> = ({ item }) => {
   const projectId = 'id' in item ? item.id : item.projectReference.id;
   const projectOrganisationId =
     'organisationReference' in item ? item.organisationReference.id : selectedOrganisationId;
-
-  const { data } = useGetProjectUserList(selectedOrganisationId, projectId);
+  const { profile } = useProfile();
+  const amIAdmin = isAdminOfProject(profile, projectOrganisationId, projectId);
+  const [users, setUsers] = useState<ModelsUserStub[]>([]);
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false);
+  useEffect(() => {
+    getProjectUserList(selectedOrganisationId, projectId).then((data) => setUsers(data));
+  }, [item, refreshFlag, selectedOrganisationId, projectId]);
 
   const handleUserInvite = () => {
     //
+    setRefreshFlag(!refreshFlag);
   };
 
   const handleUserRemove = async (userId: string) => {
-    await removeProjectUser(selectedOrganisationId, projectId, userId);
+    await removeProjectUser(selectedOrganisationId, projectId, userId).then((_) =>
+      setRefreshFlag(!refreshFlag)
+    );
   };
 
   return (
@@ -57,11 +68,16 @@ export const ManageProjectMembers: React.FC<Props> = ({ item }) => {
           <Box>
             <Heading as="h2" variant="headingUnderlined">
               <Flex sx={{ gap: 2 }}>{t('Project members')}</Flex>
-              <Box sx={{ fontWeight: 400, fontSize: 1 }}>{data?.length}</Box>
+              <Box sx={{ fontWeight: 400, fontSize: 1 }}>{users?.length}</Box>
             </Heading>
             <Grid sx={{ gap: 3, gridTemplateColumns: '1fr 1fr 1fr', pb: 3 }}>
-              {data?.map((user) => (
-                <UserCard user={user} key={user.id} onRemove={() => handleUserRemove(user.id)} />
+              {users?.map((user) => (
+                <UserCard
+                  canRemove={amIAdmin}
+                  user={user}
+                  key={user.id}
+                  onRemove={() => handleUserRemove(user.id)}
+                />
               ))}
             </Grid>
           </Box>

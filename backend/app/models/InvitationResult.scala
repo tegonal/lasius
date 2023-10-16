@@ -23,8 +23,13 @@ package models
 
 import play.api.libs.json.{Format, Json}
 
-case class InvitationLink(id: InvitationId, email: String)
+/** @param invitationLinkId
+  *   is optional and only provided, if a link was created.
+  * @param email
+  */
+case class InvitationResult(invitationLinkId: Option[InvitationId],
+                            email: String)
 
-object InvitationLink {
-  implicit val format: Format[InvitationLink] = Json.format[InvitationLink]
+object InvitationResult {
+  implicit val format: Format[InvitationResult] = Json.format[InvitationResult]
 }

@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.3+0-fdc226b5+20230829-1502
+ * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
  */
 
 export * from './controllersLoginForm';
@@ -56,9 +56,9 @@ export * from './modelsEntityReferenceModelsUserId';
 export * from './modelsFavoritesRequest';
 export * from './modelsGitlabIssueTag';
 export * from './modelsInvitation';
-export * from './modelsInvitationLink';
 export * from './modelsInvitationOutcome';
 export * from './modelsInvitationOutcomeStatus';
+export * from './modelsInvitationResult';
 export * from './modelsInvitationStatusResponse';
 export * from './modelsInvitationStatusResponseStatus';
 export * from './modelsJiraIssueTag';

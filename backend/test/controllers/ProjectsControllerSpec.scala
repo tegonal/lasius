@@ -22,8 +22,6 @@
 package controllers
 
 import core.{SystemServices, TestApplication}
-import models.OrganisationId.OrganisationReference
-import models.ProjectId.ProjectReference
 import models._
 import mongo.EmbedMongo
 import org.joda.time.DateTime
@@ -137,21 +135,21 @@ class ProjectsControllerSpec
         controller.createProject(controller.organisationId)(request)
 
       status(result) must equalTo(CREATED)
-      val resultingProject = contentAsJson(result).as[Project]
+      val resultingProject: Project = contentAsJson(result).as[Project]
       resultingProject.key === newProjectKey
       resultingProject.organisationReference === controller.organisation
         .getReference()
 
       // verify user gets automatically assigned to this project
-      val maybeUser = withDBSession()(implicit dbSession =>
+      val maybeUser: Option[User] = withDBSession()(implicit dbSession =>
         controller.userRepository.findByUserReference(controller.userReference))
         .awaitResult()
       maybeUser must beSome
-      val user = maybeUser.get
-      val userOrg = user.organisations.find(
+      val user: User = maybeUser.get
+      val userOrg: Option[UserOrganisation] = user.organisations.find(
         _.organisationReference.id == controller.organisationId)
       userOrg must beSome
-      val userProject = userOrg.get.projects.find(
+      val userProject: Option[UserProject] = userOrg.get.projects.find(
         _.projectReference == resultingProject.getReference())
       userProject must beSome
       userProject.get.role === ProjectAdministrator
@@ -187,7 +185,7 @@ class ProjectsControllerSpec
                                            reactiveMongoApi,
                                            organisationRole =
                                              OrganisationAdministrator)
-      val newProjectId = ProjectId()
+      val newProjectId: ProjectId = ProjectId()
 
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
@@ -216,15 +214,15 @@ class ProjectsControllerSpec
       status(result) must equalTo(OK)
 
       // verify user gets unassigned from project
-      val maybeUser = withDBSession()(implicit dbSession =>
+      val maybeUser: Option[User] = withDBSession()(implicit dbSession =>
         controller.userRepository.findByUserReference(controller.userReference))
         .awaitResult()
       maybeUser must beSome
-      val user = maybeUser.get
-      val userOrg = user.organisations.find(
+      val user: User = maybeUser.get
+      val userOrg: Option[UserOrganisation] = user.organisations.find(
         _.organisationReference.id == controller.organisationId)
       userOrg must beSome
-      val userProject = userOrg.get.projects.find(
+      val userProject: Option[UserProject] = userOrg.get.projects.find(
         _.projectReference == controller.project.getReference())
       userProject must beNone
     }
@@ -370,11 +368,12 @@ class ProjectsControllerSpec
           request)
 
       status(result) must equalTo(CREATED)
-      val invitationLink = contentAsJson(result).as[InvitationLink]
-      invitationLink.email === email
+      val invitationResult: InvitationResult =
+        contentAsJson(result).as[InvitationResult]
+      invitationResult.email === email
     }
 
-    "successful if user is ProjectAdministrator, invitation created" in new WithTestApplication {
+    "successful if user is ProjectAdministrator, invitation created if invited user is not part of the same org" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -392,8 +391,58 @@ class ProjectsControllerSpec
           request)
 
       status(result) must equalTo(CREATED)
-      val invitationLink = contentAsJson(result).as[InvitationLink]
-      invitationLink.email === email
+      val invitationResult: InvitationResult =
+        contentAsJson(result).as[InvitationResult]
+      invitationResult.email === email
+      invitationResult.invitationLinkId !== None
+    }
+
+    "successful if user is ProjectAdministrator, user directly assigned to project" in new WithTestApplication {
+
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices: SystemServices              = inject[SystemServices]
+      val authConfig: AuthConfig                      = inject[AuthConfig]
+      val controller: ProjectsControllerMock =
+        controllers.ProjectsControllerMock(systemServices,
+                                           authConfig,
+                                           reactiveMongoApi)
+
+      val email = "ivnitedUser@test.com"
+      val userOrganisation: UserOrganisation = UserOrganisation(
+        organisationReference = controller.organisation.getReference(),
+        `private` = controller.organisation.`private`,
+        role = OrganisationMember,
+        plannedWorkingHours = WorkingHours(),
+        projects = Seq()
+      )
+      val user: User = User(
+        UserId(),
+        "anotherUser",
+        email = email,
+        password = BCrypt.hashpw("somePassword", BCrypt.gensalt()),
+        firstName = "test",
+        lastName = "user",
+        active = true,
+        role = Administrator,
+        organisations = Seq(userOrganisation),
+        settings = None
+      )
+
+      withDBSession()(implicit dbSession =>
+        controller.userRepository.upsert(user)).awaitResult()
+
+      val request: FakeRequest[UserToProjectAssignment] =
+        FakeRequest().withBody(
+          UserToProjectAssignment(email = email, role = ProjectMember))
+      val result: Future[Result] =
+        controller.inviteUser(controller.organisationId, controller.project.id)(
+          request)
+
+      status(result) must equalTo(CREATED)
+      val invitationResult: InvitationResult =
+        contentAsJson(result).as[InvitationResult]
+      invitationResult.email === email
+      invitationResult.invitationLinkId === None
     }
   }
 
@@ -563,7 +612,7 @@ class ProjectsControllerSpec
                                            projectRole = ProjectMember)
 
       // initialize second user to be able to remove ourself
-      val userProject2 = UserProject(
+      val userProject2: UserProject = UserProject(
         sharedByOrganisationReference = None,
         projectReference = controller.project.getReference(),
         role = ProjectAdministrator
@@ -697,7 +746,7 @@ class ProjectsControllerSpec
 
       status(result) must equalTo(BAD_REQUEST)
       contentAsString(result) must equalTo(
-        s"Cannot update project with duplicate key ${project2Key} in organisation ${controller.organisationId.value}")
+        s"Cannot update project with duplicate key $project2Key in organisation ${controller.organisationId.value}")
     }
 
     "successful updated key in all references of main-entities" in new WithTestApplication {
@@ -749,7 +798,7 @@ class ProjectsControllerSpec
         settings = None
       )
 
-      val invitation = JoinProjectInvitation(
+      val invitation: JoinProjectInvitation = JoinProjectInvitation(
         id = invitationId,
         invitedEmail = "someEmail",
         createDate = DateTime.now(),
@@ -810,7 +859,7 @@ class ProjectsControllerSpec
       user2.get.organisations
         .flatMap(_.projects)
         .filter(_.projectReference.id != controller.project.id)
-        .map(_.projectReference.key) must not contain (newKey)
+        .map(_.projectReference.key) must not contain newKey
     }
   }
 }

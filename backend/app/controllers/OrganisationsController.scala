@@ -166,7 +166,8 @@ class OrganisationsController @Inject() (
                 outcome = None
               ))
           } yield Created(
-            Json.toJson(InvitationLink(invitationId, request.body.email)))
+            Json.toJson(
+              InvitationResult(Some(invitationId), request.body.email)))
         }
     }
 

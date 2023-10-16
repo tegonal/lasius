@@ -168,22 +168,42 @@ class ProjectsController @Inject() (
               _ <- validate(
                 project.active,
                 s"Cannot invite to an inactive project ${project.key}")
-              // create invitation
-              invitationId = InvitationId()
-              _ <- invitationRepository.upsert(
-                JoinProjectInvitation(
-                  id = invitationId,
-                  invitedEmail = request.body.email,
-                  createDate = DateTime.now(),
-                  createdBy = subject.userReference,
-                  expiration = DateTime.now().plusDays(7),
-                  sharedByOrganisationReference = userOrg.organisationReference,
-                  projectReference = project.getReference(),
-                  role = request.body.role,
-                  outcome = None
-                ))
+              maybeExistingUser <- userRepository.findByEmail(
+                request.body.email)
+              partOfSameOrganisation <- Future.successful(
+                maybeExistingUser.fold(false)(
+                  _.organisations.exists(_.organisationReference.id == orgId)))
+              invitationId <-
+                if (partOfSameOrganisation) {
+                  // auto-assign user to project if user is already member of the organisation the project is part of
+                  userRepository
+                    .assignUserToProject(
+                      userId = maybeExistingUser.get.id,
+                      organisationReference = project.organisationReference,
+                      projectReference = project.getReference(),
+                      role = request.body.role
+                    )
+                    .map(_ => None)
+                } else {
+                  // otherwise create invitation
+                  val invitationId = InvitationId()
+                  invitationRepository
+                    .upsert(JoinProjectInvitation(
+                      id = invitationId,
+                      invitedEmail = request.body.email,
+                      createDate = DateTime.now(),
+                      createdBy = subject.userReference,
+                      expiration = DateTime.now().plusDays(7),
+                      sharedByOrganisationReference =
+                        userOrg.organisationReference,
+                      projectReference = project.getReference(),
+                      role = request.body.role,
+                      outcome = None
+                    ))
+                    .map(_ => Some(invitationId))
+                }
             } yield Created(
-              Json.toJson(InvitationLink(invitationId, request.body.email)))
+              Json.toJson(InvitationResult(invitationId, request.body.email)))
         }
     }
 

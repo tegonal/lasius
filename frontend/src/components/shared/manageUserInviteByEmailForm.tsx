@@ -24,7 +24,7 @@ import { emailValidationPattern } from 'lib/validators';
 import { FormErrorBadge } from 'components/forms/formErrorBadge';
 import { Button, Select } from '@theme-ui/components';
 import React, { useState } from 'react';
-import { ModelsInvitationLink } from 'lib/api/lasius';
+import { ModelsInvitationResult } from 'lib/api/lasius';
 import { useTranslation } from 'next-i18next';
 import { useForm } from 'react-hook-form';
 import { ModalConfirm } from 'components/modal/modalConfirm';
@@ -61,14 +61,14 @@ export const ManageUserInviteByEmailForm: React.FC<Props> = ({ onSave, organisat
     },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCopyToClipboard, setShowCopyToClipboard] = useState(false);
-  const [invitationLink, setInvitationLink] = useState<ModelsInvitationLink | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [invitationResult, setInvitationResult] = useState<ModelsInvitationResult | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_value, copy] = useCopyToClipboard();
 
-  const handleClipboardConfirm = () => {
+  const handleCloseResult = () => {
     hookForm.reset();
-    setShowCopyToClipboard(false);
+    setShowResult(false);
   };
 
   const onSubmit = async () => {
@@ -79,16 +79,16 @@ export const ManageUserInviteByEmailForm: React.FC<Props> = ({ onSave, organisat
         email: inviteMemberByEmailAddress,
         role: projectRole,
       });
-      setInvitationLink(data);
+      setInvitationResult(data);
     } else if (organisation) {
       const data = await inviteOrganisationUser(organisation, {
         email: inviteMemberByEmailAddress,
         role: organisationRole,
       });
-      setInvitationLink(data);
+      setInvitationResult(data);
     }
     setIsSubmitting(false);
-    setShowCopyToClipboard(true);
+    setShowResult(true);
     onSave();
   };
 
@@ -165,23 +165,31 @@ export const ManageUserInviteByEmailForm: React.FC<Props> = ({ onSave, organisat
           </Button>
         </FormElement>
       </FormGroup>
-      {showCopyToClipboard && invitationLink && (
-        <ModalConfirm onConfirm={handleClipboardConfirm}>
+      {showResult && invitationResult && invitationResult.invitationLinkId && (
+        <ModalConfirm onConfirm={handleCloseResult}>
           <Box>
             {t(
               'Copy the link and send it to your colleague. If he or she does not have an account yet, one will be created when the invitation is accepted.'
             )}
           </Box>
           <Flex sx={{ gap: 3, py: 3 }}>
-            <Box variant="styles.code">{registrationLink(invitationLink.id)}</Box>
+            <Box variant="styles.code">{registrationLink(invitationResult.invitationLinkId)}</Box>
 
             <Button
               variant="icon"
               aria-label={t('Copy to clipboard')}
-              onClick={() => copy(registrationLink(invitationLink.id))}
+              onClick={() => copy(registrationLink(invitationResult.invitationLinkId || ''))}
             >
               <Icon name="copy-paste-interface-essential" size={16} />
             </Button>
+          </Flex>
+        </ModalConfirm>
+      )}
+      {showResult && invitationResult && !invitationResult.invitationLinkId && (
+        <ModalConfirm onConfirm={handleCloseResult}>
+          <Box>{t('Project successfully assigned to user.')}</Box>
+          <Flex sx={{ gap: 3, py: 3 }}>
+            <Box variant="styles.code">{invitationResult.email}</Box>
           </Flex>
         </ModalConfirm>
       )}
