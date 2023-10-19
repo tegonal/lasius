@@ -40,7 +40,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 
 import scala.annotation.tailrec
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
@@ -81,7 +81,8 @@ class UserTimeBookingStatisticsView(
 
   private val waitTime = 5 seconds
 
-  private implicit val executionContext = context.dispatcher
+  private implicit val executionContext: ExecutionContextExecutor =
+    context.dispatcher
 
   override def restoreViewFromState(snapshot: UserTimeBooking): Unit = {
     println(

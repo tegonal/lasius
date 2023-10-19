@@ -21,7 +21,7 @@
 
 package models
 
-import ai.x.play.json.Jsonx
+import models.BaseFormat.enumFormat
 import play.api.libs.json.Format
 
 sealed trait UserRole
@@ -29,7 +29,5 @@ case object FreeUser      extends UserRole
 case object Administrator extends UserRole
 
 object UserRole {
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-  implicit val format: Format[UserRole] = Jsonx.formatSealed[UserRole]
+  implicit val format: Format[UserRole] = enumFormat[UserRole]
 }

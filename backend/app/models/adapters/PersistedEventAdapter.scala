@@ -29,14 +29,14 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{ProjectRepository, UserRepository}
 
 import scala.annotation.nowarn
-import scala.concurrent.{Await, Awaitable}
+import scala.concurrent.{Await, Awaitable, ExecutionContextExecutor}
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
 class PersistedEventAdapter(system: ExtendedActorSystem)
     extends ReadEventAdapter {
 
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   lazy val allUsers = {
     val reactiveMongoApi = PlayAkkaExtension(system)

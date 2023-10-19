@@ -21,7 +21,7 @@
 
 package models
 
-import ai.x.play.json.Jsonx
+import models.BaseFormat.enumFormat
 import models.OrganisationId.OrganisationReference
 import models.ProjectId.ProjectReference
 import play.api.libs.json._
@@ -33,11 +33,7 @@ case object ProjectMember extends ProjectRole
 case object ProjectAdministrator extends ProjectRole
 
 object ProjectRole {
-
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-
-  implicit val format: Format[ProjectRole] = Jsonx.formatSealed[ProjectRole]
+  implicit val format: Format[ProjectRole] = enumFormat[ProjectRole]
 }
 
 case class UserProject(
