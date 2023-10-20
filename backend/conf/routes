@@ -690,7 +690,7 @@ GET /organisations/:orgId/projects/:projectId/users                     controll
 #      content:
 #        application/json:
 #          schema:
-#            $ref: '#/components/schemas/models.InvitationLink'
+#            $ref: '#/components/schemas/models.InvitationResult'
 ###
 POST /organisations/:orgId/projects/:projectId/users                     controllers.ProjectsController.inviteUser(orgId: models.OrganisationId, projectId: models.ProjectId)
 
@@ -829,7 +829,7 @@ GET /organisations/:orgId/users                                  controllers.Org
 #      content:
 #        application/json:
 #          schema:
-#            $ref: '#/components/schemas/models.InvitationLink'
+#            $ref: '#/components/schemas/models.InvitationResult'
 ###
 POST /organisations/:orgId/invite                                  controllers.OrganisationsController.inviteUser(orgId: models.OrganisationId)
 

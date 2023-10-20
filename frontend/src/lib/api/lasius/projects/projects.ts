@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.3+0-fdc226b5+20230829-1502
+ * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -30,7 +30,7 @@ import type {
   ModelsProject,
   ModelsCreateProject,
   ModelsUpdateProject,
-  ModelsInvitationLink,
+  ModelsInvitationResult,
   ModelsUserToProjectAssignment,
   ModelsUserStub,
 } from '..';
@@ -141,7 +141,7 @@ export const inviteProjectUser = (
   modelsUserToProjectAssignment: BodyType<ModelsUserToProjectAssignment>,
   options?: SecondParameter<typeof lasiusAxiosInstance>
 ) => {
-  return lasiusAxiosInstance<ModelsInvitationLink>(
+  return lasiusAxiosInstance<ModelsInvitationResult>(
     {
       url: `/organisations/${orgId}/projects/${projectId}/users`,
       method: 'post',
