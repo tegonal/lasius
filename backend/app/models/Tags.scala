@@ -62,10 +62,11 @@ object SimpleTag {
 }
 
 object Tag {
-  implicit val tagWrites =
+  implicit val tagWrites: OWrites[Tag] =
     derived.flat.owrites[Tag](BaseFormat.defaultTypeFormat)
-  val defaultTagReads = derived.flat.reads[Tag](BaseFormat.defaultTypeFormat)
-  val tagReads = (JsPath \ "type").readNullable[String].flatMap {
+  private val defaultTagReads =
+    derived.flat.reads[Tag](BaseFormat.defaultTypeFormat)
+  private val tagReads = (JsPath \ "type").readNullable[String].flatMap {
     // by default map to "SimpleTag" to be compliant with old bookings based on TagId only
     case None =>
       JsPath().read[String].map[Tag](tag => SimpleTag(TagId(tag)))

@@ -44,30 +44,30 @@ class MockServicesProvider @Inject() (actorSystem: ActorSystem)
 
 class MockServices(actorSystem: ActorSystem) extends SystemServices {
 
-  val supervisor =
+  val supervisor: ActorRef =
     actorSystem.actorOf(LasiusSupervisorActor.props, "lasius-test-supervisor")
   val reactiveMongoApi: ReactiveMongoApi   = mock[ReactiveMongoApi]
   override val supportTransaction: Boolean = false
 
-  implicit val system                     = actorSystem
+  implicit val system: ActorSystem        = actorSystem
   override val materializer: Materializer = Materializer.matFromSystem
-  val systemUser                          = UserId()
+  val systemUser: UserId                  = UserId()
   override val systemUserReference: UserReference =
     EntityReference(systemUser, "system")
   override val systemSubject: Subject = Subject("", systemUserReference)
-  implicit val timeout       = Timeout(5 seconds) // needed for `?` below
-  val duration               = Duration.create(5, SECONDS)
-  val timeBookingViewService = TestProbe().ref
+  implicit val timeout: Timeout = Timeout(5 seconds) // needed for `?` below
+  val duration: Duration        = Duration.create(5, SECONDS)
+  val timeBookingViewService: ActorRef = TestProbe().ref
 
-  val loginStateAggregate = TestProbe().ref
+  val loginStateAggregate: ActorRef = TestProbe().ref
 
-  val currentUserTimeBookingsViewService  = TestProbe().ref
-  val currentOrganisationTimeBookingsView = TestProbe().ref
-  val latestUserTimeBookingsViewService   = TestProbe().ref
-  val timeBookingStatisticsViewService    = TestProbe().ref
-  val tagCache                            = TestProbe().ref
-  val pluginHandler                       = TestProbe().ref
-  val loginHandler                        = TestProbe().ref
+  val currentUserTimeBookingsViewService: ActorRef  = TestProbe().ref
+  val currentOrganisationTimeBookingsView: ActorRef = TestProbe().ref
+  val latestUserTimeBookingsViewService: ActorRef   = TestProbe().ref
+  val timeBookingStatisticsViewService: ActorRef    = TestProbe().ref
+  val tagCache: ActorRef                            = TestProbe().ref
+  val pluginHandler: ActorRef                       = TestProbe().ref
+  val loginHandler: ActorRef                        = TestProbe().ref
 
   override def initialize(): Unit = {}
 }

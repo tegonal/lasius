@@ -21,17 +21,14 @@
 
 package models
 
-import ai.x.play.json._
+import models.BaseFormat.enumFormat
 import play.api.libs.json.Format
 
 sealed trait InvitationOutcomeStatus
 
 object InvitationOutcomeStatus {
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-
   implicit val format: Format[InvitationOutcomeStatus] =
-    Jsonx.formatSealed[InvitationOutcomeStatus]
+    enumFormat[InvitationOutcomeStatus]
 }
 
 case object InvitationAccepted extends InvitationOutcomeStatus

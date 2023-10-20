@@ -21,12 +21,10 @@
 
 package actors.scheduler.gitlab
 
-import ai.x.play.json.Encoders.encoder
-import ai.x.play.json.Jsonx
 import org.joda.time.DateTime
 import play.api.libs.json._
+
 import java.util.Date
-import models.BaseFormat._
 
 case class GitlabMilestone(
     due_date: Option[Date],
@@ -85,23 +83,24 @@ case class GitlabIssue(
     assignees: Seq[GitlabUser],
     assignee: Option[GitlabUser],
     labels: Seq[String],
-    upvotes: Int,
-    downvotes: Int,
-    merge_requests_count: Int,
+    // remove to not exceed limit of 22 fields
+    // upvotes: Int,
+    // downvotes: Int,
+    // merge_requests_count: Int,
     id: Int,
     title: String,
     created_at: DateTime,
     updated_at: DateTime,
     closed_at: Option[DateTime],
     closed_by: Option[GitlabUser],
-    subscribed: Option[Boolean],
-    user_notes_count: Int,
+    // subscribed: Option[Boolean],
+    // user_notes_count: Int,
     due_date: Option[Date],
     web_url: String,
     references: Option[GitlabReference],
     time_stats: Option[GitlabTimeslot],
     confidential: Option[Boolean],
-    discussion_locked: Option[Boolean],
+    // discussion_locked: Option[Boolean],
     _links: Option[GitlabLinks],
     task_completion_status: Option[GitlabTaskCompletionStatus]
 )
@@ -117,6 +116,7 @@ case class GitlabIssuesSearchResult(
 )
 
 object GitlabMilestone {
+  import models.BaseFormat._
   implicit val jsonFormat: Format[GitlabMilestone] =
     Json.format[GitlabMilestone]
 }
@@ -138,8 +138,8 @@ object GitlabTaskCompletionStatus {
     Json.format[GitlabTaskCompletionStatus]
 }
 object GitlabIssue {
-  implicit val jsonFormat: Format[GitlabIssue] =
-    Jsonx.formatCaseClass[GitlabIssue]
+  import models.BaseFormat._
+  implicit val jsonFormat: Format[GitlabIssue] = Json.format[GitlabIssue]
 }
 object GitlabIssuesSearchResult {
   implicit val jsonFormat: Format[GitlabIssuesSearchResult] =

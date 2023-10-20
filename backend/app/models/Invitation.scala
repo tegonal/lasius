@@ -27,8 +27,8 @@ import models.ProjectId.ProjectReference
 import models.UserId.UserReference
 import org.joda.time.DateTime
 import play.api.libs.json._
-import models.BaseFormat._
 import play.api.libs.json.Format
+import models.BaseFormat._
 
 sealed trait Invitation extends BaseEntity[InvitationId] {
   val createDate: DateTime
@@ -39,7 +39,7 @@ sealed trait Invitation extends BaseEntity[InvitationId] {
 }
 
 object Invitation {
-  implicit val format =
+  implicit val format: OFormat[Invitation] =
     derived.flat.oformat[Invitation](BaseFormat.defaultTypeFormat)
 }
 

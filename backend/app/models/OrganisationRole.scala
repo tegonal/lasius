@@ -20,7 +20,7 @@
  */
 
 package models
-import ai.x.play.json.Jsonx
+import models.BaseFormat.enumFormat
 import play.api.libs.json.Format
 
 sealed trait OrganisationRole
@@ -31,9 +31,5 @@ case object OrganisationAdministrator extends OrganisationRole
 
 object OrganisationRole {
 
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-
-  implicit val format: Format[OrganisationRole] =
-    Jsonx.formatSealed[OrganisationRole]
+  implicit val format: Format[OrganisationRole] = enumFormat[OrganisationRole]
 }

@@ -22,17 +22,14 @@
 package models
 
 import com.tegonal.play.json.TypedId._
+import julienrf.json.derived
+import julienrf.json.derived.{DerivedReads, TypeTag}
 import models.BaseFormat.CompositeBaseId
-import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
-import org.joda.time.{
-  DateTime,
-  DateTimeZone,
-  Duration,
-  LocalDate,
-  LocalDateTime
-}
+import org.joda.time.format.DateTimeFormat
+import org.joda.time._
 import play.api.libs.json._
 import reactivemongo.api.bson._
+import shapeless.Lazy
 
 import java.net.{URI, URL}
 import java.util.UUID
@@ -125,6 +122,20 @@ object BaseFormat {
 
   val defaultTypeFormat: OFormat[String] = (__ \ "type").format[String]
 
+  private val selfTypeFormat: OFormat[String] = __.format[String]
+
+  private def toStringWrites[T]: Writes[T] =
+    Writes[T](obj => JsString(obj.toString))
+
+  def enumFormat[T](implicit
+      derivedReads: Lazy[DerivedReads[T, TypeTag.ShortClassName]]
+  ): Format[T] = {
+    implicit val reads: Reads[T]   = derived.flat.reads(selfTypeFormat)
+    implicit val writes: Writes[T] = toStringWrites[T]
+
+    Format[T](reads, writes)
+  }
+
   val dateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
   implicit val dateFormat: Format[DateTime] = Format[DateTime](
     JodaReads.jodaDateReads(dateTimePattern),
@@ -133,9 +144,9 @@ object BaseFormat {
     Format.optionWithNull
 
   val localDateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS"
-  val localDateTimeReads: Reads[LocalDateTime] = {
+  private val localDateTimeReads: Reads[LocalDateTime] = {
     new Reads[LocalDateTime] {
-      val df =
+      private val df =
         DateTimeFormat.forPattern(localDateTimePattern)
 
       def reads(json: JsValue): JsResult[LocalDateTime] = json match {
@@ -160,7 +171,7 @@ object BaseFormat {
           .opt(LocalDateTime.parse(input, df))
     }
   }
-  val localDateTimeWrites: Writes[LocalDateTime] = {
+  private val localDateTimeWrites: Writes[LocalDateTime] = {
     val df =
       org.joda.time.format.DateTimeFormat.forPattern(localDateTimePattern)
     Writes[LocalDateTime] { d =>
@@ -171,9 +182,9 @@ object BaseFormat {
     Format[LocalDateTime](localDateTimeReads, localDateTimeWrites)
 
   val localDatePattern = "yyyy-MM-dd"
-  val localDateReads: Reads[LocalDate] = {
+  private val localDateReads: Reads[LocalDate] = {
     new Reads[LocalDate] {
-      val df =
+      private val df =
         DateTimeFormat.forPattern(localDatePattern)
 
       def reads(json: JsValue): JsResult[LocalDate] = json match {
@@ -198,7 +209,7 @@ object BaseFormat {
           .opt(LocalDate.parse(input, df))
     }
   }
-  val localDateWrites: Writes[LocalDate] = {
+  private val localDateWrites: Writes[LocalDate] = {
     val df =
       org.joda.time.format.DateTimeFormat.forPattern(localDatePattern)
     Writes[LocalDate] { d =>
@@ -210,7 +221,7 @@ object BaseFormat {
 
   implicit object DateTimeZoneFormat extends Format[DateTimeZone] {
     def writes(zone: DateTimeZone): JsValue = {
-      JsString(zone.getID())
+      JsString(zone.getID)
     }
 
     def reads(json: JsValue): JsResult[DateTimeZone] = json match {

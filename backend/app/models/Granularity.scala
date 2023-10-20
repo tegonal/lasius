@@ -21,17 +21,13 @@
 
 package models
 
-import ai.x.play.json.Jsonx
-import play.api.libs.json.Format
+import models.BaseFormat.enumFormat
+import play.api.libs.json._
 
 sealed trait Granularity {}
 
 object Granularity {
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-
-  implicit val format: Format[Granularity] =
-    Jsonx.formatSealed[Granularity]
+  implicit val format: Format[Granularity] = enumFormat[Granularity]
 }
 
 case object All   extends Granularity

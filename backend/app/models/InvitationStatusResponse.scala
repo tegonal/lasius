@@ -21,18 +21,13 @@
 
 package models
 
-import ai.x.play.json.Jsonx
+import models.BaseFormat.enumFormat
 import play.api.libs.json.{Format, Json}
 
 sealed trait InvitationStatus
 
 object InvitationStatus {
-
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
-
-  implicit val format: Format[InvitationStatus] =
-    Jsonx.formatSealed[InvitationStatus]
+  implicit val format: Format[InvitationStatus] = enumFormat[InvitationStatus]
 }
 
 case object UnregisteredUser extends InvitationStatus

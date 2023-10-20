@@ -44,7 +44,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class LoginForm(email: String, password: String)
 
 object LoginForm {
-  implicit val loginFormFormat = Json.format[LoginForm]
+  implicit val loginFormFormat: OFormat[LoginForm] = Json.format[LoginForm]
 }
 
 class ApplicationController @Inject() (

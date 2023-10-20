@@ -22,72 +22,56 @@
 package mongo
 
 import core.TestDBSupport
-import de.flapdoodle.embed.mongo.config.{Defaults, MongodConfig, Net}
+import de.flapdoodle.embed.mongo.config.Net
 import de.flapdoodle.embed.mongo.distribution.Version
-import de.flapdoodle.embed.mongo.MongodStarter
-import de.flapdoodle.embed.mongo.packageresolver.Command
-import de.flapdoodle.embed.process.config.RuntimeConfig
-import de.flapdoodle.embed.process.config.process.ProcessOutput
-import de.flapdoodle.embed.process.io.{Processors, Slf4jLevel}
-import de.flapdoodle.embed.process.runtime.Network
+import de.flapdoodle.embed.mongo.transitions.Mongod
+import de.flapdoodle.embed.process.io.{ProcessOutput, Processors, Slf4jLevel}
+import de.flapdoodle.reverse.Transition
+import de.flapdoodle.reverse.transitions.Start
 import org.slf4j.LoggerFactory
 import org.specs2.execute.{AsResult, Result}
-import org.specs2.mutable.{Specification, SpecificationLike}
+import org.specs2.mutable.SpecificationLike
 import org.specs2.specification.AroundEach
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.bson.BSONObjectID
 import util.Awaitable
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 object LazyMongo {
 
-  lazy val mongo = {
+  lazy val mongo: ReactiveMongoApi = {
     lazy val rnd    = new scala.util.Random
     lazy val range  = 12000 to 12999
     lazy val port   = range(rnd.nextInt(range length))
     lazy val dbName = BSONObjectID.generate().stringify
 
-    implicit val executionContext = ExecutionContext.Implicits.global
-
-    lazy val mongodConfig = MongodConfig
-      .builder()
-      .version(Version.Main.PRODUCTION)
-      .net(new Net(port, Network.localhostIsIPv6()))
-      .build()
-
-    lazy val logger = LoggerFactory.getLogger(getClass().getName())
-
-    lazy val processOutput = ProcessOutput
-      .builder()
-      .commands(Processors.logTo(logger, Slf4jLevel.TRACE))
-      .error(Processors.logTo(logger, Slf4jLevel.TRACE))
-      .output(Processors.named("[console>]",
-                               Processors.logTo(logger, Slf4jLevel.TRACE)))
-      .build();
-
-    val command = Command.MongoD
-
-    lazy val runtimeConfig: RuntimeConfig = Defaults
-      .runtimeConfigFor(command, logger)
-      .processOutput(processOutput)
-      .artifactStore(
-        Defaults
-          .extractedArtifactStoreFor(command)
-          .withDownloadConfig(Defaults.downloadConfigFor(command).build))
-      .build
-
-    lazy val runtime          = MongodStarter.getInstance(runtimeConfig)
-    lazy val mongodExecutable = runtime.prepare(mongodConfig)
+    lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
     logger.info(s"Start mongo on port:$port")
-    val proc = mongodExecutable.start
-    logger.info(s"Started mongo on port:$port:${proc.isProcessRunning()}")
 
-    implicit lazy val app = new GuiceApplicationBuilder()
+    val mongod = new Mongod() {
+      override def processOutput: Transition[ProcessOutput] = Start
+        .to(classOf[ProcessOutput])
+        .initializedWith(
+          ProcessOutput.builder
+            .output(
+              Processors.named("[console>]",
+                               Processors.logTo(logger, Slf4jLevel.TRACE)))
+            .error(Processors.logTo(logger, Slf4jLevel.TRACE))
+            .commands(Processors.logTo(logger, Slf4jLevel.TRACE))
+            .build)
+        .withTransitionLabel("create named console")
+
+      override def net(): Transition[Net] =
+        Start.to(classOf[Net]).initializedWith(Net.defaults.withPort(port))
+    }
+    mongod.start(Version.Main.V4_4)
+
+    implicit lazy val app: Application = new GuiceApplicationBuilder()
       .configure(Map(
         ("mongodb.uri",
          s"mongodb://localhost:$port/$dbName?w=majority&readConcernLevel=majority&maxPoolSize=1&rm.nbChannelsPerNode=1"),
@@ -111,8 +95,9 @@ trait EmbedMongo
     with Awaitable
     with TestDBSupport {
   sequential =>
-  implicit val executionContext = ExecutionContext.Implicits.global
-  override val reactiveMongoApi = LazyMongo.mongo
+  implicit val executionContext: ExecutionContext =
+    ExecutionContext.Implicits.global
+  override val reactiveMongoApi: ReactiveMongoApi = LazyMongo.mongo
 
   override protected def around[R](r: => R)(implicit
       evidence$1: AsResult[R]): Result = {
