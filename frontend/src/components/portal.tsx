@@ -17,22 +17,24 @@
  *
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 type Props = {
-  children: React.ReactNode;
+  children: any;
   selector: string;
 };
 
-export const Portal: React.FC<Props> = ({ children, selector }) => {
+export const Portal = ({ children, selector }: Props) => {
   const ref = useRef<Element | null>();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     ref.current = document.querySelector(selector);
-    setMounted(true);
+    if (ref.current) {
+      setMounted(true);
+    }
   }, [selector]);
 
-  return mounted ? createPortal(children, ref.current as unknown as Element) : null;
+  return <>{mounted && ref.current ? createPortal(children, ref.current) : null}</>;
 };
