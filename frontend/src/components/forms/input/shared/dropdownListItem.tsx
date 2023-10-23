@@ -36,7 +36,6 @@ export const DropdownListItem: React.FC<Props> = ({
   active,
   selected,
 }) => {
-  console.log(active);
   return (
     <Box
       sx={{
