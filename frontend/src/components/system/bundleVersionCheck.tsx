@@ -17,7 +17,7 @@
  *
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { BuildIdResponse } from 'pages/api/build-id';
 import { BUILD_ID } from 'projectConfig/constants';
@@ -26,24 +26,26 @@ import { LOCAL_VERSION_CHECK_INTERVAL } from 'projectConfig/intervals';
 import { useTranslation } from 'next-i18next';
 import { nextJsAxiosInstance } from 'lib/api/nextJsAxiosInstance';
 import { logger } from 'lib/logger';
-import { useIsClient } from 'usehooks-ts';
 
 export const BundleVersionCheck: React.FC = () => {
   const { t } = useTranslation('common');
-  const { data } = useSWR<BuildIdResponse>('/api/build-id', nextJsAxiosInstance, {
+  const { data, isLoading } = useSWR<BuildIdResponse>('/api/build-id', nextJsAxiosInstance, {
     refreshInterval: LOCAL_VERSION_CHECK_INTERVAL,
     revalidateOnMount: true,
     refreshWhenHidden: true,
   });
-  const isClient = useIsClient();
+  const [shouldRefresh, setShouldRefresh] = useState<boolean>(false);
 
-  if (!isClient) return null;
+  useEffect(() => {
+    if (!data || isLoading || !data.buildId || !BUILD_ID) {
+      return;
+    }
+    setShouldRefresh(data.buildId !== BUILD_ID);
+  }, [data, isLoading]);
 
   const handleConfirm = () => {
     window.location.reload();
   };
-
-  const shouldRefresh = !!(data && data.buildId && BUILD_ID && data.buildId !== BUILD_ID);
 
   if (data) {
     logger.logEverywhere('[BundleVersionCheck]', {
@@ -53,17 +55,17 @@ export const BundleVersionCheck: React.FC = () => {
     });
   }
 
-  if (shouldRefresh) {
-    return (
-      <ModalConfirm
-        onConfirm={handleConfirm}
-        text={{
-          action: t('Lasius has been updated. The page will reload after your confirmation.'),
-          confirm: t('Reload application'),
-        }}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <>
+      {shouldRefresh && (
+        <ModalConfirm
+          onConfirm={handleConfirm}
+          text={{
+            action: t('Lasius has been updated. The page will reload after your confirmation.'),
+            confirm: t('Reload application'),
+          }}
+        />
+      )}
+    </>
+  );
 };
