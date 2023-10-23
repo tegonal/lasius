@@ -35,9 +35,14 @@ export const useGetPlannedWorkingHoursByDate = (date: string) => {
     data?.settings.lastSelectedOrganisation?.id ||
     data?.organisations.filter((item) => item.private)[0].organisationReference.id;
 
-  const week = data?.organisations.filter(
+  const filteredWeeks = data?.organisations.filter(
     (org) => org.organisationReference.id === lastSelectedOrganisationId
-  )[0].plannedWorkingHours;
+  );
+
+  const week =
+    Array.isArray(filteredWeeks) && filteredWeeks[0]?.plannedWorkingHours
+      ? filteredWeeks[0].plannedWorkingHours
+      : plannedWorkingHoursStub;
 
   const plannedHoursDay = { ...plannedWorkingHoursStub, ...week }[
     getWorkingHoursWeekdayString(date)

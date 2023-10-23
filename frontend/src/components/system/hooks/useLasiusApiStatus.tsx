@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { CONNECTION_STATUS } from 'projectConfig/constants';
+import { CONNECTION_STATUS, IS_BROWSER } from 'projectConfig/constants';
 import { useInterval } from 'usehooks-ts';
 import { API_STATUS_INTERVAL } from 'projectConfig/intervals';
 import { lasiusAxiosInstance } from 'lib/api/lasiusAxiosInstance';
@@ -56,7 +56,9 @@ export const useLasiusApiStatus = () => {
   const handleOffline = () => {
     setStatus(CONNECTION_STATUS.DISCONNECTED);
     if (browserStatus === CONNECTION_STATUS.CONNECTED) {
-      plausible('error', { props: { status: 'apiConnection', message: 'connectionLost' } });
+      if (IS_BROWSER) {
+        plausible('error', { props: { status: 'apiConnection', message: 'connectionLost' } });
+      }
     }
   };
 

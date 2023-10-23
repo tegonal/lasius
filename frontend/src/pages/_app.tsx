@@ -38,6 +38,7 @@ import { StoreContextProvider, useStore } from 'storeContext/store';
 import { Error } from 'components/error';
 import {
   DEV,
+  LASIUS_TELEMETRY_PLAUSIBLE_HOST,
   LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN,
   SOCIAL_MEDIA_CARD_IMAGE_URL,
 } from 'projectConfig/constants';
@@ -123,6 +124,8 @@ const App = ({
               <ThemeUIProvider theme={theme}>
                 <PlausibleProvider
                   domain={LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
+                  customDomain={LASIUS_TELEMETRY_PLAUSIBLE_HOST}
+                  selfHosted
                   enabled={!!LASIUS_TELEMETRY_PLAUSIBLE_SOURCE_DOMAIN}
                   trackLocalhost={DEV}
                   trackOutboundLinks

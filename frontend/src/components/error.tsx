@@ -23,15 +23,18 @@ import { Box, Flex, Heading } from 'theme-ui';
 import { PageError } from 'dynamicTranslationStrings';
 import { usePlausible } from 'next-plausible';
 import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
+import { useEffectOnce } from 'usehooks-ts';
 
 export const Error: React.FC<{ statusCode: number }> = ({ statusCode }) => {
   const plausible = usePlausible<LasiusPlausibleEvents>();
 
-  plausible('error', {
-    props: {
-      status: statusCode.toString(),
-      message: PageError[statusCode.toString()],
-    },
+  useEffectOnce(() => {
+    plausible('error', {
+      props: {
+        status: statusCode.toString(),
+        message: PageError[statusCode.toString()],
+      },
+    });
   });
 
   return (
