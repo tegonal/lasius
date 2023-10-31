@@ -22,6 +22,7 @@
 package controllers
 
 import com.google.inject.ImplementedBy
+import com.typesafe.config.Config
 import core.{DBSession, SystemServices}
 import helpers.UserHelper
 import models.UserId.UserReference
@@ -32,10 +33,23 @@ import play.api.mvc._
 import repositories.{SecurityRepositoryComponent, UserRepository}
 
 import javax.inject.Inject
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.DurationConverters._
 
 @ImplementedBy(classOf[DefaultAuthConfig])
 trait AuthConfig {
+
+  // max time an auth token lived in the cache to reduce load to db
+  val authTokenMaxCacheTime: Duration
+  // time an auth token expires and needs to be renewed
+  val authTokenExpiresAfter: Duration
+  // max time the auth token can still be renewed after it was expired
+  val authTokenMaxRenewTime: Duration
+  // max time an access token lives in the cache to reduce load to db
+  val accessTokenMaxCacheTime: Duration
+  // max expiration time an access token can be configured to
+  val accessTokenMaxExpirationTime: Duration
 
   /** Map usertype to permission role.
     */
@@ -55,6 +69,17 @@ trait AuthConfig {
       context: ExecutionContext,
       dbSession: DBSession): Future[Option[User]]
 
+  /** Lookup user by token
+    */
+  def resolveUserByAuthToken(token: String)(implicit
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Option[UserReference]]
+
+  def resolveUserByAccessToken(accessTokenId: AccessTokenId,
+                               tokenSecret: String)(implicit
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Option[UserReference]]
+
   /** Defined handling of authorizationfailed
     */
   def authorizationFailed(request: RequestHeader)(implicit
@@ -63,11 +88,23 @@ trait AuthConfig {
 
 class DefaultAuthConfig @Inject() (controllerComponents: ControllerComponents,
                                    systemServices: SystemServices,
-                                   override val userRepository: UserRepository)
+                                   override val userRepository: UserRepository,
+                                   config: Config)
     extends AbstractController(controllerComponents)
     with AuthConfig
     with UserHelper
     with SecurityRepositoryComponent {
+
+  val authTokenMaxCacheTime: Duration =
+    config.getDuration("auth_token.max_cache_time").toScala
+  val authTokenExpiresAfter: Duration =
+    config.getDuration("auth_token.expires_after").toScala
+  val authTokenMaxRenewTime: Duration =
+    config.getDuration("auth_token.max_renew_time").toScala
+  val accessTokenMaxCacheTime: Duration =
+    config.getDuration("access_token.max_cache_time").toScala
+  val accessTokenMaxExpirationTime: Duration =
+    config.getDuration("access_token.max_expiration_time").toScala
 
   /** Map usertype to permission role.
     */
@@ -99,7 +136,18 @@ class DefaultAuthConfig @Inject() (controllerComponents: ControllerComponents,
       dbSession: DBSession): Future[Option[User]] =
     userRepository.findByUserReference(userReference)
 
+  override def resolveUserByAuthToken(token: String)(implicit
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Option[UserReference]] =
+    userRepository.findByAuthToken(token)
+
+  override def resolveUserByAccessToken(accessTokenId: AccessTokenId,
+                                        tokenSecret: String)(implicit
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Option[UserReference]] =
+    accessTokenRepository.resolveAndValidateToken(accessTokenId, tokenSecret)
+
   override def authorizationFailed(request: RequestHeader)(implicit
       context: ExecutionContext): Future[Result] =
-    Future.successful(Unauthorized(Json.obj("message" -> "Unauthorized")))
+    Future.successful(Forbidden(Json.obj("message" -> "Unauthorized")))
 }

@@ -34,14 +34,14 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ProjectsController @Inject() (
-    controllerComponents: ControllerComponents,
-    override val systemServices: SystemServices,
-    projectRepository: ProjectRepository,
-    userRepository: UserRepository,
-    invitationRepository: InvitationRepository,
-    override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
-    override val reactiveMongoApi: ReactiveMongoApi)(implicit
+                                     controllerComponents: ControllerComponents,
+                                     override val systemServices: SystemServices,
+                                     projectRepository: ProjectRepository,
+                                     userRepository: UserRepository,
+                                     invitationRepository: InvitationRepository,
+                                     override val authConfig: AuthConfig,
+                                     override val authTokenCache: AsyncCacheApi,
+                                     override val reactiveMongoApi: ReactiveMongoApi)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
   def getProjects(orgId: OrganisationId): Action[Unit] =

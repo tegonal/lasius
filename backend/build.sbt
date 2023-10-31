@@ -36,10 +36,11 @@ resolvers += "Tegonal releases".at(
 resolvers += "Sonatype OSS Releases".at(
   "https://oss.sonatype.org/content/repositories/releases")
 
-val akkaVersion              = "2.6.21"
-val reactiveMongoVersion     = "1.0.10"
-val reactiveMongoPlayVersion = s"$reactiveMongoVersion-play28"
-val playVersion              = "2.8.20"
+val akkaVersion               = "2.6.21"
+val reactiveMongoVersion      = "1.0.10"
+val reactiveMongoPlayVersion  = s"$reactiveMongoVersion-play28"
+val playVersion               = "2.8.20"
+val playOAuth2ProviderVersion = "1.5.0"
 
 libraryDependencies ++= Seq(
   ("org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoPlayVersion)
@@ -64,6 +65,9 @@ libraryDependencies ++= Seq(
   "net.openhft"          % "zero-allocation-hashing"   % "0.16",
   // depend on this plugin to be able to provide custom OutputTransformer
   "io.github.play-swagger" %% "play-swagger" % "1.4.4",
+  // oauth2 provider dependencies
+  "com.nulab-inc" %% "scala-oauth2-core"     % playOAuth2ProviderVersion,
+  "com.nulab-inc" %% "play2-oauth2-provider" % playOAuth2ProviderVersion,
   ehcache,
   ws,
   specs2 % Test,

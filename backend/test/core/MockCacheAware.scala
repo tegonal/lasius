@@ -29,7 +29,7 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait MockCacheAware extends CacheAware {
-  override val cache: AsyncCacheApi = MockCache
+  override val authTokenCache: AsyncCacheApi = MockCache
 }
 
 object MockCache extends AsyncCacheApi {

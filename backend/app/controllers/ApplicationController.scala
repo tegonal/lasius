@@ -26,10 +26,9 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.Timeout
 import com.typesafe.config.Config
-import core.{CacheAware, DBSession, DBSupport, SystemServices}
+import core.SystemServices
 import models._
-import play.api._
-import play.api.cache.AsyncCacheApi
+import play.api.cache.{AsyncCacheApi, NamedCache}
 import play.api.libs.json._
 import play.api.libs.streams._
 import play.api.mvc.WebSocket.MessageFlowTransformer
@@ -51,7 +50,8 @@ class ApplicationController @Inject() (
     controllerComponents: ControllerComponents,
     userRepository: UserRepository,
     override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
+    @NamedCache("auth-tokens") override val authTokenCache: AsyncCacheApi,
+    @NamedCache("access-token") override val accessTokenCache: AsyncCacheApi,
     override val systemServices: SystemServices,
     clientReceiver: ClientReceiver)(implicit
     executionContext: ExecutionContext,
@@ -82,20 +82,22 @@ class ApplicationController @Inject() (
     */
   def messagingSocket: WebSocket = WebSocket.acceptOrResult[InEvent, OutEvent] {
     implicit request =>
-      checkToken().map {
-        case Right(result) =>
-          logger.warn(
-            s"Couldn't create Websocket for client ${result.header} - ${result.body}")
-          Left(result)
-        case Left(subject) =>
-          Right({
-            logger.debug(
-              s"Create Websocket for client ${subject.userReference.id}")
-            ActorFlow.actorRef(
-              ClientMessagingWebsocketActor.props(subject.userReference.id),
-              1000,
-              OverflowStrategy.dropNew)
-          })
+      withDBSession() { implicit dbSession =>
+        checkOneTimeAuthToken().map {
+          case Left(result) =>
+            logger.warn(
+              s"Couldn't create Websocket for client ${result.header} - ${result.body}")
+            Left(result)
+          case Right(subject) =>
+            Right({
+              logger.debug(
+                s"Create Websocket for client ${subject.userReference.id}")
+              ActorFlow.actorRef(
+                ClientMessagingWebsocketActor.props(subject.userReference.id),
+                1000,
+                OverflowStrategy.dropNew)
+            })
+        }
       }
   }
 
@@ -118,7 +120,7 @@ class ApplicationController @Inject() (
             case Some(user) =>
               logger.debug(s"Store token for user: ${user.getReference()}")
               val uuid = UUID.randomUUID.toString
-              cache.set(uuid, user.getReference())
+              authTokenCache.set(uuid, user.getReference())
 
               systemServices.loginStateAggregate ! UserLoggedInV2(
                 user.getReference())
@@ -143,7 +145,7 @@ class ApplicationController @Inject() (
 
   private def doLogout(subject: Subject): Future[Result] = {
     logger.debug(s"Remove token from cache: ${subject.token}")
-    cache.remove(subject.token)
+    authTokenCache.remove(subject.token)
 
     systemServices.loginStateAggregate ! UserLoggedOutV2(subject.userReference)
 

@@ -21,31 +21,24 @@
 
 package controllers
 
+import controllers.Security._
 import core.Validation.ValidationFailedException
 import core.{CacheAware, DBSession, DBSupport}
-import models.OrganisationId.OrganisationReference
 import models.UserId.UserReference
-import models.{
-  EntityReference,
-  OrganisationAdministrator,
-  OrganisationId,
-  OrganisationMember,
-  OrganisationRole,
-  ProjectId,
-  ProjectRole,
-  Subject,
-  User,
-  UserId,
-  UserOrganisation,
-  UserProject,
-  UserRole
-}
+import models._
+import org.apache.commons.codec.binary.Base64
 import play.api.Logging
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json.{Json, Reads}
+import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
+import scalaoauth2.provider.OAuth2ProviderActionBuilders
 
+import java.util.UUID
+import scala.concurrent.Future.successful
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 /** Security actions that should be used by all controllers that need to protect
   * their actions. Can be composed to fine-tune access control.
@@ -54,12 +47,8 @@ trait SecurityComponent {
   val authConfig: AuthConfig
 }
 
-trait Security extends Logging {
+trait Security extends Logging with OAuth2ProviderActionBuilders {
   self: BaseController with SecurityComponent with CacheAware with DBSupport =>
-
-  val AuthTokenHeader    = "X-XSRF-TOKEN"
-  val AuthTokenCookieKey = "XSRF-TOKEN"
-  val AuthTokenUrlKey    = "auth"
 
   def HasToken[A](withinTransaction: Boolean)(
       f: DBSession => Subject => Request[A] => Future[Result])(implicit
@@ -78,55 +67,181 @@ trait Security extends Logging {
       context: ExecutionContext): Action[A] = {
     Action.async(p) { implicit request =>
       withDBSession(withinTransaction) { implicit dbSession =>
-        checkToken().flatMap {
-          case Left(subject) =>
+        checkAuthOrAccessToken().flatMap {
+          case Right(subject) =>
             f(dbSession)(subject)(request)
-          case Right(result) =>
-            Future.successful(result)
+          case Left(result) =>
+            successful(result)
         }
       }
     }
   }
 
-  /** check is user has a token
+  /** check is user has an auth or an access-token
     */
-  def checkToken[A]()(implicit
+  private def checkAuthOrAccessToken()(implicit
       request: RequestHeader,
-      context: ExecutionContext): Future[Either[Subject, Result]] = {
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Either[Result, Subject]] = {
+    checkAuthToken().flatMap {
+      case Right(result) => successful(Right(result))
+      case Left(_)       => checkAccessToken()
+    }
+  }
+
+  /** check auth token by validating xsrf-token cookie with xsrf-token provided
+    * either in header or as query parameter used for websocket authentication.
+    * Perform user reference lookup within cache or db
+    */
+  def checkOneTimeAuthToken()(implicit
+      request: RequestHeader,
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Either[Result, Subject]] =
+    request.cookies
+      .get(AuthTokenCookieKey)
+      .map { xsrfTokenCookie =>
+        val maybeOneTimeToken =
+          request.getQueryString(AuthOneTimeTokenQueryParamKey)
+        logger.debug("Nonce auth Token from headers:" + maybeOneTimeToken)
+        maybeOneTimeToken
+          .map { oneTimeToken =>
+            nonceAuthTokenCache
+              .get[String](oneTimeToken)
+              .flatMap {
+                _.map { authToken =>
+                  if (xsrfTokenCookie.value.equals(oneTimeToken)) {
+                    resolveAuthTokenFromCacheOrDbCache(authToken)
+                  } else {
+                    successful(Left(
+                      Unauthorized(Json.obj("message" -> "Invalid Token"))))
+                  }
+                }.getOrElse {
+                  successful(
+                    Left(Unauthorized(Json.obj("message" -> "No Token"))))
+                }
+
+              }
+          }
+          .getOrElse {
+            successful(Left(Unauthorized(Json.obj("message" -> "No Token"))))
+          }
+      }
+      .getOrElse {
+        successful(
+          Left(
+            Unauthorized(Json.obj("message" -> "Invalid XSRF Token cookie"))))
+      }
+
+  /** check auth token by validating xsrf-token cookie with xsrf-token provided
+    * in the request header. Perform user reference lookup within cache or db
+    */
+  private def checkAuthToken()(implicit
+      request: RequestHeader,
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Either[Result, Subject]] = {
     request.cookies
       .get(AuthTokenCookieKey)
       .map { xsrfTokenCookie =>
         val maybeToken = request.headers
           .get(AuthTokenHeader)
-          .orElse(request.getQueryString(AuthTokenUrlKey))
         logger.debug("Token from headers:" + maybeToken)
         maybeToken
-          .map { token =>
-            logger.debug(
-              s"Check security token in cache:$token, " + cache.sync.get(token))
-            cache.get[UserReference](token).map {
-              _.map { userReference =>
-                logger.debug(s"Found userId: ${userReference.id}")
-                if (xsrfTokenCookie.value.equals(token)) {
-                  val subject = Subject(token, userReference)
-                  Left(subject)
-                } else {
-                  Right(Unauthorized(Json.obj("message" -> "Invalid Token")))
-                }
-              }.getOrElse(Right(
-                Unauthorized(Json.obj("message" -> "No Token"))))
+          .map { authToken =>
+            if (xsrfTokenCookie.value.equals(authToken)) {
+              logger.debug(
+                s"Check security token in cache:$authToken, " + authTokenCache.sync
+                  .get(authToken))
+              resolveAuthTokenFromCacheOrDbCache(authToken)
+            } else {
+              successful(Security.invalidTokenResult)
             }
           }
-          .getOrElse {
-            Future.successful(
-              Right(Unauthorized(Json.obj("message" -> "No Token"))))
+          .getOrElse(successful(Security.missingTokenResult))
+      }
+      .getOrElse(successful(Security.missingTokenResult))
+  }
+
+  private def resolveAuthTokenFromCacheOrDbCache(authToken: String)(implicit
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Either[Result, Subject]] =
+    authTokenCache
+      .get[UserReference](authToken)
+      .flatMap {
+        _.map { userReference =>
+          logger.debug(s"Found userId: ${userReference.id}")
+          successful(Some(userReference))
+        }.getOrElse {
+          // lookup in db
+          authConfig.resolveUserByAuthToken(authToken).map {
+            _.map { userReference =>
+              // update token in cache, for a max of 1 day, after this, token needs to be renewed
+              authTokenCache.set(authToken, userReference, system)
+
+              userReference
+            }
           }
+        }
       }
-      .getOrElse {
-        Future.successful(
-          Right(
-            Unauthorized(Json.obj("message" -> "Invalid XSRF Token cookie"))))
+      .map {
+        _.map { userReference =>
+          val subject = Subject(authToken, userReference)
+
+          Right(subject)
+        }.getOrElse(Security.missingTokenResult)
       }
+
+  /** check access token by querying a special access-token header with the
+    * base64 encoded accessTokenKey::accessTokenSecret pair. Successful if
+    * accessTokenKey can be resolved within accessTokenCache or looked up with a
+    * matching accessTokenKey/accessTokenSecret pair
+    */
+  private def checkAccessToken()(implicit
+      request: RequestHeader,
+      context: ExecutionContext,
+      dbSession: DBSession): Future[Either[Result, Subject]] = {
+    request.headers
+      .get(AccessTokenHeader)
+      .map { accessTokenPair =>
+        val pair =
+          new String(Base64.decodeBase64(accessTokenPair.getBytes("utf-8")))
+        pair.split("::").toList match {
+          case accessTokenKey :: accessTokenSecret :: Nil =>
+            accessTokenCache
+              .get[UserReference](accessTokenKey)
+              .flatMap {
+                _.map { userReference =>
+                  successful(Some(userReference))
+                }
+                  .getOrElse {
+                    authConfig
+                      .resolveUserByAccessToken(
+                        AccessTokenId(UUID.fromString(accessTokenKey)),
+                        accessTokenSecret
+                      )
+                      .map {
+                        _.map { userReference =>
+                          // update token in cache for a short period of time
+                          // to reduce load to db
+                          accessTokenCache.set(accessTokenKey,
+                                               userReference,
+                                               1 minute)
+                          userReference
+                        }
+
+                      }
+                  }
+              }
+              .map {
+                _.map { userReference =>
+                  val subject = Subject(accessTokenKey, userReference)
+
+                  Right(subject)
+                }.getOrElse(missingTokenResult)
+              }
+          case _ => successful(invalidTokenResult)
+        }
+      }
+      .getOrElse(successful(missingTokenResult))
   }
 
   def HasUserRole[A, R <: UserRole](role: R, withinTransaction: Boolean)(
@@ -163,7 +278,6 @@ trait Security extends Logging {
       maybeOrganisation: Option[OrganisationId],
       role: R)(f: Option[UserOrganisation] => Future[Result])(implicit
       context: ExecutionContext,
-      dbSession: DBSession,
       request: Request[A]): Future[Result] = {
     maybeOrganisation
       .fold(f(None))(orgId =>
@@ -175,7 +289,6 @@ trait Security extends Logging {
                                                     role: R)(
       f: UserOrganisation => Future[Result])(implicit
       context: ExecutionContext,
-      dbSession: DBSession,
       request: Request[A]): Future[Result] = {
     checked(user.organisations.find(_.organisationReference.id == orgId) match {
       case Some(userOrganisation) =>
@@ -194,7 +307,6 @@ trait Security extends Logging {
                                           role: R)(
       f: UserProject => Future[Result])(implicit
       context: ExecutionContext,
-      dbSession: DBSession,
       request: Request[A]): Future[Result] = {
     checked(
       userOrganisation.projects.find(_.projectReference.id == projectId) match {
@@ -219,7 +331,6 @@ trait Security extends Logging {
       projectId: ProjectId,
       projectRole: ProjectRole)(f: UserOrganisation => Future[Result])(implicit
       context: ExecutionContext,
-      dbSession: DBSession,
       request: Request[A]): Future[Result] = {
     HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
       // either org admin or project admin
@@ -239,7 +350,6 @@ trait Security extends Logging {
       maybeProjectId: Option[ProjectId],
       role: R)(f: Option[UserProject] => Future[Result])(implicit
       context: ExecutionContext,
-      dbSession: DBSession,
       request: Request[A]): Future[Result] = {
     maybeProjectId
       .fold(f(None))(projectId =>
@@ -251,17 +361,27 @@ trait Security extends Logging {
       context: ExecutionContext): Future[Result] = {
     f.recoverWith {
       case e: ValidationFailedException =>
-        logger.debug(s"Validation errror", e)
-        Future.successful(
-          BadRequest(
-            Option(e.getMessage()).getOrElse(e.getClass.getSimpleName)))
+        logger.debug(s"Validation error", e)
+        successful(
+          BadRequest(Option(e.getMessage).getOrElse(e.getClass.getSimpleName)))
       case e =>
         logger.error(s"Unknown Error", e)
-        Future.successful(
+        successful(
           InternalServerError(
-            Option(e.getMessage()).getOrElse(e.getClass.getSimpleName)))
+            Option(e.getMessage).getOrElse(e.getClass.getSimpleName)))
     }
   }
+}
 
-  def checkSSOAlive(): Unit = {}
+object Security {
+  private val invalidTokenResult = Left(
+    Unauthorized(Json.obj("message" -> "Invalid Token")))
+
+  private val missingTokenResult = Left(
+    Unauthorized(Json.obj("message" -> "No Token")))
+
+  val AuthTokenHeader               = "X-XSRF-TOKEN"
+  val AccessTokenHeader             = "X-ACS-TOKEN"
+  val AuthTokenCookieKey            = "XSRF-TOKEN"
+  val AuthOneTimeTokenQueryParamKey = "token"
 }

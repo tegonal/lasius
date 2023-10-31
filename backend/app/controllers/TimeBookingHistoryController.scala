@@ -36,12 +36,12 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class TimeBookingHistoryController @Inject() (
-    controllerComponents: ControllerComponents,
-    override val systemServices: SystemServices,
-    override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
-    override val reactiveMongoApi: ReactiveMongoApi,
-    bookingHistoryRepository: BookingHistoryRepository)(implicit
+                                               controllerComponents: ControllerComponents,
+                                               override val systemServices: SystemServices,
+                                               override val authConfig: AuthConfig,
+                                               override val authTokenCache: AsyncCacheApi,
+                                               override val reactiveMongoApi: ReactiveMongoApi,
+                                               bookingHistoryRepository: BookingHistoryRepository)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 

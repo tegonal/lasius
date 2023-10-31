@@ -34,11 +34,11 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class TimeBookingController @Inject() (
-    controllerComponents: ControllerComponents,
-    override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
-    override val reactiveMongoApi: ReactiveMongoApi,
-    override val systemServices: SystemServices)(implicit ec: ExecutionContext)
+                                        controllerComponents: ControllerComponents,
+                                        override val authConfig: AuthConfig,
+                                        override val authTokenCache: AsyncCacheApi,
+                                        override val reactiveMongoApi: ReactiveMongoApi,
+                                        override val systemServices: SystemServices)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   override val supportTransaction: Boolean = systemServices.supportTransaction

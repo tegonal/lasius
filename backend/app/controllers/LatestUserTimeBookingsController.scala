@@ -35,11 +35,11 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import scala.concurrent.{ExecutionContext, Future}
 
 class LatestUserTimeBookingsController @Inject() (
-    controllerComponents: ControllerComponents,
-    override val systemServices: SystemServices,
-    override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
-    override val reactiveMongoApi: ReactiveMongoApi)(implicit
+                                                   controllerComponents: ControllerComponents,
+                                                   override val systemServices: SystemServices,
+                                                   override val authConfig: AuthConfig,
+                                                   override val authTokenCache: AsyncCacheApi,
+                                                   override val reactiveMongoApi: ReactiveMongoApi)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 

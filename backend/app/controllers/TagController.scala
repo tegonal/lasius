@@ -40,7 +40,7 @@ import scala.language.postfixOps
 class TagController @Inject() (controllerComponents: ControllerComponents,
                                override val systemServices: SystemServices,
                                override val authConfig: AuthConfig,
-                               override val cache: AsyncCacheApi,
+                               override val authTokenCache: AsyncCacheApi,
                                override val userRepository: UserRepository,
                                override val reactiveMongoApi: ReactiveMongoApi,
                                projectRepository: ProjectRepository)(implicit

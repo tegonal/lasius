@@ -34,12 +34,12 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class UsersController @Inject() (
-    controllerComponents: ControllerComponents,
-    override val systemServices: SystemServices,
-    override val authConfig: AuthConfig,
-    override val cache: AsyncCacheApi,
-    override val reactiveMongoApi: ReactiveMongoApi,
-    userRepository: UserRepository)(implicit ec: ExecutionContext)
+                                  controllerComponents: ControllerComponents,
+                                  override val systemServices: SystemServices,
+                                  override val authConfig: AuthConfig,
+                                  override val authTokenCache: AsyncCacheApi,
+                                  override val reactiveMongoApi: ReactiveMongoApi,
+                                  userRepository: UserRepository)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   implicit val timeout: Timeout = systemServices.timeout

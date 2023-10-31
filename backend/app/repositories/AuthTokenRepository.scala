@@ -21,7 +21,26 @@
 
 package repositories
 
-trait SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val accessTokenRepository: AccessTokenRepository
+import com.google.inject.ImplementedBy
+import core.{DBSession, Validation}
+import models._
+import reactivemongo.api.bson.collection.BSONCollection
+
+import javax.inject.Inject
+import scala.concurrent._
+
+@ImplementedBy(classOf[AuthTokenMongoRepository])
+trait AuthTokenRepository
+    extends BaseRepository[AuthToken, AuthTokenId]
+    with DropAllSupport[AuthToken, AuthTokenId] {}
+
+class AuthTokenMongoRepository @Inject() (
+    override implicit protected val executionContext: ExecutionContext)
+    extends BaseReactiveMongoRepository[AuthToken, AuthTokenId]
+    with AuthTokenRepository
+    with MongoDropAllSupport[AuthToken, AuthTokenId]
+    with Validation {
+  override protected[repositories] def coll(implicit
+      dbSession: DBSession): BSONCollection =
+    dbSession.db.collection[BSONCollection]("AuthToken")
 }

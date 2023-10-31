@@ -25,6 +25,7 @@ import core.{CacheAware, DBSupport, SystemServices}
 import helpers.FutureHelper
 import play.api.Logging
 import play.api.mvc.{AbstractController, ControllerComponents}
+import scalaoauth2.provider.{OAuth2Provider, TokenEndpoint}
 
 abstract class BaseLasiusController(controllerComponents: ControllerComponents)
     extends AbstractController(controllerComponents)
@@ -34,8 +35,11 @@ abstract class BaseLasiusController(controllerComponents: ControllerComponents)
     with CacheAware
     with ControllerValidation
     with FutureHelper
-    with DBSupport {
+    with DBSupport
+    with OAuth2Provider {
   override val supportTransaction: Boolean = systemServices.supportTransaction
+
+  override val tokenEndpoint: TokenEndpoint = new OAuth2TokenEndpoint()
 
   val systemServices: SystemServices
 }

@@ -32,7 +32,7 @@ import core.db.InitialDataLoader
 import domain.LoginStateAggregate
 import domain.views.CurrentOrganisationTimeBookingsView
 import models.UserId.UserReference
-import models.{EntityReference, PersistedEvent, Subject, UserId}
+import models.{EntityReference, Subject, UserId}
 import play.api.Logging
 import play.api.inject.Injector
 import play.api.libs.ws.WSClient

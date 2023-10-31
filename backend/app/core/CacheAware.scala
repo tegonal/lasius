@@ -24,5 +24,17 @@ package core
 import play.api.cache.AsyncCacheApi
 
 trait CacheAware {
-  val cache: AsyncCacheApi
+
+  /** Token cache used to store short living nonce (one-time) tokens
+    */
+  val nonceAuthTokenCache: AsyncCacheApi
+
+  /** Token cache to store long-living auth tokens
+    */
+  val authTokenCache: AsyncCacheApi
+
+  /** Token cache to store short-living accessToken keys of access token based
+    * authentications
+    */
+  val accessTokenCache: AsyncCacheApi
 }

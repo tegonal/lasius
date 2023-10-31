@@ -19,9 +19,26 @@
  * along with Lasius. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package repositories
+package models
 
-trait SecurityRepositoryComponent {
-  val userRepository: UserRepository
-  val accessTokenRepository: AccessTokenRepository
+import models.BaseFormat.UUIDBaseId
+import models.UserId.UserReference
+import org.joda.time.DateTime
+import play.api.libs.json.{Json, OFormat}
+
+import java.util.UUID
+
+case class AuthTokenId(value: UUID = UUID.randomUUID()) extends UUIDBaseId
+
+object AuthTokenId {
+  implicit val format: OFormat[AuthTokenId] =
+    Json.format[AuthTokenId]
+}
+
+case class AuthToken(id: AuthTokenId, expiration: DateTime, user: UserReference)
+    extends BaseEntity[AuthTokenId] {}
+
+object AuthToken {
+  implicit val format: OFormat[AuthToken] =
+    Json.format[AuthToken]
 }
