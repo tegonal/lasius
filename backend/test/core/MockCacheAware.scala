@@ -22,43 +22,46 @@
 package core
 
 import akka.Done
-import play.api.cache.{AsyncCacheApi, SyncCacheApi}
+import play.api.cache.AsyncCacheApi
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait MockCacheAware extends CacheAware {
-  override val authTokenCache: AsyncCacheApi = MockCache
+  override val oneTimeAccessTokenCache: AsyncCacheApi = new MockAsyncCache()
 }
 
-object MockCache extends AsyncCacheApi {
-  var cacheMap: Map[String, Any] = Map()
+class MockAsyncCache extends AsyncCacheApi {
+  val mockSyncCache = new MockSyncCache()
 
   override def set(key: String,
                    value: Any,
                    expiration: Duration): Future[Done] = {
-    cacheMap = cacheMap + (key -> value)
+    mockSyncCache.set(key, value, expiration)
     Future.successful(Done)
   }
 
   override def remove(key: String): Future[Done] = {
-    cacheMap = cacheMap - key
+    mockSyncCache.remove(key)
     Future.successful(Done)
   }
 
   override def getOrElseUpdate[A](key: String, expiration: Duration)(
       orElse: => Future[A])(implicit evidence$1: ClassTag[A]): Future[A] = {
-    Future.successful(cacheMap.get(key).getOrElse(orElse).asInstanceOf[A])
+    orElse.map { orElseValue =>
+      mockSyncCache.getOrElseUpdate[A](key, expiration)(orElseValue)
+    }
   }
 
   override def get[A](key: String)(implicit
       evidence$2: ClassTag[A]): Future[Option[A]] = {
-    Future.successful(cacheMap.get(key).asInstanceOf[Option[A]])
+    Future.successful(mockSyncCache.get(key))
   }
 
   override def removeAll(): Future[Done] = {
-    cacheMap = Map()
+    mockSyncCache.removeAll()
     Future.successful(Done)
   }
 }

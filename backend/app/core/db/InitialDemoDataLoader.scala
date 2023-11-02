@@ -38,6 +38,7 @@ import scala.util.Random
 
 class InitialDemoDataLoader @Inject() (
     val reactiveMongoApi: ReactiveMongoApi,
+    oauthUserRepository: OAuthUserRepository,
     userRepository: UserRepository,
     projectRepository: ProjectRepository,
     organisationRepository: OrganisationRepository,
@@ -46,7 +47,7 @@ class InitialDemoDataLoader @Inject() (
     with DBSupport
     with InitialDataLoader {
 
-  val randomPhraseList: List[SimpleTag] =
+  private val randomPhraseList: List[SimpleTag] =
     """   You Can't Teach an Old Dog New Tricks
           Shot In the Dark
           Jack of All Trades Master of None
@@ -104,17 +105,17 @@ class InitialDemoDataLoader @Inject() (
   // get's overridden b the withinTransaction call
   override val supportTransaction = true
 
-  val user1Key: String = sys.env.getOrElse("DEMO_USER1_KEY", "demo1")
-  val user1Email: String =
+  private val user1Key: String = sys.env.getOrElse("DEMO_USER1_KEY", "demo1")
+  private val user1Email: String =
     sys.env.getOrElse("DEMO_USER1_EMAIL", "demo1@lasius.ch")
-  val user1PasswordHash: String = BCrypt.hashpw(
+  private val user1PasswordHash: String = BCrypt.hashpw(
     sys.env.getOrElse("DEMO_USER1_PASSWORD", "demo"),
     BCrypt.gensalt())
 
-  val user2Key: String = sys.env.getOrElse("DEMO_USER2_KEY", "demo2")
-  val user2Email: String =
+  private val user2Key: String = sys.env.getOrElse("DEMO_USER2_KEY", "demo2")
+  private val user2Email: String =
     sys.env.getOrElse("DEMO_USER2_EMAIL", "demo2@lasius.ch")
-  val user2PasswordHash: String = BCrypt.hashpw(
+  private val user2PasswordHash: String = BCrypt.hashpw(
     sys.env.getOrElse("DEMO_USER2_PASSWORD", "demo"),
     BCrypt.gensalt())
 
@@ -131,7 +132,7 @@ class InitialDemoDataLoader @Inject() (
     }
   }
 
-  protected def initializeOrganisations()(implicit
+  private def initializeOrganisations()(implicit
       dbSession: DBSession,
       userReference: UserReference)
       : Future[(Organisation, Organisation, Organisation)] = {
@@ -165,7 +166,7 @@ class InitialDemoDataLoader @Inject() (
       .map(_ => (user1org, user2org, org))
   }
 
-  protected def initializeProjects(org: Organisation)(implicit
+  private def initializeProjects(org: Organisation)(implicit
       dbSession: DBSession,
       userReference: UserReference): Future[Seq[Project]] = {
     val projects = List(
@@ -224,22 +225,31 @@ class InitialDemoDataLoader @Inject() (
     projectRepository.bulkInsert(projects).map(_ => projects)
   }
 
-  protected def initializeUsers(user1Org: Organisation,
-                                user2Org: Organisation,
-                                publicOrg: Organisation,
-                                projects: Seq[Project])(implicit
+  private def initializeUsers(user1Org: Organisation,
+                              user2Org: Organisation,
+                              publicOrg: Organisation,
+                              projects: Seq[Project])(implicit
       dbSession: DBSession,
       userReference: UserReference): Future[List[User]] = {
-    val user1 = User(
-      UserId(),
-      user1Key,
-      user1Email,
-      user1PasswordHash,
-      "Demo",
-      "User 1",
+
+    val oauthUser1 = OAuthUser(
+      id = OAuthUserId(),
+      email = user1Email,
+      password = user1PasswordHash,
+      firstName = Some("Demo"),
+      lastName = Some("User 1"),
       active = true,
-      FreeUser,
-      Seq(
+    )
+
+    val user1 = User(
+      id = UserId(),
+      key = user1Key,
+      email = user1Email,
+      firstName = "Demo",
+      lastName = "User 1",
+      active = true,
+      role = FreeUser,
+      organisations = Seq(
         UserOrganisation(
           user1Org.getReference(),
           `private` = user1Org.`private`,
@@ -265,16 +275,23 @@ class InitialDemoDataLoader @Inject() (
         UserSettings(lastSelectedOrganisation = Some(publicOrg.getReference())))
     )
 
-    val user2 = User(
-      UserId(),
-      user2Key,
-      user2Email,
-      user2PasswordHash,
-      "Demo",
-      "User 2",
+    val oauthUser2 = OAuthUser(
+      id = OAuthUserId(),
+      email = user2Email,
+      password = user2PasswordHash,
+      firstName = Some("Demo"),
+      lastName = Some("User 2"),
       active = true,
-      FreeUser,
-      Seq(
+    )
+    val user2 = User(
+      id = UserId(),
+      key = user2Key,
+      email = user2Email,
+      firstName = "Demo",
+      lastName = "User 2",
+      active = true,
+      role = FreeUser,
+      organisations = Seq(
         UserOrganisation(
           user2Org.getReference(),
           `private` = user2Org.`private`,
@@ -302,12 +319,13 @@ class InitialDemoDataLoader @Inject() (
 
     val users = List(user1, user2)
 
+    oauthUserRepository.bulkInsert(List(oauthUser1, oauthUser2))
     userRepository.bulkInsert(users).map(_ => users)
   }
 
-  protected def initializeTimeBookings(org: Organisation,
-                                       projects: Seq[Project],
-                                       users: Seq[User])(implicit
+  private def initializeTimeBookings(org: Organisation,
+                                     projects: Seq[Project],
+                                     users: Seq[User])(implicit
       dbSession: DBSession,
       userReference: UserReference): Future[Seq[Seq[Seq[Unit]]]] =
     Future {
@@ -316,9 +334,9 @@ class InitialDemoDataLoader @Inject() (
 
   /** Generate time bookings for a given user for the last 60 days
     */
-  protected def initializeUserTimeBookings(org: Organisation,
-                                           projects: Seq[Project],
-                                           user: User)(implicit
+  private def initializeUserTimeBookings(org: Organisation,
+                                         projects: Seq[Project],
+                                         user: User)(implicit
       dbSession: DBSession): Seq[Seq[Unit]] = {
     val now           = DateTime.now()
     val orgRef        = org.getReference()

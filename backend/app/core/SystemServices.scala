@@ -32,7 +32,8 @@ import core.db.InitialDataLoader
 import domain.LoginStateAggregate
 import domain.views.CurrentOrganisationTimeBookingsView
 import models.UserId.UserReference
-import models.{EntityReference, Subject, UserId}
+import models.{ApplicationConfig, EntityReference, Subject, UserId}
+import org.pac4j.core.profile.CommonProfile
 import play.api.Logging
 import play.api.inject.Injector
 import play.api.libs.ws.WSClient
@@ -55,7 +56,8 @@ import scala.language.postfixOps
 trait SystemServices {
   val systemUser: UserId
   val systemUserReference: UserReference
-  val systemSubject: Subject
+  val systemUserProfile: CommonProfile
+  val systemSubject: Subject[_]
   val timeout: Timeout
   val duration: Duration
   val timeBookingViewService: ActorRef
@@ -70,6 +72,7 @@ trait SystemServices {
   val system: ActorSystem
   val materializer: Materializer
   val supportTransaction: Boolean
+  val appConfig: ApplicationConfig
 
   def initialize(): Unit
 }
@@ -80,8 +83,6 @@ class DefaultSystemServices @Inject() (
     @Named(LasiusSupervisorActor.name) supervisor: ActorRef,
     override val reactiveMongoApi: ReactiveMongoApi,
     userRepository: UserRepository,
-    projectRepository: ProjectRepository,
-    organisationRepository: OrganisationRepository,
     jiraConfigRepository: JiraConfigRepository,
     gitlabConfigRepository: GitlabConfigRepository,
     clientReceiver: ClientReceiver,
@@ -100,11 +101,15 @@ class DefaultSystemServices @Inject() (
   override val supportTransaction: Boolean =
     config.getBoolean("db.support_transactions")
 
-  val systemUUID = UUID.fromString("0000000-0000-0000-0000-000000000000")
+  private val systemUUID =
+    UUID.fromString("0000000-0000-0000-0000-000000000000")
   val systemUser: UserId = UserId(systemUUID)
-  implicit val systemUserReference: UserReference =
+  implicit val systemUserReference: UserReference = {
     EntityReference(systemUser, "system")
-  val systemSubject: Subject    = Subject("system", systemUserReference)
+  }
+  override val systemUserProfile: CommonProfile = new CommonProfile()
+  val systemSubject: Subject[_] =
+    Subject(systemUserProfile, systemUserReference)
   implicit val timeout: Timeout = Timeout(5 seconds) // needed for `?` below
   val duration: FiniteDuration  = Duration.create(30, SECONDS)
   override val timeBookingViewService: ActorRef = Await
@@ -173,6 +178,17 @@ class DefaultSystemServices @Inject() (
   // start pluginhandler
   pluginHandler ! PluginHandler.Startup
 
+  val appConfig: ApplicationConfig = {
+    ApplicationConfig(
+      title = config.getString("lasius.title"),
+      instance = config.getString("lasius.instance"),
+      lasiusOAuthProviderEnabled =
+        config.getBoolean("lasius.oauth2_provider.enabled"),
+      lasiusOAuthProviderAllowUserRegistration =
+        config.getBoolean("lasius.oauth2_provider.allow_register_users")
+    )
+  }
+
   override def initialize(): Unit = {
 
     val cleanData: Boolean = config.getBoolean("db.clean_database_on_startup")
@@ -184,7 +200,7 @@ class DefaultSystemServices @Inject() (
 
     val hasUsers =
       Await.result(withDBSession()(implicit dbSession =>
-                     userRepository.findAll(limit = 1).map(!_.isEmpty)),
+                     userRepository.findAll(limit = 1).map(_.nonEmpty)),
                    10 seconds)
 
     val initData: Boolean = config.getBoolean("db.initialize_data")

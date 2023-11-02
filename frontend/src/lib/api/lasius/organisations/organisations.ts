@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -58,25 +58,6 @@ export const createOrganisation = (
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       data: modelsCreateOrganisation,
-    },
-    options
-  );
-};
-
-/**
- * @summary update an organisation
- */
-export const updateOrganisation = (
-  orgId: string,
-  modelsUpdateOrganisation: BodyType<ModelsUpdateOrganisation>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsOrganisation>(
-    {
-      url: `/organisations/${orgId}`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsUpdateOrganisation,
     },
     options
   );
@@ -119,6 +100,25 @@ export const useGetOrganisation = <TError = ErrorType<unknown>>(
     swrKey,
     ...query,
   };
+};
+
+/**
+ * @summary update an organisation
+ */
+export const updateOrganisation = (
+  orgId: string,
+  modelsUpdateOrganisation: BodyType<ModelsUpdateOrganisation>,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<ModelsOrganisation>(
+    {
+      url: `/organisations/${orgId}`,
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      data: modelsUpdateOrganisation,
+    },
+    options
+  );
 };
 
 /**

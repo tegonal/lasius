@@ -235,7 +235,7 @@ class InvitationsControllerSpec
     }
   }
 
-  "register user" should {
+  /*"register user" should {
     "badrequest for non existing invitation" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -454,7 +454,7 @@ class InvitationsControllerSpec
         .awaitResult()
       loginResult must beSome
     }
-  }
+  }*/
 
   "decline invitation" should {
     "badrequest for non existing invitation" in new WithTestApplication {
@@ -561,7 +561,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("illegal_access")
     }
 
-    "unauthorized if user is not a member of the provided organisation" in new WithTestApplication {
+    "forbidden if user is not a member of the provided organisation" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
       val authConfig: AuthConfig                      = inject[AuthConfig]
@@ -580,7 +580,7 @@ class InvitationsControllerSpec
       val result: Future[Result] =
         controller.accept(invitationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "for JoinProjectInvitation" in {

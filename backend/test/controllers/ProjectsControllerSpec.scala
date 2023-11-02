@@ -25,7 +25,6 @@ import core.{SystemServices, TestApplication}
 import models._
 import mongo.EmbedMongo
 import org.joda.time.DateTime
-import org.mindrot.jbcrypt.BCrypt
 import org.specs2.mock.Mockito
 import org.specs2.mock.mockito.MockitoMatchers
 import play.api.mvc._
@@ -44,7 +43,7 @@ class ProjectsControllerSpec
 
   "create project" should {
 
-    "unauthorized create project in organisation not assigned to user" in new WithTestApplication {
+    "forbidden create project in organisation not assigned to user" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -63,7 +62,7 @@ class ProjectsControllerSpec
       val result: Future[Result] =
         controller.createProject(OrganisationId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest blank key was specified" in new WithTestApplication {
@@ -157,7 +156,7 @@ class ProjectsControllerSpec
   }
 
   "deactivate project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -172,7 +171,7 @@ class ProjectsControllerSpec
         controller.deactivateProject(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
     "badrequest if project id does not exist for given organisation" in new WithTestApplication {
 
@@ -229,7 +228,7 @@ class ProjectsControllerSpec
   }
 
   "invite user to project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -246,10 +245,10 @@ class ProjectsControllerSpec
       val result: Future[Result] =
         controller.inviteUser(OrganisationId(), controller.project.id)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is OrganisationMember and not assigned to project as ProjectAdministrator" in new WithTestApplication {
+    "forbidden if user is OrganisationMember and not assigned to project as ProjectAdministrator" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -270,7 +269,7 @@ class ProjectsControllerSpec
         controller.inviteUser(controller.organisationId, controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if incorrect email was provided" in new WithTestApplication {
@@ -419,7 +418,6 @@ class ProjectsControllerSpec
         UserId(),
         "anotherUser",
         email = email,
-        password = BCrypt.hashpw("somePassword", BCrypt.gensalt()),
         firstName = "test",
         lastName = "user",
         active = true,
@@ -447,7 +445,7 @@ class ProjectsControllerSpec
   }
 
   "remove other user from project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -463,10 +461,10 @@ class ProjectsControllerSpec
                                 controller.project.id,
                                 UserId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is OrganisationMember and not assigned as Administrator to project" in new WithTestApplication {
+    "forbidden if user is OrganisationMember and not assigned as Administrator to project" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -485,7 +483,7 @@ class ProjectsControllerSpec
                                 controller.project.id,
                                 UserId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     def successfulUnassignUser(controller: ProjectsControllerMock) = {
@@ -506,7 +504,6 @@ class ProjectsControllerSpec
         UserId(),
         "anotherUser",
         email = "user2@user.com",
-        password = BCrypt.hashpw("somePassword", BCrypt.gensalt()),
         firstName = "test",
         lastName = "user",
         active = true,
@@ -564,7 +561,7 @@ class ProjectsControllerSpec
   }
 
   "remove own user from project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -579,10 +576,10 @@ class ProjectsControllerSpec
         controller.unassignMyUser(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -597,7 +594,7 @@ class ProjectsControllerSpec
         controller.unassignMyUser(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "successful as ProjectMember" in new WithTestApplication {
@@ -617,7 +614,7 @@ class ProjectsControllerSpec
         projectReference = controller.project.getReference(),
         role = ProjectAdministrator
       )
-      val userOrganisation2 = UserOrganisation(
+      private val userOrganisation2 = UserOrganisation(
         organisationReference = controller.organisation.getReference(),
         `private` = controller.organisation.`private`,
         role = OrganisationMember,
@@ -628,7 +625,6 @@ class ProjectsControllerSpec
         UserId(),
         "anotherUser",
         email = "user2@user.com",
-        password = BCrypt.hashpw("somePassword", BCrypt.gensalt()),
         firstName = "test",
         lastName = "user",
         active = true,
@@ -645,7 +641,7 @@ class ProjectsControllerSpec
                                   controller.project.id)(request)
 
       status(result) must equalTo(OK)
-      val remainingUsers = withDBSession()(implicit dbSession =>
+      private val remainingUsers = withDBSession()(implicit dbSession =>
         controller.userRepository.findByProject(controller.project.id))
         .awaitResult()
       remainingUsers should haveSize(1)
@@ -653,7 +649,7 @@ class ProjectsControllerSpec
   }
 
   "update project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -669,7 +665,7 @@ class ProjectsControllerSpec
         controller.updateProject(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest no update was provided" in new WithTestApplication {
@@ -758,15 +754,14 @@ class ProjectsControllerSpec
         controllers.ProjectsControllerMock(systemServices,
                                            authConfig,
                                            reactiveMongoApi)
-      val newKey       = "newProjectKey"
-      val invitationId = InvitationId()
+      val newKey               = "newProjectKey"
+      private val invitationId = InvitationId()
 
       // create second user with different project structure
       val anotherUser: User = User(
         UserId(),
         "second-user",
         email = "user@user.com",
-        password = BCrypt.hashpw("no-pwd", BCrypt.gensalt()),
         firstName = "test",
         lastName = "user",
         active = true,
@@ -825,12 +820,12 @@ class ProjectsControllerSpec
                                  controller.project.id)(request)
 
       status(result) must equalTo(OK)
-      val updatedProject = contentAsJson(result).as[Project]
+      private val updatedProject = contentAsJson(result).as[Project]
 
       updatedProject.key === newKey
 
       // verify references where updated as well
-      val updatedInvitation = withDBSession()(implicit dbSession =>
+      private val updatedInvitation = withDBSession()(implicit dbSession =>
         controller.invitationRepository.findById(invitationId)).awaitResult()
       updatedInvitation must beSome
       updatedInvitation.get
@@ -838,7 +833,7 @@ class ProjectsControllerSpec
         .projectReference
         .key === newKey
 
-      val user = withDBSession()(implicit dbSession =>
+      private val user = withDBSession()(implicit dbSession =>
         controller.userRepository.findById(controller.userId)).awaitResult()
       user must beSome
 
@@ -848,7 +843,7 @@ class ProjectsControllerSpec
         .map(_.projectReference.key) === Some(newKey)
 
       // check project was changed in second user
-      val user2 = withDBSession()(implicit dbSession =>
+      private val user2 = withDBSession()(implicit dbSession =>
         controller.userRepository.findById(anotherUser.id)).awaitResult()
       user2 must beSome
       user2.get.organisations

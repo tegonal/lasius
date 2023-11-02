@@ -25,14 +25,12 @@ import com.google.inject.ImplementedBy
 import core.DBSession
 import models.ProjectId.ProjectReference
 import models.UserId.UserReference
-
-import javax.inject.Inject
 import models._
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.bson.collection.BSONCollection
 import repositories.MongoDBCommandSet._
 
+import javax.inject.Inject
 import scala.concurrent._
 
 @ImplementedBy(classOf[UserFavoritesMongoRepository])

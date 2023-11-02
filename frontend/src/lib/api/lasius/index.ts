@@ -22,10 +22,9 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 
-export * from './controllersLoginForm';
 export * from './getAggregatedStatisticsByProjectGranularity';
 export * from './getAggregatedStatisticsByProjectParams';
 export * from './getOrganisationBookingAggregatedStatsGranularity';
@@ -67,6 +66,9 @@ export * from './modelsJoinOrganisationInvitationRole';
 export * from './modelsJoinProjectInvitation';
 export * from './modelsJoinProjectInvitationRole';
 export * from './modelsLocalDateTimeWithTimeZone';
+export * from './modelsOAuthAuthorizationCodeLoginRequest';
+export * from './modelsOAuthUserId';
+export * from './modelsOAuthUserRegistration';
 export * from './modelsOrganisation';
 export * from './modelsPasswordChangeRequest';
 export * from './modelsPersonalDataUpdate';
@@ -85,7 +87,6 @@ export * from './modelsUserOrganisation';
 export * from './modelsUserOrganisationRole';
 export * from './modelsUserProject';
 export * from './modelsUserProjectRole';
-export * from './modelsUserRegistration';
 export * from './modelsUserRole';
 export * from './modelsUserSettings';
 export * from './modelsUserStub';
@@ -95,4 +96,3 @@ export * from './modelsUserToOrganisationAssignmentRole';
 export * from './modelsUserToProjectAssignment';
 export * from './modelsUserToProjectAssignmentRole';
 export * from './modelsWorkingHours';
-export * from './signIn200';

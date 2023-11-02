@@ -25,9 +25,10 @@ import actors.ClientReceiver
 import akka.util.Timeout
 import core.SystemServices
 import models._
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 
@@ -35,13 +36,13 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class UserFavoritesController @Inject() (
-                                          controllerComponents: ControllerComponents,
-                                          override val systemServices: SystemServices,
-                                          override val authConfig: AuthConfig,
-                                          override val authTokenCache: AsyncCacheApi,
-                                          override val reactiveMongoApi: ReactiveMongoApi,
-                                          userFavoritesRepository: UserFavoritesRepository,
-                                          clientReceiver: ClientReceiver)(implicit ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore,
+    userFavoritesRepository: UserFavoritesRepository,
+    clientReceiver: ClientReceiver)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   implicit val timeout: Timeout = systemServices.timeout

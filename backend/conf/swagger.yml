@@ -5,10 +5,9 @@ info:
   description: "Track your time"
 components:
   securitySchemes:
-    cookieAuth: # arbitrary name for the security scheme; will be used in the "security" key later
-      type: apiKey
-      in: cookie
-      name: XSRF-TOKEN  # cookie name
+    oAuth2: # <---- arbitrary name
+      type: oauth2
+      description: This API uses OAuth 2 with the grant flow depending on the server used
   schemas:
     models.Invitation:
       oneOf:

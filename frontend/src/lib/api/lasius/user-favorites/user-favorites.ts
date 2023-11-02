@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -37,25 +37,6 @@ import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
 ) => any
   ? P
   : never;
-
-/**
- * @summary Save a new favorite booking for the current user in the selected organisation
- */
-export const addFavoriteBooking = (
-  orgId: string,
-  modelsFavoritesRequest: BodyType<ModelsFavoritesRequest>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsUserFavorites[]>(
-    {
-      url: `/user-favorites/organisations/${orgId}`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsFavoritesRequest,
-    },
-    options
-  );
-};
 
 /**
  * @summary Get current user's favorite bookings list for the selected organisation
@@ -104,6 +85,25 @@ export const useGetFavoriteBookingList = <TError = ErrorType<unknown>>(
     swrKey,
     ...query,
   };
+};
+
+/**
+ * @summary Save a new favorite booking for the current user in the selected organisation
+ */
+export const addFavoriteBooking = (
+  orgId: string,
+  modelsFavoritesRequest: BodyType<ModelsFavoritesRequest>,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<ModelsUserFavorites[]>(
+    {
+      url: `/user-favorites/organisations/${orgId}`,
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      data: modelsFavoritesRequest,
+    },
+    options
+  );
 };
 
 /**

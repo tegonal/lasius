@@ -21,22 +21,17 @@
 
 package controllers
 
-import actors.{ClientMessagingWebsocketActor, ClientReceiver}
 import akka.actor.ActorSystem
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.Materializer
 import akka.util.Timeout
 import com.typesafe.config.Config
 import core.SystemServices
-import models._
-import play.api.cache.{AsyncCacheApi, NamedCache}
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json._
-import play.api.libs.streams._
-import play.api.mvc.WebSocket.MessageFlowTransformer
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.UserRepository
 
-import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,15 +42,11 @@ object LoginForm {
 }
 
 class ApplicationController @Inject() (
-    controllerComponents: ControllerComponents,
-    userRepository: UserRepository,
+    override val controllerComponents: SecurityComponents,
     override val authConfig: AuthConfig,
-    @NamedCache("auth-tokens") override val authTokenCache: AsyncCacheApi,
-    @NamedCache("access-token") override val accessTokenCache: AsyncCacheApi,
     override val systemServices: SystemServices,
-    clientReceiver: ClientReceiver)(implicit
+    override val playSessionStore: SessionStore)(implicit
     executionContext: ExecutionContext,
-    config: Config,
     override val reactiveMongoApi: ReactiveMongoApi)
     extends BaseLasiusController(controllerComponents) {
 
@@ -64,102 +55,11 @@ class ApplicationController @Inject() (
   implicit val system: ActorSystem        = systemServices.system
   implicit val materializer: Materializer = Materializer.matFromSystem
 
-  implicit val messageFlowTransformer
-      : MessageFlowTransformer[InEvent, OutEvent] =
-    MessageFlowTransformer.jsonMessageFlowTransformer[InEvent, OutEvent]
-
-  val appConfig: ApplicationConfig = loadApplicationConfig()
-
-  private def loadApplicationConfig() = {
-    systemServices.initialize()
-
-    val title    = config.getString("lasius.title")
-    val instance = config.getString("lasius.instance")
-    ApplicationConfig(title, instance)
-  }
-
-  /** Provide access to actor based messaging websocket
-    */
-  def messagingSocket: WebSocket = WebSocket.acceptOrResult[InEvent, OutEvent] {
-    implicit request =>
-      withDBSession() { implicit dbSession =>
-        checkOneTimeAuthToken().map {
-          case Left(result) =>
-            logger.warn(
-              s"Couldn't create Websocket for client ${result.header} - ${result.body}")
-            Left(result)
-          case Right(subject) =>
-            Right({
-              logger.debug(
-                s"Create Websocket for client ${subject.userReference.id}")
-              ActorFlow.actorRef(
-                ClientMessagingWebsocketActor.props(subject.userReference.id),
-                1000,
-                OverflowStrategy.dropNew)
-            })
-        }
-      }
-  }
-
-  /** Log-in a user.
-    *
-    * Set the cookie [[AuthTokenCookieKey]] to have AngularJS set the
-    * X-XSRF-TOKEN in the HTTP header.
-    *
-    * returns The token needed for subsequent requests
-    */
-  def login: Action[LoginForm] =
-    Action.async(validateJson[LoginForm]) { implicit request =>
-      // first resolve using authentication service
-      withDBSession() { implicit dbSession =>
-        userRepository
-          .authenticate(request.body.email, request.body.password)
-          .map {
-            case None =>
-              BadRequest("Authentication failed")
-            case Some(user) =>
-              logger.debug(s"Store token for user: ${user.getReference()}")
-              val uuid = UUID.randomUUID.toString
-              authTokenCache.set(uuid, user.getReference())
-
-              systemServices.loginStateAggregate ! UserLoggedInV2(
-                user.getReference())
-
-              Ok(Json.obj("token" -> uuid))
-                .withCookies(
-                  Cookie(AuthTokenCookieKey, uuid, None, httpOnly = false))
-          }
-      }
-    }
-
-  /** Log-out a user. Invalidates the authentication token.
-    *
-    * Discard the cookie [[AuthTokenCookieKey]] to have AngularJS no longer set
-    * the X-XSRF-TOKEN in HTTP header.
-    */
-  def logout(): Action[Unit] =
-    HasToken(parse.empty, withinTransaction = false) {
-      _ => subject => implicit request =>
-        doLogout(subject);
-    }
-
-  private def doLogout(subject: Subject): Future[Result] = {
-    logger.debug(s"Remove token from cache: ${subject.token}")
-    authTokenCache.remove(subject.token)
-
-    systemServices.loginStateAggregate ! UserLoggedOutV2(subject.userReference)
-
-    // notify client
-    clientReceiver ! (subject.userReference.id, UserLoggedOutV2(
-      subject.userReference), List(subject.userReference.id))
-
-    Future.successful(
-      Ok.discardingCookies(DiscardingCookie(name = AuthTokenCookieKey)))
-  }
+  systemServices.initialize()
 
   /** Load application config
     */
   def getConfig: Action[AnyContent] = Action.async {
-    Future.successful(Ok(Json.toJson(appConfig)))
+    Future.successful(Ok(Json.toJson(systemServices.appConfig)))
   }
 }

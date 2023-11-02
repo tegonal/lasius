@@ -26,8 +26,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 import akka.testkit.TestProbe
 import akka.util.Timeout
-import models.{EntityReference, Subject, UserId}
+import models.{ApplicationConfig, EntityReference, Subject, UserId}
 import models.UserId.UserReference
+import org.pac4j.core.profile.CommonProfile
 import org.specs2.mock.Mockito.mock
 import play.modules.reactivemongo.ReactiveMongoApi
 
@@ -44,6 +45,12 @@ class MockServicesProvider @Inject() (actorSystem: ActorSystem)
 
 class MockServices(actorSystem: ActorSystem) extends SystemServices {
 
+  override val appConfig: ApplicationConfig = ApplicationConfig(
+    title = "Lasius",
+    instance = "Test",
+    lasiusOAuthProviderEnabled = true,
+    lasiusOAuthProviderAllowUserRegistration = true
+  )
   val supervisor: ActorRef =
     actorSystem.actorOf(LasiusSupervisorActor.props, "lasius-test-supervisor")
   val reactiveMongoApi: ReactiveMongoApi   = mock[ReactiveMongoApi]
@@ -54,7 +61,9 @@ class MockServices(actorSystem: ActorSystem) extends SystemServices {
   val systemUser: UserId                  = UserId()
   override val systemUserReference: UserReference =
     EntityReference(systemUser, "system")
-  override val systemSubject: Subject = Subject("", systemUserReference)
+  override val systemUserProfile: CommonProfile = new CommonProfile()
+  override val systemSubject: Subject[CommonProfile] =
+    Subject(systemUserProfile, systemUserReference)
   implicit val timeout: Timeout = Timeout(5 seconds) // needed for `?` below
   val duration: Duration        = Duration.create(5, SECONDS)
   val timeBookingViewService: ActorRef = TestProbe().ref

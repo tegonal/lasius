@@ -22,16 +22,11 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
-import type {
-  ModelsUser,
-  ModelsPersonalDataUpdate,
-  ModelsUserSettings,
-  ModelsPasswordChangeRequest,
-} from '..';
+import type { ModelsUser, ModelsPersonalDataUpdate, ModelsUserSettings } from '..';
 import { lasiusAxiosInstance } from '../../lasiusAxiosInstance';
 import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
 
@@ -42,24 +37,6 @@ import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
 ) => any
   ? P
   : never;
-
-/**
- * @summary Change current user's profile
- */
-export const updateUserProfile = (
-  modelsPersonalDataUpdate: BodyType<ModelsPersonalDataUpdate>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsUser>(
-    {
-      url: `/user/profile`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsPersonalDataUpdate,
-    },
-    options
-  );
-};
 
 /**
  * @summary Get current user's profile
@@ -98,6 +75,24 @@ export const useGetUserProfile = <TError = ErrorType<unknown>>(options?: {
 };
 
 /**
+ * @summary Change current user's profile
+ */
+export const updateUserProfile = (
+  modelsPersonalDataUpdate: BodyType<ModelsPersonalDataUpdate>,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<ModelsUser>(
+    {
+      url: `/user/profile`,
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      data: modelsPersonalDataUpdate,
+    },
+    options
+  );
+};
+
+/**
  * @summary Change current user's settings
  */
 export const updateUserSettings = (
@@ -110,24 +105,6 @@ export const updateUserSettings = (
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
       data: modelsUserSettings,
-    },
-    options
-  );
-};
-
-/**
- * @summary Change current user's password
- */
-export const updateUserPassword = (
-  modelsPasswordChangeRequest: BodyType<ModelsPasswordChangeRequest>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<void>(
-    {
-      url: `/user/update-password`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsPasswordChangeRequest,
     },
     options
   );

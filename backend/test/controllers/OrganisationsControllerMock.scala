@@ -21,28 +21,27 @@
 
 package controllers
 
-import core.{MockCache, MockCacheAware, SystemServices, TestDBSupport}
+import core.{MockCacheAware, MockSessionStore, SystemServices, TestDBSupport}
 import models.{OrganisationAdministrator, OrganisationRole}
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import org.specs2.mock.Mockito
-import play.api.cache.AsyncCacheApi
-import play.api.mvc.ControllerComponents
-import play.api.test.Helpers
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
-import util.{Awaitable, MockAwaitable}
+import util.{Awaitable, MockAwaitable, SecurityComponents}
 
 import scala.concurrent.ExecutionContext
 
 class OrganisationsControllerMock(
-    controllerComponents: ControllerComponents,
+    controllerComponents: SecurityComponents,
     systemServices: SystemServices,
     val organisationRepository: OrganisationMongoRepository,
     userMongoRepository: UserMongoRepository,
     val invitationRepository: InvitationMongoRepository,
     val projectRepository: ProjectMongoRepository,
     authConfig: AuthConfig,
-    cache: AsyncCacheApi,
     reactiveMongoApi: ReactiveMongoApi,
+    playSessionStore: SessionStore,
     override val organisationRole: OrganisationRole,
     override val isOrganisationPrivate: Boolean,
     override val organisationActive: Boolean)(implicit ec: ExecutionContext)
@@ -53,8 +52,8 @@ class OrganisationsControllerMock(
                                     invitationRepository,
                                     projectRepository,
                                     authConfig,
-                                    cache,
-                                    reactiveMongoApi)
+                                    reactiveMongoApi,
+                                    playSessionStore)
     with SecurityControllerMock
     with MockCacheAware
     with TestDBSupport {
@@ -80,15 +79,15 @@ object OrganisationsControllerMock
     val organisationMongoRepository = new OrganisationMongoRepository()
 
     val controller = new OrganisationsControllerMock(
-      Helpers.stubControllerComponents(),
+      SecurityComponents.stubSecurityComponents(),
       systemServices,
       organisationMongoRepository,
       userMongoRepository,
       invitationMongoRepository,
       projectMongoRepository,
       authConfig,
-      MockCache,
       reactiveMongoApi,
+      new MockSessionStore(),
       organisationRole,
       isOrganisationPrivate = isOrganisationPrivate,
       organisationActive = organisationActive)

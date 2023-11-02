@@ -38,7 +38,7 @@ trait InvitationRepository
     with Validation {
   def updateInvitationStatus(invitationId: InvitationId,
                              status: InvitationOutcomeStatus)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Boolean]
 
   def updateOrganisationKey(organisationId: OrganisationId, newKey: String)(
@@ -58,7 +58,7 @@ class InvitationMongoRepository @Inject() (
 
   override def updateInvitationStatus(invitationId: InvitationId,
                                       status: InvitationOutcomeStatus)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Boolean] = {
     val sel = Json.obj("id" -> invitationId)
     update(

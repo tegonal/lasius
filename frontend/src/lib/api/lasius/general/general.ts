@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -65,36 +65,6 @@ export const useGetConfiguration = <TError = ErrorType<unknown>>(options?: {
   const isEnabled = swrOptions?.enabled !== false;
   const swrKey = swrOptions?.swrKey ?? (() => (isEnabled ? getGetConfigurationKey() : null));
   const swrFn = () => getConfiguration(requestOptions);
-
-  const query = useSwr<Awaited<ReturnType<typeof swrFn>>, TError>(swrKey, swrFn, swrOptions);
-
-  return {
-    swrKey,
-    ...query,
-  };
-};
-
-export const messagingSocket = (options?: SecondParameter<typeof lasiusAxiosInstance>) => {
-  return lasiusAxiosInstance<void>({ url: `/messagingSocket`, method: 'get' }, options);
-};
-
-export const getMessagingSocketKey = () => [`/messagingSocket`] as const;
-
-export type MessagingSocketQueryResult = NonNullable<Awaited<ReturnType<typeof messagingSocket>>>;
-export type MessagingSocketQueryError = ErrorType<unknown>;
-
-export const useMessagingSocket = <TError = ErrorType<unknown>>(options?: {
-  swr?: SWRConfiguration<Awaited<ReturnType<typeof messagingSocket>>, TError> & {
-    swrKey?: Key;
-    enabled?: boolean;
-  };
-  request?: SecondParameter<typeof lasiusAxiosInstance>;
-}) => {
-  const { swr: swrOptions, request: requestOptions } = options ?? {};
-
-  const isEnabled = swrOptions?.enabled !== false;
-  const swrKey = swrOptions?.swrKey ?? (() => (isEnabled ? getMessagingSocketKey() : null));
-  const swrFn = () => messagingSocket(requestOptions);
 
   const query = useSwr<Awaited<ReturnType<typeof swrFn>>, TError>(swrKey, swrFn, swrOptions);
 

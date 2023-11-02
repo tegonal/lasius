@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait UserHelper {
   self: SecurityRepositoryComponent =>
   def withUser[R](errorResult: R)(f: User => Future[R])(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession,
       context: ExecutionContext): Future[R] = {
     forUser(subject.userReference)(errorResult)(f)

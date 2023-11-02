@@ -22,13 +22,13 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
-import type { ModelsInvitationStatusResponse, ModelsInvitation, ModelsUserRegistration } from '..';
+import type { ModelsInvitationStatusResponse } from '..';
 import { lasiusAxiosInstance } from '../../lasiusAxiosInstance';
-import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
+import type { ErrorType } from '../../lasiusAxiosInstance';
 
 // eslint-disable-next-line
   type SecondParameter<T extends (...args: any) => any> = T extends (
@@ -85,23 +85,4 @@ export const useGetInvitationStatus = <TError = ErrorType<void>>(
     swrKey,
     ...query,
   };
-};
-
-/**
- * @summary --------please annotate------
- */
-export const registerInvitationUser = (
-  invitationId: string,
-  modelsUserRegistration: BodyType<ModelsUserRegistration>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsInvitation>(
-    {
-      url: `/invitations/${invitationId}/register`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsUserRegistration,
-    },
-    options
-  );
 };

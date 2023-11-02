@@ -21,19 +21,13 @@
 
 package controllers
 
-import core.{
-  DBSession,
-  MockCache,
-  MockCacheAware,
-  SystemServices,
-  TestApplication
-}
+import core._
 import models._
 import mongo.EmbedMongo
-import org.joda.time.{DateTime, Duration, LocalDate, LocalDateTime}
+import org.joda.time.LocalDate
 import org.specs2.mock.Mockito
 import org.specs2.mock.mockito.MockitoMatchers
-import util.MockAwaitable
+import util.{MockAwaitable, SecurityComponents}
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.test._
@@ -122,11 +116,11 @@ object TimeBookingStatisticsControllerMock extends MockAwaitable with Mockito {
     val bookingByTagRepository     = mockAwaitable[BookingByTagRepository]
 
     new TimeBookingStatisticsController(
-      Helpers.stubControllerComponents(),
+      SecurityComponents.stubSecurityComponents(),
       systemServices,
       authConfig,
-      MockCache,
       reactiveMongoApi,
+      new MockSessionStore(),
       bookingByProjectRepository,
       bookingByTagRepository) with SecurityControllerMock with MockCacheAware
   }

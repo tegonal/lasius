@@ -22,9 +22,12 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 
-export type SignIn200 = {
-  token?: string;
-};
+export interface ModelsOAuthUserRegistration {
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}

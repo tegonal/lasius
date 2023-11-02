@@ -24,7 +24,9 @@ package controllers
 import core.{CacheAware, DBSession, DBSupport}
 import helpers.UserHelper
 import models._
-import org.mindrot.jbcrypt.BCrypt
+import org.pac4j.core.profile.CommonProfile
+import org.pac4j.core.profile.definition.CommonProfileDefinition
+import org.pac4j.play.scala.{AuthenticatedRequest, Security => Pac4jSecurity}
 import org.specs2.mock.Mockito
 import play.api.Logging
 import play.api.mvc._
@@ -32,22 +34,23 @@ import repositories.{SecurityRepositoryComponent, UserRepository}
 import util.MockAwaitable
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 trait SecurityControllerMock
     extends Logging
-    with Security
+    with Security[CommonProfile]
     with UserHelper
     with SecurityRepositoryComponent
     with MockAwaitable
-    with Mockito {
+    with Mockito
+    with Pac4jSecurity[CommonProfile] {
   self: BaseController with CacheAware with DBSupport with SecurityComponent =>
-  val userRepository = mockAwaitable[UserRepository]
+  val userRepository: UserRepository = mockAwaitable[UserRepository]
 
   val token: String                          = ""
   val userId: UserId                         = UserId()
   val userKey: String                        = "someUserId"
   val userReference: EntityReference[UserId] = EntityReference(userId, userKey)
-  val authorized: Future[Boolean]            = Future.successful(true)
   val organisationId: OrganisationId         = OrganisationId()
   val organisationRole: OrganisationRole     = OrganisationAdministrator
   val isOrganisationPrivate: Boolean         = false
@@ -62,7 +65,7 @@ trait SecurityControllerMock
   )
 
   val projectActive: Boolean = true
-  val project =
+  val project: Project =
     Project(
       id = ProjectId(),
       key = "project1",
@@ -72,14 +75,13 @@ trait SecurityControllerMock
       createdBy = userReference,
       deactivatedBy = None
     )
-  val password                 = "password"
   val projectRole: ProjectRole = ProjectAdministrator
-  val userProject = UserProject(
+  val userProject: UserProject = UserProject(
     sharedByOrganisationReference = None,
     projectReference = project.getReference(),
     role = projectRole
   )
-  val userOrganisation = UserOrganisation(
+  val userOrganisation: UserOrganisation = UserOrganisation(
     organisationReference = organisation.getReference(),
     `private` = organisation.`private`,
     role = organisationRole,
@@ -91,7 +93,6 @@ trait SecurityControllerMock
     userId,
     userKey,
     email = "user@user.com",
-    password = BCrypt.hashpw(password, BCrypt.gensalt()),
     firstName = "test",
     lastName = "user",
     active = userActive,
@@ -100,13 +101,21 @@ trait SecurityControllerMock
     settings = None
   )
   val authorizationFailedResult: Result = null
+  val profile: CommonProfile            = new CommonProfile()
+  profile.addAttribute(CommonProfileDefinition.EMAIL, user.email)
 
-  override def HasToken[A](p: BodyParser[A], withinTransaction: Boolean)(
-      f: DBSession => Subject => Request[A] => Future[Result])(implicit
-      context: ExecutionContext): Action[A] = {
+  override def HasToken[A](p: BodyParser[A],
+                           withinTransaction: Boolean,
+                           clients: String)(f: DBSession => Subject[
+    CommonProfile] => SecurityControllerMock#AuthenticatedRequest[A] => Future[
+    Result])(implicit
+      context: ExecutionContext,
+      ct: ClassTag[CommonProfile]): Action[A] = {
     Action.async(p) { implicit request =>
       withDBSession() { dbSession =>
-        checked(f(dbSession)(Subject(token, userReference))(request))
+        checked(
+          f(dbSession)(Subject(profile, userReference))(
+            AuthenticatedRequest(List(profile), request)))
       }
     }
   }
@@ -114,11 +123,15 @@ trait SecurityControllerMock
   override def HasUserRole[A, R <: UserRole](role: R,
                                              p: BodyParser[A],
                                              withinTransaction: Boolean)(
-      f: DBSession => Subject => User => Request[A] => Future[Result])(implicit
-      context: ExecutionContext): Action[A] = {
+      f: DBSession => Subject[CommonProfile] => User => Request[A] => Future[
+        Result])(implicit
+      context: ExecutionContext,
+      ct: ClassTag[CommonProfile]): Action[A] = {
     Action.async(p) { implicit request =>
       withDBSession() { dbSession =>
-        checked(f(dbSession)(Subject(token, userReference))(user)(request))
+        checked(
+          f(dbSession)(Subject(profile, userReference))(user)(
+            AuthenticatedRequest(List(profile), request)))
       }
     }
   }

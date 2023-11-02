@@ -21,12 +21,13 @@
 
 package controllers
 
-import core.{DBSession, SystemServices}
+import core.SystemServices
 import models._
 import org.joda.time.DateTime
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{InvitationRepository, ProjectRepository, UserRepository}
 
@@ -34,15 +35,14 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ProjectsController @Inject() (
-                                     controllerComponents: ControllerComponents,
-                                     override val systemServices: SystemServices,
-                                     projectRepository: ProjectRepository,
-                                     userRepository: UserRepository,
-                                     invitationRepository: InvitationRepository,
-                                     override val authConfig: AuthConfig,
-                                     override val authTokenCache: AsyncCacheApi,
-                                     override val reactiveMongoApi: ReactiveMongoApi)(implicit
-    ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    projectRepository: ProjectRepository,
+    userRepository: UserRepository,
+    invitationRepository: InvitationRepository,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
   def getProjects(orgId: OrganisationId): Action[Unit] =
     HasUserRole(FreeUser, parse.empty, withinTransaction = false) {

@@ -37,16 +37,16 @@ trait OrganisationRepository
     extends BaseRepository[Organisation, OrganisationId]
     with DropAllSupport[Organisation, OrganisationId] {
   def create(key: String, `private`: Boolean)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Organisation]
 
   def update(organisationReference: OrganisationReference,
              update: UpdateOrganisation)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Organisation]
 
   def deactivate(organisationReference: OrganisationReference)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Boolean]
 
   def findByKey(key: String)(implicit
@@ -69,7 +69,7 @@ class OrganisationMongoRepository @Inject() (
   }
 
   override def create(key: String, `private`: Boolean)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Organisation] = {
     for {
       _                    <- validateNonBlankString("key", key)
@@ -87,7 +87,7 @@ class OrganisationMongoRepository @Inject() (
   }
 
   override def deactivate(organisationReference: OrganisationReference)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Boolean] = {
     updateFields(
       Json.obj("id" -> organisationReference.id),
@@ -96,7 +96,7 @@ class OrganisationMongoRepository @Inject() (
 
   override def update(organisationReference: OrganisationReference,
                       update: UpdateOrganisation)(implicit
-      subject: Subject,
+      subject: Subject[_],
       dbSession: DBSession): Future[Organisation] = {
     val updateObject: Seq[(String, JsValueWrapper)] = Seq(
       update.key.map(key => "key" -> Json.toJsFieldJsValueWrapper(key))
@@ -111,7 +111,7 @@ class OrganisationMongoRepository @Inject() (
         } yield result
       }
       _ <- validate(
-        !updateObject.isEmpty,
+        updateObject.nonEmpty,
         s"cannot update organisation ${organisationReference.key}, at least one field must be specified")
       _ <- updateFields(Json.obj("id" -> organisationReference.id),
                         updateObject)

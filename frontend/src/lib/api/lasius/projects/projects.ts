@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -30,9 +30,9 @@ import type {
   ModelsProject,
   ModelsCreateProject,
   ModelsUpdateProject,
+  ModelsUserStub,
   ModelsInvitationResult,
   ModelsUserToProjectAssignment,
-  ModelsUserStub,
 } from '..';
 import { lasiusAxiosInstance } from '../../lasiusAxiosInstance';
 import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
@@ -44,22 +44,6 @@ import type { ErrorType, BodyType } from '../../lasiusAxiosInstance';
 ) => any
   ? P
   : never;
-
-export const createProject = (
-  orgId: string,
-  modelsCreateProject: BodyType<ModelsCreateProject>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsProject>(
-    {
-      url: `/organisations/${orgId}/projects`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsCreateProject,
-    },
-    options
-  );
-};
 
 export const getProjectList = (
   orgId: string,
@@ -101,6 +85,22 @@ export const useGetProjectList = <TError = ErrorType<unknown>>(
   };
 };
 
+export const createProject = (
+  orgId: string,
+  modelsCreateProject: BodyType<ModelsCreateProject>,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<ModelsProject>(
+    {
+      url: `/organisations/${orgId}/projects`,
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      data: modelsCreateProject,
+    },
+    options
+  );
+};
+
 /**
  * @summary update a project
  */
@@ -131,23 +131,6 @@ export const deactivateProject = (
 ) => {
   return lasiusAxiosInstance<void>(
     { url: `/organisations/${orgId}/projects/${projectId}`, method: 'delete' },
-    options
-  );
-};
-
-export const inviteProjectUser = (
-  orgId: string,
-  projectId: string,
-  modelsUserToProjectAssignment: BodyType<ModelsUserToProjectAssignment>,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<ModelsInvitationResult>(
-    {
-      url: `/organisations/${orgId}/projects/${projectId}/users`,
-      method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      data: modelsUserToProjectAssignment,
-    },
     options
   );
 };
@@ -195,6 +178,23 @@ export const useGetProjectUserList = <TError = ErrorType<unknown>>(
     swrKey,
     ...query,
   };
+};
+
+export const inviteProjectUser = (
+  orgId: string,
+  projectId: string,
+  modelsUserToProjectAssignment: BodyType<ModelsUserToProjectAssignment>,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<ModelsInvitationResult>(
+    {
+      url: `/organisations/${orgId}/projects/${projectId}/users`,
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      data: modelsUserToProjectAssignment,
+    },
+    options
+  );
 };
 
 export const removeProjectUser = (

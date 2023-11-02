@@ -32,5 +32,30 @@ trait FutureHelper {
       case Some(result) => Future.successful(result)
       case _            => Future.failed(ValidationFailedException(errorMsg))
     }
+
+    def someToFailed(errorMsg: => String)(implicit
+        executionContext: ExecutionContext): Future[Option[T]] = self.flatMap {
+      case Some(_) => Future.failed(ValidationFailedException(errorMsg))
+      case _       => Future.successful(None)
+    }
+
+  }
+
+  implicit class FutureHelper[T](self: Future[T]) {
+
+    def failIf(predicate: T => Boolean, errorMsg: => String)(implicit
+        executionContext: ExecutionContext): Future[T] = self.flatMap {
+      result =>
+        if (predicate(result))
+          Future.failed(ValidationFailedException(errorMsg))
+        else Future.successful(result)
+    }
+  }
+
+  implicit class FutureBooleanHelper(self: Future[Boolean]) {
+
+    def failIfTrue(errorMsg: => String)(implicit
+        executionContext: ExecutionContext): Future[Boolean] =
+      self.failIf(_ == true, errorMsg)
   }
 }

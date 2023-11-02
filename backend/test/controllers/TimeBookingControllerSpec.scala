@@ -21,13 +21,7 @@
 
 package controllers
 
-import core.{
-  MockCache,
-  MockCacheAware,
-  MockServices,
-  SystemServices,
-  TestApplication
-}
+import core.{MockCacheAware, MockSessionStore, SystemServices, TestApplication}
 import models._
 import mongo.EmbedMongo
 import org.joda.time.DateTime
@@ -36,7 +30,7 @@ import org.specs2.mock.mockito.MockitoMatchers
 import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
-import util.MockAwaitable
+import util.{MockAwaitable, SecurityComponents}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,10 +44,10 @@ class TimeBookingControllerSpec
 
   "start booking" should {
 
-    "unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
 
       val controller: TimeBookingController
         with SecurityControllerMock
@@ -70,13 +64,13 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.start(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "badrequest if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -92,16 +86,16 @@ class TimeBookingControllerSpec
       val organisationId: OrganisationId = OrganisationId()
       val result: Future[Result] = controller.start(organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
   }
 
   "edit booking" should {
 
-    "unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -119,13 +113,13 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.edit(controller.organisationId, BookingId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -143,13 +137,13 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.edit(organisationId, BookingId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if end date is before start date" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -176,10 +170,10 @@ class TimeBookingControllerSpec
 
   "add booking" should {
 
-    "Unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -197,13 +191,13 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.add(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "Unauthorized if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -220,13 +214,13 @@ class TimeBookingControllerSpec
       val organisationId: OrganisationId = OrganisationId()
       val result: Future[Result] = controller.add(organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if end date is before start date" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices                              = inject[SystemServices]
-      val authConfig                                  = inject[AuthConfig]
+      private val systemServices                      = inject[SystemServices]
+      private val authConfig                          = inject[AuthConfig]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
@@ -259,10 +253,10 @@ object TimeBookingControllerMock extends MockAwaitable with Mockito {
     with MockCacheAware = {
 
     new TimeBookingController(
-      Helpers.stubControllerComponents(),
+      SecurityComponents.stubSecurityComponents(),
       authConfig,
-      MockCache,
       reactiveMongoApi,
-      systemServices) with SecurityControllerMock with MockCacheAware
+      systemServices,
+      new MockSessionStore()) with SecurityControllerMock with MockCacheAware
   }
 }

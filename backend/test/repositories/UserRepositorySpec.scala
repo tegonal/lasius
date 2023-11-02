@@ -23,11 +23,6 @@ package repositories
 
 import models.{FreeUser, User, UserId}
 import mongo.EmbedMongo
-import org.specs2.runner.JUnitRunner
-import reactivemongo.api.bson.BSONObjectID
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 class UserRepositorySpec extends EmbedMongo {
   sequential =>
@@ -35,15 +30,14 @@ class UserRepositorySpec extends EmbedMongo {
   "UserRepository findByEmail" should {
     "find user by email" in {
       val email = "email"
-      val user = User(UserId(),
-                      "user",
-                      email,
-                      "pwd",
-                      "firstname",
-                      "lastname",
-                      true,
-                      FreeUser,
-                      Seq(),
+      val user = User(id = UserId(),
+                      key = "user",
+                      email = email,
+                      firstName = "firstname",
+                      lastName = "lastname",
+                      active = true,
+                      role = FreeUser,
+                      organisations = Seq(),
                       settings = None)
 
       // initialize
@@ -56,15 +50,14 @@ class UserRepositorySpec extends EmbedMongo {
     }
     "find none" in {
       val email = "email"
-      val user = User(UserId(),
-                      "user",
-                      email,
-                      "pwd",
-                      "firstname",
-                      "lastname",
-                      true,
-                      FreeUser,
-                      Seq(),
+      val user = User(id = UserId(),
+                      key = "user",
+                      email = email,
+                      firstName = "firstname",
+                      lastName = "lastname",
+                      active = true,
+                      role = FreeUser,
+                      organisations = Seq(),
                       settings = None)
 
       // initialize

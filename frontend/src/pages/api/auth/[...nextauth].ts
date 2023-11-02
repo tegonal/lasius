@@ -22,7 +22,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { logger } from 'lib/logger';
-import { signIn } from 'lib/api/lasius/authentication/authentication';
+import { oauthAccessToken } from 'lib/api/lasius/oauth2-provider/oauth2-provider';
 import { getUserProfile, updateUserSettings } from 'lib/api/lasius/user/user';
 import { getServerSideRequestHeaders } from 'lib/api/hooks/useTokensWithAxiosRequests';
 
@@ -46,7 +46,7 @@ const nextAuthOptions = (): NextAuthOptions => {
           let signInResponse;
 
           try {
-            signInResponse = await signIn({ email, password });
+            signInResponse = await oauthAccessToken({ email, password });
           } catch (error) {
             logger.error('[nextauth][signInFailed]', error);
           }

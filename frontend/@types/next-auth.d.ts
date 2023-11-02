@@ -21,9 +21,8 @@ import { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {
   interface Session {
-    user: { xsrfToken: string } & DefaultSession['user'];
+    user: { sessionToken: string } & DefaultSession['user'];
   }
   interface User {
-    xsrfToken: string;
   }
 }

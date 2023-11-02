@@ -26,9 +26,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import core.SystemServices
 import models._
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 
@@ -37,14 +38,14 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class TagController @Inject() (controllerComponents: ControllerComponents,
-                               override val systemServices: SystemServices,
-                               override val authConfig: AuthConfig,
-                               override val authTokenCache: AsyncCacheApi,
-                               override val userRepository: UserRepository,
-                               override val reactiveMongoApi: ReactiveMongoApi,
-                               projectRepository: ProjectRepository)(implicit
-    ec: ExecutionContext)
+class TagController @Inject() (
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    override val authConfig: AuthConfig,
+    override val userRepository: UserRepository,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore,
+    projectRepository: ProjectRepository)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents)
     with SecurityRepositoryComponent {
 

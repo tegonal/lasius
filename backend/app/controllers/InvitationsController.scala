@@ -25,9 +25,11 @@ import core.Validation.ValidationFailedException
 import core.{DBSession, SystemServices}
 import models._
 import org.joda.time.DateTime
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.core.profile.CommonProfile
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{
   InvitationRepository,
@@ -40,16 +42,15 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class InvitationsController @Inject() (
-                                        controllerComponents: ControllerComponents,
-                                        override val systemServices: SystemServices,
-                                        userRepository: UserRepository,
-                                        organisationRepository: OrganisationRepository,
-                                        invitationRepository: InvitationRepository,
-                                        projectRepository: ProjectRepository,
-                                        override val authConfig: AuthConfig,
-                                        override val authTokenCache: AsyncCacheApi,
-                                        override val reactiveMongoApi: ReactiveMongoApi)(implicit
-    ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    userRepository: UserRepository,
+    organisationRepository: OrganisationRepository,
+    invitationRepository: InvitationRepository,
+    projectRepository: ProjectRepository,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   /** Unauthenticated endpoint
@@ -80,31 +81,6 @@ class InvitationsController @Inject() (
 
   /** Unauthenticated endpoint
     */
-  def registerUser(invitationId: InvitationId): Action[UserRegistration] = {
-    Action.async(validateJson[UserRegistration]) { request =>
-      checked {
-        withinTransaction { implicit dbSession =>
-          for {
-            invitation <- validateInvitation(invitationId)
-            _          <- validateNonBlankString("key", request.body.key)
-            // first validate user before applying any changes to support
-            // setup without real transactions
-            _ <- userRepository.validateCreate(invitation.invitedEmail,
-                                               request.body)
-            // Create new private organisation
-            newOrg <- organisationRepository.create(request.body.key, true)(
-              systemServices.systemSubject,
-              dbSession)
-            // Create new user and assign to private organisation
-            _ <- userRepository.create(invitation.invitedEmail,
-                                       request.body,
-                                       newOrg,
-                                       OrganisationAdministrator)
-          } yield Ok(Json.toJson(invitation))
-        }
-      }
-    }
-  }
 
   def getDetails(invitationId: InvitationId): Action[Unit] = {
     HasUserRole(FreeUser, parse.empty, withinTransaction = false) {
@@ -136,7 +112,7 @@ class InvitationsController @Inject() (
                     userOrg <- maybeUserOrg.fold[Future[UserOrganisation]](
                       Future.failed(ValidationFailedException(
                         "Need to specify binding organisation when joining a project")))(
-                      Future.successful(_))
+                      Future.successful)
                     project <- projectRepository
                       .findById(i.projectReference.id)
                       .noneToFailed(

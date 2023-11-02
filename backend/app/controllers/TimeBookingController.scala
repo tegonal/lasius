@@ -26,19 +26,20 @@ import core.SystemServices
 import domain.UserTimeBookingAggregate._
 import models._
 import org.joda.time.DateTime
-import play.api.cache.AsyncCacheApi
-import play.api.mvc.{Action, ControllerComponents}
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class TimeBookingController @Inject() (
-                                        controllerComponents: ControllerComponents,
-                                        override val authConfig: AuthConfig,
-                                        override val authTokenCache: AsyncCacheApi,
-                                        override val reactiveMongoApi: ReactiveMongoApi,
-                                        override val systemServices: SystemServices)(implicit ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val systemServices: SystemServices,
+    override val playSessionStore: SessionStore)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   override val supportTransaction: Boolean = systemServices.supportTransaction

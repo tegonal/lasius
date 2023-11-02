@@ -22,5 +22,6 @@
 package models
 
 import models.UserId.UserReference
+import org.pac4j.core.profile.CommonProfile
 
-case class Subject(token: String, userReference: UserReference)
+case class Subject[P <: CommonProfile](profile: P, userReference: UserReference)

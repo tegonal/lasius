@@ -26,9 +26,10 @@ import core.SystemServices
 import core.Validation.ValidationFailedException
 import models._
 import org.joda.time._
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.{DefaultSecurityComponents, SecurityComponents}
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{BookingByProjectRepository, BookingByTagRepository}
 
@@ -36,13 +37,13 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class TimeBookingStatisticsController @Inject() (
-                                                  controllerComponents: ControllerComponents,
-                                                  override val systemServices: SystemServices,
-                                                  override val authConfig: AuthConfig,
-                                                  override val authTokenCache: AsyncCacheApi,
-                                                  override val reactiveMongoApi: ReactiveMongoApi,
-                                                  val bookingByProjectRepository: BookingByProjectRepository,
-                                                  val bookingByTagRepository: BookingByTagRepository)(implicit
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore,
+    val bookingByProjectRepository: BookingByProjectRepository,
+    val bookingByTagRepository: BookingByTagRepository)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 

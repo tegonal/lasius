@@ -21,13 +21,13 @@
 
 package controllers
 
-import core.{CacheAware, DBSupport, SystemServices}
+import core.SystemServices
 import models._
 import org.joda.time.DateTime
-import play.api.Logging
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json.Json
-import play.api.mvc.{AbstractController, Action, ControllerComponents}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{
   InvitationRepository,
@@ -40,16 +40,15 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class OrganisationsController @Inject() (
-                                          controllerComponents: ControllerComponents,
-                                          override val systemServices: SystemServices,
-                                          organisationRepository: OrganisationRepository,
-                                          userRepository: UserRepository,
-                                          invitationRepository: InvitationRepository,
-                                          projectRepository: ProjectRepository,
-                                          override val authConfig: AuthConfig,
-                                          override val authTokenCache: AsyncCacheApi,
-                                          override val reactiveMongoApi: ReactiveMongoApi)(implicit
-    ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    organisationRepository: OrganisationRepository,
+    userRepository: UserRepository,
+    invitationRepository: InvitationRepository,
+    projectRepository: ProjectRepository,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   def getOrganisation(organisationId: OrganisationId): Action[Unit] =

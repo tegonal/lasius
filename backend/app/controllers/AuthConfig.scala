@@ -27,29 +27,21 @@ import core.{DBSession, SystemServices}
 import helpers.UserHelper
 import models.UserId.UserReference
 import models._
+import org.pac4j.core.profile.CommonProfile
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.libs.json._
 import play.api.mvc._
-import repositories.{SecurityRepositoryComponent, UserRepository}
+import repositories.{
+  OrganisationRepository,
+  SecurityRepositoryComponent,
+  UserRepository
+}
 
 import javax.inject.Inject
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.DurationConverters._
 
 @ImplementedBy(classOf[DefaultAuthConfig])
 trait AuthConfig {
-
-  // max time an auth token lived in the cache to reduce load to db
-  val authTokenMaxCacheTime: Duration
-  // time an auth token expires and needs to be renewed
-  val authTokenExpiresAfter: Duration
-  // max time the auth token can still be renewed after it was expired
-  val authTokenMaxRenewTime: Duration
-  // max time an access token lives in the cache to reduce load to db
-  val accessTokenMaxCacheTime: Duration
-  // max expiration time an access token can be configured to
-  val accessTokenMaxExpirationTime: Duration
 
   /** Map usertype to permission role.
     */
@@ -71,14 +63,10 @@ trait AuthConfig {
 
   /** Lookup user by token
     */
-  def resolveUserByAuthToken(token: String)(implicit
+  def resolveOrCreateUserByProfile[P <: CommonProfile](
+      commonProfile: P)(implicit
       context: ExecutionContext,
-      dbSession: DBSession): Future[Option[UserReference]]
-
-  def resolveUserByAccessToken(accessTokenId: AccessTokenId,
-                               tokenSecret: String)(implicit
-      context: ExecutionContext,
-      dbSession: DBSession): Future[Option[UserReference]]
+      dbSession: DBSession): Future[UserReference]
 
   /** Defined handling of authorizationfailed
     */
@@ -86,25 +74,15 @@ trait AuthConfig {
       context: ExecutionContext): Future[Result]
 }
 
-class DefaultAuthConfig @Inject() (controllerComponents: ControllerComponents,
-                                   systemServices: SystemServices,
-                                   override val userRepository: UserRepository,
-                                   config: Config)
+class DefaultAuthConfig @Inject() (
+    controllerComponents: ControllerComponents,
+    systemServices: SystemServices,
+    override val userRepository: UserRepository,
+    val organisationRepository: OrganisationRepository)
     extends AbstractController(controllerComponents)
     with AuthConfig
     with UserHelper
     with SecurityRepositoryComponent {
-
-  val authTokenMaxCacheTime: Duration =
-    config.getDuration("auth_token.max_cache_time").toScala
-  val authTokenExpiresAfter: Duration =
-    config.getDuration("auth_token.expires_after").toScala
-  val authTokenMaxRenewTime: Duration =
-    config.getDuration("auth_token.max_renew_time").toScala
-  val accessTokenMaxCacheTime: Duration =
-    config.getDuration("access_token.max_cache_time").toScala
-  val accessTokenMaxExpirationTime: Duration =
-    config.getDuration("access_token.max_expiration_time").toScala
 
   /** Map usertype to permission role.
     */
@@ -136,16 +114,28 @@ class DefaultAuthConfig @Inject() (controllerComponents: ControllerComponents,
       dbSession: DBSession): Future[Option[User]] =
     userRepository.findByUserReference(userReference)
 
-  override def resolveUserByAuthToken(token: String)(implicit
+  override def resolveOrCreateUserByProfile[P <: CommonProfile](
+      commonProfile: P)(implicit
       context: ExecutionContext,
-      dbSession: DBSession): Future[Option[UserReference]] =
-    userRepository.findByAuthToken(token)
+      dbSession: DBSession): Future[UserReference] = {
 
-  override def resolveUserByAccessToken(accessTokenId: AccessTokenId,
-                                        tokenSecret: String)(implicit
-      context: ExecutionContext,
-      dbSession: DBSession): Future[Option[UserReference]] =
-    accessTokenRepository.resolveAndValidateToken(accessTokenId, tokenSecret)
+    userRepository.findByEmail(commonProfile.getEmail).flatMap {
+      _.map(user => Future.successful(user.getReference()))
+        .getOrElse {
+          for {
+            // Create new private organisation
+            newOrg <- organisationRepository.create(
+              commonProfile.getUsername,
+              `private` = true)(systemServices.systemSubject, dbSession)
+            // Create new user and assign to private organisation
+            user <- userRepository.createInitialUserBasedOnProfile(
+              commonProfile,
+              newOrg,
+              OrganisationAdministrator)
+          } yield user.getReference()
+        }
+    }
+  }
 
   override def authorizationFailed(request: RequestHeader)(implicit
       context: ExecutionContext): Future[Result] =

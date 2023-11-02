@@ -22,7 +22,7 @@
  * Do not edit manually.
  * Lasius API
  * Track your time
- * OpenAPI spec version: 1.0.4+1-15ad669d+20231019-0610
+ * OpenAPI spec version: 1.0.4+7-a1eb9022+20231108-2147
  */
 import useSwr from 'swr';
 import type { SWRConfiguration, Key } from 'swr';
@@ -111,6 +111,20 @@ export const updateUserBookingCurrent = (
 };
 
 /**
+ * @summary Remove a booking by organisation and booking id for the current user
+ */
+export const deleteUserBooking = (
+  orgId: string,
+  bookingId: string,
+  options?: SecondParameter<typeof lasiusAxiosInstance>
+) => {
+  return lasiusAxiosInstance<void>(
+    { url: `/user-bookings/organisations/${orgId}/bookings/${bookingId}`, method: 'delete' },
+    options
+  );
+};
+
+/**
  * @summary Change a booking by organisation for the current user
  */
 export const updateUserBooking = (
@@ -126,20 +140,6 @@ export const updateUserBooking = (
       headers: { 'Content-Type': 'application/json' },
       data: modelsEditBookingRequest,
     },
-    options
-  );
-};
-
-/**
- * @summary Remove a booking by organisation and booking id for the current user
- */
-export const deleteUserBooking = (
-  orgId: string,
-  bookingId: string,
-  options?: SecondParameter<typeof lasiusAxiosInstance>
-) => {
-  return lasiusAxiosInstance<void>(
-    { url: `/user-bookings/organisations/${orgId}/bookings/${bookingId}`, method: 'delete' },
     options
   );
 };

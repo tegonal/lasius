@@ -19,10 +19,11 @@
  * along with Lasius. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package core
+package modules
 
 import actors.LasiusSupervisorActor
 import com.google.inject.AbstractModule
+import core.SystemServices
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 class LasiusModule extends AbstractModule with AkkaGuiceSupport {

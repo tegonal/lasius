@@ -23,5 +23,4 @@ package repositories
 
 trait SecurityRepositoryComponent {
   val userRepository: UserRepository
-  val accessTokenRepository: AccessTokenRepository
 }

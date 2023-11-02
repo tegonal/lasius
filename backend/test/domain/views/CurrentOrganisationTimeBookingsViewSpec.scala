@@ -48,45 +48,45 @@ class CurrentOrganisationTimeBookingsViewSpec
 
   "CurrentOrganisationTimeBookingsViewSpec" should {
     "correct result for: booking in first organisaton, book in second organisation stop booking" in new PersistentActorTestScope {
-      val systemServices = new MockServices(system)
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
+      private val systemServices = new MockServices(system)
+      private val probe          = TestProbe()
+      private val clientReceiver = mock[ClientReceiver]
 
-      val userReference =
+      private val userReference =
         EntityReference(UserId(), "noob")
-      val orgReference =
+      private val orgReference =
         EntityReference(OrganisationId(), "org")
-      val projectReference =
+      private val projectReference =
         EntityReference(ProjectId(), "proj")
 
-      val userRepository = mock[UserRepository]
+      private val userRepository = mock[UserRepository]
 
-      val actorRef = system.actorOf(
+      private val actorRef = system.actorOf(
         CurrentOrganisationTimeBookingsViewMock.props(
           userRepository,
           clientReceiver,
           systemServices.reactiveMongoApi,
           systemServices.supportTransaction))
 
-      val day   = LocalDate.now()
-      val start = DateTime.now().minusHours(2)
+      private val day   = LocalDate.now()
+      private val start = DateTime.now().minusHours(2)
 
-      val tag1 = SimpleTag(TagId("tag1"))
-      val tag2 = SimpleTag(TagId("tag2"))
+      private val tag1 = SimpleTag(TagId("tag1"))
+      private val tag2 = SimpleTag(TagId("tag2"))
 
-      val booking = BookingV2(BookingId(),
-                              start.toLocalDateTimeWithZone(),
-                              None,
-                              userReference,
-                              orgReference,
-                              projectReference,
-                              Set(tag1, tag2))
+      private val booking = BookingV2(BookingId(),
+                                      start.toLocalDateTimeWithZone(),
+                                      None,
+                                      userReference,
+                                      orgReference,
+                                      projectReference,
+                                      Set(tag1, tag2))
 
-      val state1 = CurrentUserTimeBooking(userReference,
-                                          day,
-                                          Some(booking),
-                                          None,
-                                          Duration.ZERO)
+      private val state1 = CurrentUserTimeBooking(userReference,
+                                                  day,
+                                                  Some(booking),
+                                                  None,
+                                                  Duration.ZERO)
 
       probe.send(actorRef, CurrentUserTimeBookingEvent(state1))
       probe.expectMsg(Ack)
@@ -98,24 +98,24 @@ class CurrentOrganisationTimeBookingsViewSpec
       }
 
       // start booking in second organisation
-      val org2Reference =
+      private val org2Reference =
         EntityReference(OrganisationId(), "org2")
-      val project2Reference =
+      private val project2Reference =
         EntityReference(ProjectId(), "proj2")
 
-      val booking2 = BookingV2(BookingId(),
-                               start.toLocalDateTimeWithZone(),
-                               None,
-                               userReference,
-                               org2Reference,
-                               project2Reference,
-                               Set())
-      val newState1 = state1.copy(booking = None)
-      val state2 = CurrentUserTimeBooking(userReference,
-                                          day,
-                                          Some(booking2),
-                                          None,
-                                          Duration.ZERO)
+      private val booking2 = BookingV2(BookingId(),
+                                       start.toLocalDateTimeWithZone(),
+                                       None,
+                                       userReference,
+                                       org2Reference,
+                                       project2Reference,
+                                       Set())
+      private val newState1 = state1.copy(booking = None)
+      private val state2 = CurrentUserTimeBooking(userReference,
+                                                  day,
+                                                  Some(booking2),
+                                                  None,
+                                                  Duration.ZERO)
 
       probe.send(actorRef, CurrentUserTimeBookingEvent(state2))
       probe.expectMsg(Ack)
@@ -134,7 +134,7 @@ class CurrentOrganisationTimeBookingsViewSpec
       }
 
       // stop booking in second organisation
-      val newState2 = state2.copy(booking = None)
+      private val newState2 = state2.copy(booking = None)
       probe.send(actorRef, CurrentUserTimeBookingEvent(newState2))
       probe.expectMsg(Ack)
 
@@ -148,26 +148,25 @@ class CurrentOrganisationTimeBookingsViewSpec
   }
 
   "initialize organisation time bookings with active users only" in new PersistentActorTestScope {
-    val systemServices = new MockServices(system)
-    val probe          = TestProbe()
-    val clientReceiver = mock[ClientReceiver]
+    private val systemServices = new MockServices(system)
+    private val probe          = TestProbe()
+    private val clientReceiver = mock[ClientReceiver]
 
-    val userRepository = mock[UserRepository]
+    private val userRepository = mock[UserRepository]
 
-    val actorRef = system.actorOf(
+    private val actorRef = system.actorOf(
       CurrentOrganisationTimeBookingsViewMock.props(
         userRepository,
         clientReceiver,
         systemServices.reactiveMongoApi,
         systemServices.supportTransaction))
 
-    val organisationReference = EntityReference(OrganisationId(), "org")
+    private val organisationReference = EntityReference(OrganisationId(), "org")
 
-    val user1 = User(
+    private val user1 = User(
       id = UserId(),
       key = "user1",
       email = "test@user.com",
-      password = "",
       firstName = "",
       lastName = "",
       active = true,
@@ -184,11 +183,10 @@ class CurrentOrganisationTimeBookingsViewSpec
       settings = None
     )
 
-    val user2 = User(
+    private val user2 = User(
       id = UserId(),
       key = "user2",
       email = "test@user2.com",
-      password = "",
       firstName = "",
       lastName = "",
       active = false,
@@ -214,8 +212,8 @@ class CurrentOrganisationTimeBookingsViewSpec
 
     probe.send(actorRef,
                GetCurrentOrganisationTimeBookings(organisationReference.id))
-    val today = LocalDate.now()
-    val expectedResult = CurrentOrganisationTimeBookings(
+    private val today = LocalDate.now()
+    private val expectedResult = CurrentOrganisationTimeBookings(
       organisationReference.id,
       Seq(
         CurrentUserTimeBooking(user1.getReference(),
@@ -231,20 +229,20 @@ class CurrentOrganisationTimeBookingsViewSpec
   }
 
   "initialize without users" in new PersistentActorTestScope {
-    val systemServices = new MockServices(system)
-    val probe          = TestProbe()
-    val clientReceiver = mock[ClientReceiver]
+    private val systemServices = new MockServices(system)
+    private val probe          = TestProbe()
+    private val clientReceiver = mock[ClientReceiver]
 
-    val userRepository = mock[UserRepository]
+    private val userRepository = mock[UserRepository]
 
-    val actorRef = system.actorOf(
+    private val actorRef = system.actorOf(
       CurrentOrganisationTimeBookingsViewMock.props(
         userRepository,
         clientReceiver,
         systemServices.reactiveMongoApi,
         systemServices.supportTransaction))
 
-    val organisationReference = EntityReference(OrganisationId(), "org")
+    private val organisationReference = EntityReference(OrganisationId(), "org")
 
     userRepository
       .findAll()(any[DBSession])
@@ -275,9 +273,9 @@ object CurrentOrganisationTimeBookingsViewMock {
             clientReceiver: ClientReceiver,
             reactiveMongoApi: ReactiveMongoApi,
             supportTransaction: Boolean): Props =
-    Props(classOf[CurrentOrganisationTimeBookingsViewMock],
-          userRepository,
-          clientReceiver,
-          reactiveMongoApi,
-          supportTransaction)
+    Props(
+      new CurrentOrganisationTimeBookingsViewMock(userRepository,
+                                                  clientReceiver,
+                                                  reactiveMongoApi,
+                                                  supportTransaction))
 }

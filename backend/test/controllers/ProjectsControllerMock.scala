@@ -21,18 +21,16 @@
 
 package controllers
 
-import core.{MockCache, MockCacheAware, SystemServices, TestDBSupport}
+import core.{MockCacheAware, MockSessionStore, SystemServices, TestDBSupport}
 import models.{
-  OrganisationAdministrator,
   OrganisationMember,
   OrganisationRole,
   ProjectAdministrator,
   ProjectRole
 }
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import org.specs2.mock.Mockito
-import play.api.cache.AsyncCacheApi
-import play.api.mvc.ControllerComponents
-import play.api.test.Helpers
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories.{
   InvitationMongoRepository,
@@ -40,19 +38,19 @@ import repositories.{
   UserMongoRepository,
   UserRepository
 }
-import util.{Awaitable, MockAwaitable}
+import util.{Awaitable, MockAwaitable, SecurityComponents}
 
 import scala.concurrent.ExecutionContext
 
 class ProjectsControllerMock(
-    controllerComponents: ControllerComponents,
+    controllerComponents: SecurityComponents,
     systemServices: SystemServices,
     val projectRepository: ProjectMongoRepository,
     userMongoRepository: UserMongoRepository,
     val invitationRepository: InvitationMongoRepository,
     authConfig: AuthConfig,
-    cache: AsyncCacheApi,
     reactiveMongoApi: ReactiveMongoApi,
+    playSessionStore: SessionStore,
     override val organisationRole: OrganisationRole,
     override val projectRole: ProjectRole,
     override val projectActive: Boolean)(implicit ec: ExecutionContext)
@@ -62,8 +60,8 @@ class ProjectsControllerMock(
                                userMongoRepository,
                                invitationRepository,
                                authConfig,
-                               cache,
-                               reactiveMongoApi)
+                               reactiveMongoApi,
+                               playSessionStore)
     with SecurityControllerMock
     with MockCacheAware
     with TestDBSupport {
@@ -88,14 +86,14 @@ object ProjectsControllerMock
     val invitationMongoRepository = new InvitationMongoRepository()
 
     val controller = new ProjectsControllerMock(
-      Helpers.stubControllerComponents(),
+      SecurityComponents.stubSecurityComponents(),
       systemServices,
       projectMongoRepository,
       userMongoRepository,
       invitationMongoRepository,
       authConfig,
-      MockCache,
       reactiveMongoApi,
+      new MockSessionStore(),
       organisationRole,
       projectRole,
       projectActive)

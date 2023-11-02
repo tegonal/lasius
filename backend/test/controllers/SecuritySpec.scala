@@ -21,25 +21,27 @@
 
 package controllers
 
-import core.{
-  DBSession,
-  DBSupport,
-  MockCacheAware,
-  TestApplication,
-  TestDBSupport
-}
+import core.{DBSession, MockCacheAware, TestApplication, TestDBSupport}
 import models._
 import mongo.EmbedMongo
 import org.apache.http.HttpStatus
+import org.pac4j.core.profile.CommonProfile
+import org.pac4j.play.scala.{
+  AuthenticatedRequest,
+  Security => Pac4jSecurity,
+  SecurityComponents
+}
 import org.specs2.mock.Mockito
-import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
+import util.SecurityComponents
 
+import javax.inject.Inject
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.reflect.ClassTag
 
 class SecuritySpec
     extends PlaySpecification
@@ -50,106 +52,6 @@ class SecuritySpec
     with TestApplication
     with EmbedMongo {
   sequential =>
-
-  "HasToken" should {
-
-    def runHasToken(controller: SecurityMock, request: Request[Unit]) = {
-      // execute
-      val result: Future[Result] = controller
-        .HasToken(ignore(()), withinTransaction = false) {
-          _ => _ => implicit request =>
-            Future.successful(Ok)
-        }
-        .apply(request)
-
-      // return results
-      Await.ready(result, 2 seconds)
-    }
-
-    "Fail if token is missing in cookie" in new WithTestApplication {
-      // prepare
-      val controller             = new SecurityMock(reactiveMongoApi)
-      val request: Request[Unit] = FakeRequest().asInstanceOf[Request[Unit]]
-
-      // execute
-      val result = runHasToken(controller, request)
-
-      // check results
-      status(result) === HttpStatus.SC_UNAUTHORIZED
-      contentAsJson(result) === Json.obj(
-        "message" -> "Invalid XSRF Token cookie")
-    }
-
-    "Fail if token is missing in request header" in new WithTestApplication {
-      // prepare
-      val controller = new SecurityMock(reactiveMongoApi)
-      val token      = "ghvhvh"
-      val request: Request[Unit] = FakeRequest()
-        .withCookies(Cookie(controller.AuthTokenCookieKey, token))
-        .asInstanceOf[Request[Unit]]
-
-      // execute
-      val result = runHasToken(controller, request)
-
-      // check results
-      status(result) === HttpStatus.SC_UNAUTHORIZED
-      contentAsJson(result) === Json.obj("message" -> "No Token")
-    }
-
-    "Fail if token is missing in cache" in new WithTestApplication {
-      // prepare
-      val controller = new SecurityMock(reactiveMongoApi)
-      val token      = "ghvhvh"
-      val request = FakeRequest()
-        .withCookies(Cookie(controller.AuthTokenCookieKey, token))
-        .withHeaders((controller.AuthTokenHeader, token))
-        .asInstanceOf[Request[Unit]]
-
-      // execute
-      val result = runHasToken(controller, request)
-
-      // check results
-      status(result) === HttpStatus.SC_UNAUTHORIZED
-      contentAsJson(result) === Json.obj("message" -> "No Token")
-    }
-
-    "Fail if token in cookie and request header mismatches" in new WithApplication {
-      // prepare
-      val controller = new SecurityMock(reactiveMongoApi)
-      val token      = "ghvhvh"
-      val token2     = "kljnkln880"
-      val request = FakeRequest()
-        .withCookies(Cookie(controller.AuthTokenCookieKey, token))
-        .withHeaders((controller.AuthTokenHeader, token2))
-        .asInstanceOf[Request[Unit]]
-      authTokenCache.set(token2, EntityReference(UserId(), "userId"))
-
-      // execute
-      val result = runHasToken(controller, request)
-
-      // check results
-      status(result) === HttpStatus.SC_UNAUTHORIZED
-      contentAsJson(result) === Json.obj("message" -> "Invalid Token")
-    }
-
-    "Succeed in all cases" in new WithTestApplication {
-      // prepare
-      val controller = spy(new SecurityMock(reactiveMongoApi))
-      val token      = "ghvhvh"
-      val request = FakeRequest()
-        .withCookies(Cookie(controller.AuthTokenCookieKey, token))
-        .withHeaders(controller.AuthTokenHeader -> token)
-        .asInstanceOf[Request[Unit]]
-      authTokenCache.set(token, EntityReference(UserId(), "userId"))
-      implicit val req = FakeRequest()
-
-      // execute
-      val result = runHasToken(controller, request)
-
-      // check results
-      status(result) === HttpStatus.SC_OK
-    }
-  }
 
   "HasRole" should {
     def runHasRole(controller: HasRoleSecurityMock,
@@ -244,43 +146,54 @@ class SecuritySpec
   }
 }
 
-class SecurityMock(override val reactiveMongoApi: ReactiveMongoApi)
-    extends AbstractController(Helpers.stubControllerComponents())
-    with Security
+class SecurityMock[P <: CommonProfile](
+    @Inject
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val controllerComponents: SecurityComponents)
+    extends BaseController
+    with Security[P]
     with SecurityComponentMock
     with MockCacheAware
-    with TestDBSupport {}
+    with TestDBSupport
+    with Pac4jSecurity[P] {}
 
 object UserMock {
   def mock(role: UserRole): User =
-    User(UserId(),
-         "123",
-         "email",
-         "login",
-         "firstname",
-         "lastname",
-         true,
-         role,
-         Seq(),
+    User(id = UserId(),
+         key = "123",
+         email = "email",
+         firstName = "firstname",
+         lastName = "lastname",
+         active = true,
+         role = role,
+         organisations = Seq(),
          settings = None)
 }
 
 class HasRoleSecurityMock(
     override val reactiveMongoApi: ReactiveMongoApi,
-    subject: Subject = Subject("fsdfsdf", EntityReference(UserId(), "123")))
-    extends AbstractController(Helpers.stubControllerComponents())
-    with Security
+    override val controllerComponents: SecurityComponents =
+      SecurityComponents.stubSecurityComponents(),
+    private val subject: Subject[CommonProfile] =
+      Subject(new CommonProfile(), EntityReference(UserId(), "123")))
+    extends BaseController
+    with Security[CommonProfile]
     with SecurityComponentMock
     with MockCacheAware
-    with TestDBSupport {
+    with TestDBSupport
+    with Pac4jSecurity[CommonProfile] {
 
-  override def HasToken[A](p: BodyParser[A], withinTransaction: Boolean)(
-      f: DBSession => Subject => Request[A] => Future[Result])(implicit
-      context: ExecutionContext): Action[A] = {
+  override def HasToken[A](p: BodyParser[A],
+                           withinTransaction: Boolean,
+                           clients: String)(
+      f: DBSession => Subject[CommonProfile] => AuthenticatedRequest[
+        A] => Future[Result])(implicit
+      context: ExecutionContext,
+      ct: ClassTag[CommonProfile]): Action[A] =
     Action.async(p) { implicit request =>
       withDBSession() { session =>
-        f(session)(subject)(request)
+        f(session)(subject)(
+          AuthenticatedRequest(List(subject.profile), request))
       }
     }
-  }
 }

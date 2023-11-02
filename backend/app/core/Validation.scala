@@ -36,6 +36,16 @@ trait Validation extends FutureHelper {
   protected def failed(errorMsg: String): Future[Status] =
     Future.failed(ValidationFailedException(errorMsg))
 
+  protected def failIfNot(predicate: Boolean, errorMsg: String): Future[Unit] =
+    failIf(!predicate, errorMsg)
+
+  protected def failIf(predicate: Boolean, errorMsg: String): Future[Unit] = {
+    if (predicate)
+      Future.failed(ValidationFailedException(errorMsg))
+    else
+      Future.successful(())
+  }
+
   protected def validate(predicate: Boolean,
                          errorMsg: => String): Future[Status] = {
     if (!predicate) {

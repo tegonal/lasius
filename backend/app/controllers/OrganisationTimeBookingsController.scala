@@ -23,26 +23,24 @@ package controllers
 
 import akka.pattern.ask
 import akka.util.Timeout
-import core.{CacheAware, DBSupport, SystemServices}
+import core.SystemServices
 import domain.views.CurrentOrganisationTimeBookingsView._
-
-import javax.inject.Inject
 import models._
-import play.api.Logging
-import play.api.cache.AsyncCacheApi
+import org.pac4j.core.context.session.SessionStore
+import org.pac4j.play.scala.SecurityComponents
 import play.api.libs.json._
-import play.api.mvc.{AbstractController, Action, ControllerComponents}
+import play.api.mvc.Action
 import play.modules.reactivemongo.ReactiveMongoApi
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class OrganisationTimeBookingsController @Inject() (
-                                                     controllerComponents: ControllerComponents,
-                                                     override val systemServices: SystemServices,
-                                                     override val authConfig: AuthConfig,
-                                                     override val authTokenCache: AsyncCacheApi,
-                                                     override val reactiveMongoApi: ReactiveMongoApi)(implicit
-    ec: ExecutionContext)
+    override val controllerComponents: SecurityComponents,
+    override val systemServices: SystemServices,
+    override val authConfig: AuthConfig,
+    override val reactiveMongoApi: ReactiveMongoApi,
+    override val playSessionStore: SessionStore)(implicit ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   implicit val timeout: Timeout = systemServices.timeout

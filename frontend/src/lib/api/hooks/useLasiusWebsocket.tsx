@@ -27,15 +27,19 @@ import useIsWindowFocused from 'lib/hooks/useIsWindowFocused';
 
 export const useLasiusWebsocket = () => {
   const { data } = useSession();
-  const token = data?.user?.xsrfToken;
+  const token = data?.user?.sessionToken;
   const isWindowFocused = useIsWindowFocused();
 
   if (!token) logger.warn('[useLasiusWebsocket][tokenUndefined]');
 
   const [messageHistory, setMessageHistory] = useState<MessageEvent<any>[]>([]);
 
+  // TODO: after login read one-time-token from
+  // ${LASIUS_API_WEBSOCKET_URL}/messaging/token
+  // TODO: use sockjs to connect to websocket to get more reliable websocket
+  // connections
   const { sendJsonMessage, lastMessage, readyState } = useWebSocket(
-    IS_SERVER ? null : `${LASIUS_API_WEBSOCKET_URL}/messagingSocket?auth=${token}`,
+    IS_SERVER ? null : `${LASIUS_API_WEBSOCKET_URL}/messaging?otoken=${token}`,
     {
       share: true,
       shouldReconnect: (closeEvent) => {

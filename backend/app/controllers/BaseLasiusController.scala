@@ -21,25 +21,25 @@
 
 package controllers
 
-import core.{CacheAware, DBSupport, SystemServices}
+import core.{DBSupport, SystemServices}
 import helpers.FutureHelper
+import org.pac4j.core.profile.CommonProfile
+import org.pac4j.play.scala.SecurityComponents
 import play.api.Logging
-import play.api.mvc.{AbstractController, ControllerComponents}
-import scalaoauth2.provider.{OAuth2Provider, TokenEndpoint}
+import play.api.mvc.{AbstractController, BaseController, ControllerComponents}
+import play.mvc.Controller
 
-abstract class BaseLasiusController(controllerComponents: ControllerComponents)
-    extends AbstractController(controllerComponents)
+abstract class BaseLasiusController(
+    override val controllerComponents: SecurityComponents)
+    extends BaseController
     with Logging
-    with Security
+    with Security[CommonProfile]
     with SecurityComponent
-    with CacheAware
     with ControllerValidation
     with FutureHelper
     with DBSupport
-    with OAuth2Provider {
+    with org.pac4j.play.scala.Security[CommonProfile] {
   override val supportTransaction: Boolean = systemServices.supportTransaction
-
-  override val tokenEndpoint: TokenEndpoint = new OAuth2TokenEndpoint()
 
   val systemServices: SystemServices
 }

@@ -23,12 +23,12 @@ package controllers
 
 import core.Validation
 import play.api.libs.json.{JsError, Reads}
-import play.api.mvc.{AbstractController, BodyParser}
+import play.api.mvc.{AbstractController, BaseController, BodyParser}
 
 import scala.concurrent.ExecutionContext
 
 trait ControllerValidation extends Validation {
-  self: AbstractController =>
+  self: BaseController =>
   protected def validateJson[A: Reads](implicit
       ec: ExecutionContext): BodyParser[A] =
     parse.json.validate(
