@@ -55,7 +55,7 @@ trait AuthConfig {
       context: ExecutionContext,
       dbSession: DBSession): Future[Option[User]]
 
-  /** Defined handling of authorizationfailed
+  /** Defined handling of authorizationFailed
     */
   def authorizationFailed(request: RequestHeader)(implicit
       context: ExecutionContext): Future[Result]
@@ -101,5 +101,5 @@ class DefaultAuthConfig @Inject() (controllerComponents: ControllerComponents,
 
   override def authorizationFailed(request: RequestHeader)(implicit
       context: ExecutionContext): Future[Result] =
-    Future.successful(Unauthorized(Json.obj("message" -> "Unauthorized")))
+    Future.successful(Forbidden(Json.obj("message" -> "Unauthorized")))
 }

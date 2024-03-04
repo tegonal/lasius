@@ -46,7 +46,7 @@ class UserFavoritesControllerSpec
     with EmbedMongo {
 
   "add favorite" should {
-    "Unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
       val authConfig: AuthConfig                      = inject[AuthConfig]
@@ -70,10 +70,10 @@ class UserFavoritesControllerSpec
       val result: Future[Result] =
         controller.addFavorite(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "Unauthorized if for authenticated user team does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user team does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
       val authConfig: AuthConfig                      = inject[AuthConfig]
@@ -97,12 +97,12 @@ class UserFavoritesControllerSpec
       val result: Future[Result] =
         controller.addFavorite(organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
   }
 
   "remove favorite" should {
-    "Unauthorized if for authenticated user project id does not exist" in new WithTestApplication
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication
       with Injecting {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -127,11 +127,11 @@ class UserFavoritesControllerSpec
       val result: Future[Result] =
         controller.removeFavorite(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
   }
 
-  "Unauthorized if for authenticated user team does not exist" in new WithTestApplication
+  "forbidden if for authenticated user team does not exist" in new WithTestApplication
     with Injecting {
     implicit val executionContext: ExecutionContext = inject[ExecutionContext]
     val systemServices: SystemServices              = inject[SystemServices]
@@ -156,7 +156,7 @@ class UserFavoritesControllerSpec
     val result: Future[Result] =
       controller.removeFavorite(organisationId)(request)
 
-    status(result) must equalTo(UNAUTHORIZED)
+    status(result) must equalTo(FORBIDDEN)
   }
 
 }

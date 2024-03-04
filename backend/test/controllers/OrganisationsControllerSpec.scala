@@ -130,7 +130,7 @@ class OrganisationsControllerSpec
   }
 
   "deactivate organisation" should {
-    "Unauthorized if organisation id does not exist" in new WithTestApplication {
+    "forbidden if organisation id does not exist" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -145,7 +145,7 @@ class OrganisationsControllerSpec
       val result: Future[Result] =
         controller.deactivateOrganisation(newOrganisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "successful, organisation unassigned from all users" in new WithTestApplication {
@@ -276,7 +276,7 @@ class OrganisationsControllerSpec
   }
 
   "remove other user from organisation" should {
-    "unauthorized if user is not assigned as Administrator to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned as Administrator to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -291,7 +291,7 @@ class OrganisationsControllerSpec
       val result: Future[Result] =
         controller.unassignUser(controller.organisationId, UserId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if user is single active organisation administrator" in new WithTestApplication {
@@ -368,7 +368,9 @@ class OrganisationsControllerSpec
         active = true,
         role = Administrator,
         organisations = Seq(userOrganisation2),
-        settings = None
+        settings = Some(
+          UserSettings(lastSelectedOrganisation =
+            Some(controller.organisation.getReference())))
       )
       withDBSession()(implicit dbSession =>
         controller.userRepository.upsert(user2)).awaitResult()
@@ -384,11 +386,16 @@ class OrganisationsControllerSpec
           controller.organisation.getReference()))
         .awaitResult()
       remainingUsers should haveSize(1)
+
+      val updatedUser = withDBSession()(implicit dbSession =>
+        controller.userRepository.findById(user2.id))
+        .awaitResult()
+      updatedUser.get.settings shouldEqual Some(UserSettings(None))
     }
   }
 
   "remove own user from organisation" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -402,7 +409,7 @@ class OrganisationsControllerSpec
       val result: Future[Result] =
         controller.unassignMyUser(OrganisationId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if user is single active organisation administrator" in new WithTestApplication {
