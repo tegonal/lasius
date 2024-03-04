@@ -21,13 +21,7 @@
 
 package controllers
 
-import core.{
-  DBSession,
-  DBSupport,
-  MockCacheAware,
-  TestApplication,
-  TestDBSupport
-}
+import core.{DBSession, MockCacheAware, TestApplication, TestDBSupport}
 import models._
 import mongo.EmbedMongo
 import org.apache.http.HttpStatus
@@ -37,6 +31,7 @@ import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
 
+import java.util.UUID
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -99,7 +94,7 @@ class SecuritySpec
     "Fail if token is missing in cache" in new WithTestApplication {
       // prepare
       val controller = new SecurityMock(reactiveMongoApi)
-      val token      = "ghvhvh"
+      val token      = UUID.randomUUID().toString
       val request = FakeRequest()
         .withCookies(Cookie(controller.AuthTokenCookieKey, token))
         .withHeaders((controller.AuthTokenHeader, token))
@@ -178,7 +173,7 @@ class SecuritySpec
         .returns(Future.successful(None))
 
       // execute
-      val result = runHasRole(controller)
+      runHasRole(controller)
 
       // check results
       there.was(
@@ -186,7 +181,7 @@ class SecuritySpec
           .authorizationFailed(any[RequestHeader])(any[ExecutionContext]))
     }
 
-    "return unauthorized when autorization failed" in new WithTestApplication {
+    "return unauthorized when authorization failed" in new WithTestApplication {
       // prepare
       val controller = new HasRoleSecurityMock(reactiveMongoApi)
       controller.authConfig
@@ -198,7 +193,7 @@ class SecuritySpec
         .returns(Future.successful(Some(UserMock.mock(FreeUser))))
 
       // execute
-      val result = runHasRole(controller)
+      runHasRole(controller)
 
       // check results
       there.was(

@@ -50,7 +50,7 @@ class TimeBookingControllerSpec
 
   "start booking" should {
 
-    "unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -70,10 +70,10 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.start(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "badrequest if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -92,13 +92,13 @@ class TimeBookingControllerSpec
       val organisationId: OrganisationId = OrganisationId()
       val result: Future[Result] = controller.start(organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
   }
 
   "edit booking" should {
 
-    "unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -119,10 +119,10 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.edit(controller.organisationId, BookingId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -143,7 +143,7 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.edit(organisationId, BookingId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if end date is before start date" in new WithTestApplication {
@@ -176,7 +176,7 @@ class TimeBookingControllerSpec
 
   "add booking" should {
 
-    "Unauthorized if for authenticated user project id does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -197,10 +197,10 @@ class TimeBookingControllerSpec
       val result: Future[Result] =
         controller.add(controller.organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "Unauthorized if for authenticated user organisation does not exist" in new WithTestApplication {
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
@@ -220,7 +220,7 @@ class TimeBookingControllerSpec
       val organisationId: OrganisationId = OrganisationId()
       val result: Future[Result] = controller.add(organisationId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if end date is before start date" in new WithTestApplication {

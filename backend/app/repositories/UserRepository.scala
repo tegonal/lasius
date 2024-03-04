@@ -381,7 +381,7 @@ class UserMongoRepository @Inject() (
           u.active && u.organisations.exists(o =>
             o.role == OrganisationAdministrator && o.organisationReference.id == organisationReference.id))
       _ <- validate(
-        !otherActiveAndAdministrators.isEmpty,
+        otherActiveAndAdministrators.nonEmpty,
         s"RemovalDenied.UserIsLastUserReference"
       )
       result <- update(
@@ -389,6 +389,18 @@ class UserMongoRepository @Inject() (
         Json.obj(
           MongoDBCommandSet.Pull -> Json.obj("organisations" -> Json.obj(
             "organisationReference.id" -> organisationReference.id))),
+        upsert = false
+      )
+      // conditionally drop lastSelectedOrganisation assignement if user was
+      // assigned to the org he should get removed from
+      _ <- update(
+        Json.obj(
+          "id"                                   -> userId,
+          "settings.lastSelectedOrganisation.id" -> organisationReference.id),
+        Json.obj(
+          MongoDBCommandSet.Set -> Json.obj(
+            "settings.lastSelectedOrganisation" -> None),
+        ),
         upsert = false
       )
     } yield result

@@ -172,7 +172,7 @@ class UsersControllerSpec
   }
 
   "update other user data" should {
-    "unauthorized user does not exist" in new WithTestApplication {
+    "forbidden user does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
       val authConfig: AuthConfig                      = inject[AuthConfig]
@@ -192,7 +192,7 @@ class UsersControllerSpec
       val result: Future[Result] =
         controller.updateUserData(teamId, userId)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
   }
 
@@ -271,7 +271,7 @@ class UsersControllerSpec
   }
 
   "updateUserOrganisation" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
       val authConfig: AuthConfig                      = inject[AuthConfig]
@@ -287,7 +287,7 @@ class UsersControllerSpec
       val result: Future[Result] =
         controller.updateMyUserOrganisationData(OrganisationId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "ok" in new WithTestApplication {

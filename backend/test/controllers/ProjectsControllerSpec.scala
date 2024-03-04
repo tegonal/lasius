@@ -44,7 +44,7 @@ class ProjectsControllerSpec
 
   "create project" should {
 
-    "unauthorized create project in organisation not assigned to user" in new WithTestApplication {
+    "forbidden create project in organisation not assigned to user" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -63,7 +63,7 @@ class ProjectsControllerSpec
       val result: Future[Result] =
         controller.createProject(OrganisationId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest blank key was specified" in new WithTestApplication {
@@ -157,7 +157,7 @@ class ProjectsControllerSpec
   }
 
   "deactivate project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -172,7 +172,7 @@ class ProjectsControllerSpec
         controller.deactivateProject(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
     "badrequest if project id does not exist for given organisation" in new WithTestApplication {
 
@@ -229,7 +229,7 @@ class ProjectsControllerSpec
   }
 
   "invite user to project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -246,10 +246,10 @@ class ProjectsControllerSpec
       val result: Future[Result] =
         controller.inviteUser(OrganisationId(), controller.project.id)(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is OrganisationMember and not assigned to project as ProjectAdministrator" in new WithTestApplication {
+    "forbidden if user is OrganisationMember and not assigned to project as ProjectAdministrator" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -270,7 +270,7 @@ class ProjectsControllerSpec
         controller.inviteUser(controller.organisationId, controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest if incorrect email was provided" in new WithTestApplication {
@@ -447,7 +447,7 @@ class ProjectsControllerSpec
   }
 
   "remove other user from project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -463,10 +463,10 @@ class ProjectsControllerSpec
                                 controller.project.id,
                                 UserId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is OrganisationMember and not assigned as Administrator to project" in new WithTestApplication {
+    "forbidden if user is OrganisationMember and not assigned as Administrator to project" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -485,7 +485,7 @@ class ProjectsControllerSpec
                                 controller.project.id,
                                 UserId())(request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     def successfulUnassignUser(controller: ProjectsControllerMock) = {
@@ -564,7 +564,7 @@ class ProjectsControllerSpec
   }
 
   "remove own user from project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -579,10 +579,10 @@ class ProjectsControllerSpec
         controller.unassignMyUser(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -597,7 +597,7 @@ class ProjectsControllerSpec
         controller.unassignMyUser(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "successful as ProjectMember" in new WithTestApplication {
@@ -653,7 +653,7 @@ class ProjectsControllerSpec
   }
 
   "update project" should {
-    "unauthorized if user is not assigned to organisation" in new WithTestApplication {
+    "forbidden if user is not assigned to organisation" in new WithTestApplication {
 
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices: SystemServices              = inject[SystemServices]
@@ -669,7 +669,7 @@ class ProjectsControllerSpec
         controller.updateProject(OrganisationId(), controller.project.id)(
           request)
 
-      status(result) must equalTo(UNAUTHORIZED)
+      status(result) must equalTo(FORBIDDEN)
     }
 
     "badrequest no update was provided" in new WithTestApplication {
