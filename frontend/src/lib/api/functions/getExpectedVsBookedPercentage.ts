@@ -29,8 +29,8 @@ export const getExpectedVsBookedPercentage = (expected: number, worked: number) 
     fulfilledPercentage > 90 && fulfilledPercentage < 100
       ? 90
       : fulfilledPercentage > 100
-      ? 100
-      : fulfilledPercentage;
+        ? 100
+        : fulfilledPercentage;
 
   return {
     fulfilledPercentage,

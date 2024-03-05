@@ -29,7 +29,12 @@ export const useProjects = () => {
       const org = profile.organisations.find(
         (item) => item.organisationReference.id === profile.settings?.lastSelectedOrganisation?.id
       );
-      return orderBy(org?.projects.map((item) => item.projectReference), (data) => data.key) || [];
+      return (
+        orderBy(
+          org?.projects.map((item) => item.projectReference),
+          (data) => data.key
+        ) || []
+      );
     }
     return [];
   };

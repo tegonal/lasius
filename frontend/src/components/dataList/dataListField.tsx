@@ -21,7 +21,7 @@ import React from 'react';
 import { Box, ThemeUIStyleObject } from 'theme-ui';
 
 type Props = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   width?: number | string;
   sx?: ThemeUIStyleObject;
 };

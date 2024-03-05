@@ -81,6 +81,10 @@ export const useDateFieldInput = ({
     e.currentTarget.select();
   };
 
+  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.select();
+  };
+
   useEffect(() => {
     setValue(padStart(defaultValue.toString(), digits, '0'));
   }, [defaultValue, digits]);
@@ -91,6 +95,7 @@ export const useDateFieldInput = ({
       onChange,
       onBlur,
       onKeyDown,
+      onFocus,
       onMouseUp,
       maxLength: digits,
       value,
