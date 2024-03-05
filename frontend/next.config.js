@@ -79,10 +79,8 @@ const nextConfiguration = {
 };
 
 // module.exports = withPWA(withBundleAnalyzer(nextConfiguration));
-module.exports = withPWA(
-  withPlausibleProxy({
-    subdirectory: 's',
-    scriptName: 'p.js',
-    customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
-  })(nextConfiguration)
-);
+module.exports = withPlausibleProxy({
+  subdirectory: 's',
+  scriptName: 'p.js',
+  customDomain: LASIUS_TELEMETRY_PLAUSIBLE_HOST,
+})(nextConfiguration);

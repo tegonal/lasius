@@ -40,9 +40,9 @@ export const LasiusBackendWebsocketStatus: React.FC = () => {
       connectionStatus === CONNECTION_STATUS.DISCONNECTED ||
       connectionStatus === CONNECTION_STATUS.ERROR
     ) {
-      logger.log('[AppWebsocketStatus][Disconnected]');
+      logger.info('[AppWebsocketStatus][Disconnected]');
     } else {
-      logger.log('[AppWebsocketStatus]', connectionStatus);
+      logger.info('[AppWebsocketStatus]', connectionStatus);
     }
     setStatus(connectionStatus);
   }, [connectionStatus]);
@@ -50,7 +50,7 @@ export const LasiusBackendWebsocketStatus: React.FC = () => {
   //  In an effort to keep the websocket connection alive, we send a ping message every 5 seconds
   useInterval(() => {
     if (connectionStatus === CONNECTION_STATUS.CONNECTED) {
-      logger.log('[AppWebsocketStatus][SendingPing]');
+      logger.info('[AppWebsocketStatus][SendingPing]');
       sendJsonMessage({ type: 'HelloServer', client: 'lasius-nextjs-frontend' }, false);
     }
   }, 5000);

@@ -48,7 +48,7 @@ export const BundleVersionCheck: React.FC = () => {
   };
 
   if (data) {
-    logger.logEverywhere('[BundleVersionCheck]', {
+    logger.info('[BundleVersionCheck]', {
       apiBuildId: data?.buildId,
       localBuildId: BUILD_ID,
       shouldRefresh,

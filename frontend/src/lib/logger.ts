@@ -18,25 +18,12 @@
  */
 
 import { DEV } from 'projectConfig/constants';
+import type { ILogObj } from 'tslog';
+import { Logger } from 'tslog';
 
-export const logger = {
-  log: (...args: any[]) => {
-    if (DEV) {
-      console.log(...args);
-    }
-  },
-  logEverywhere: (...args: any[]) => {
-    console.log(...args);
-  },
-  info: (...args: any[]) => {
-    if (DEV) {
-      console.info(...args);
-    }
-  },
-  warn: (...args: any[]) => {
-    console.warn(...args);
-  },
-  error: (...args: any[]) => {
-    console.error(...args);
-  },
-};
+const dev: ILogObj = { type: 'pretty', minLevel: 0 };
+const prod: ILogObj = { type: 'json', minLevel: 4, hideLogPositionForProduction: true };
+
+const logger: Logger<ILogObj> = new Logger(DEV ? dev : prod);
+
+export { logger };

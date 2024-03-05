@@ -46,7 +46,7 @@ export const LasiusBackendWebsocketEventHandler: React.FC = () => {
 
   useEffect(() => {
     if (lastMessage && stringHash(lastMessage) !== lastMessageHash) {
-      logger.log('[AppWebsocketEventHandler]', lastMessage);
+      logger.info('[AppWebsocketEventHandler]', lastMessage);
       const { type, data } = lastMessage;
 
       //  Mutate data, grouped, to save requests
@@ -66,7 +66,7 @@ export const LasiusBackendWebsocketEventHandler: React.FC = () => {
           break;
 
         case type === WEBSOCKET_EVENT.HelloClient:
-          logger.log('[AppWebsocketEventHandler][pong!]');
+          logger.info('[AppWebsocketEventHandler][pong!]');
           break;
 
         case type === WEBSOCKET_EVENT.FavoriteAdded:

@@ -33,11 +33,11 @@ export const BrowserOnlineStatusCheck: React.FC = () => {
 
   useEffect(() => {
     if (status !== CONNECTION_STATUS.CONNECTED) {
-      logger.log('BrowserOnlineStatusCheck', status);
+      logger.info('BrowserOnlineStatusCheck', status);
       openModal();
     }
     if (status === CONNECTION_STATUS.CONNECTED && isModalOpen) {
-      logger.log('BrowserOnlineStatusCheck', status);
+      logger.info('BrowserOnlineStatusCheck', status);
       closeModal();
     }
   }, [closeModal, isModalOpen, openModal, status]);

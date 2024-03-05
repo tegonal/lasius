@@ -30,7 +30,7 @@ export const CookieCutter: React.FC = () => {
   // Set the token for client side requests to use
   useEffect(() => {
     const token = session?.data?.user.xsrfToken;
-    logger.log('AxiosConfig', token);
+    logger.info('AxiosConfig', token);
     if (token) {
       cookie.set(COOKIE_NAMES.XSRF_TOKEN, token, { sameSite: 'strict', path: '/' });
       axios.defaults.headers.common['X-XSRF-TOKEN'] = token;

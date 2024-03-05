@@ -36,7 +36,7 @@ export const lasiusAxiosInstance = <T>(
     ...config,
     headers: { ...defaultHeaders, ...config.headers },
   };
-  logger.log(newConfig, options);
+  logger.info(newConfig, options);
 
   const source = Axios.CancelToken.source();
   const promise = clientAxiosInstance({
@@ -46,11 +46,11 @@ export const lasiusAxiosInstance = <T>(
   })
     .then(({ data }) => data)
     .catch(async (error) => {
-      logger.log('error', error);
+      logger.info('error', error);
       if (Axios.isCancel(error)) {
-        logger.log('[lasiusAxiosInstance][RequestCanceled]', error.message);
+        logger.info('[lasiusAxiosInstance][RequestCanceled]', error.message);
       } else if (error.response.status === 401) {
-        logger.log('[lasiusAxiosInstance][Unauthorized]', {
+        logger.info('[lasiusAxiosInstance][Unauthorized]', {
           path: error.request.pathname,
           message: error.data,
         });
@@ -63,7 +63,7 @@ export const lasiusAxiosInstance = <T>(
           await removeAccessibleCookies();
           await signOut();
         } else {
-          logger.log('[lasiusAxiosInstance][Unauthorized]', error);
+          logger.info('[lasiusAxiosInstance][Unauthorized]', error);
           throw new Error(error);
         }
       } else {

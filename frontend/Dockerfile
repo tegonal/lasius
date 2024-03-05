@@ -1,5 +1,5 @@
 # Build main app package
-FROM node:18 AS builder
+FROM node:20 AS builder
 ENV NEXT_TELEMETRY_DISABLED 1
 ARG LASIUS_VERSION
 LABEL git-commit=$COMMIT_SHORT_SHA
@@ -16,7 +16,7 @@ RUN rm -rf .git
 RUN find . -type f -regextype posix-egrep -regex ".*\.(tsx|ts|tar.gz|md|txt)$" -delete
 RUN find . -type f -regextype posix-egrep -regex ".*(LICENSE|license|CHANGELOG)$" -delete
 
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 ENV NEXT_TELEMETRY_DISABLED 1
 ARG LASIUS_VERSION
 LABEL git-commit=$COMMIT_SHORT_SHA

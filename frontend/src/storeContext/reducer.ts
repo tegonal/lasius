@@ -37,7 +37,7 @@ export type ActionType =
   | { type: 'toastview.remove'; payload: ToastViewType };
 
 export const storeReducer = (state: Store, action: ActionType) => {
-  logger.log({ action });
+  logger.info({ action });
 
   let newState: Partial<Store>;
 
