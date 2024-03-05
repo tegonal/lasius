@@ -50,10 +50,10 @@ export const useLasiusWebsocket = () => {
 
   useEffect(() => {
     if (isWindowFocused && readyState === ReadyState.OPEN) {
-      logger.log('[useLasiusWebsocket][onReturn][connected]');
+      logger.info('[useLasiusWebsocket][onReturn][connected]');
     }
     if (isWindowFocused && readyState !== ReadyState.OPEN) {
-      logger.log('[useLasiusWebsocket][onReturn][disconnected]');
+      logger.info('[useLasiusWebsocket][onReturn][disconnected]');
       setMessageHistory([]);
     }
   }, [isWindowFocused, readyState]);

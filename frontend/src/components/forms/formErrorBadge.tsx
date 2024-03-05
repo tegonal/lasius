@@ -28,7 +28,7 @@ type Props = { error?: FieldError | Merge<FieldError, FieldErrors<any>> };
 
 export const FormErrorBadge: React.FC<Props> = ({ error }) => {
   if (!error) return null;
-  logger.log('[form][FormErrorBadge]', error.type);
+  logger.info('[form][FormErrorBadge]', error.type);
 
   return (
     <Box sx={{ bottom: 0, position: 'absolute', right: 0, transform: 'translate(6px, 50%)' }}>

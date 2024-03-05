@@ -105,7 +105,7 @@ export const ProjectAddUpdateTagsForm: React.FC<Props> = ({ item, onSave, onCanc
     setIsSubmitting(true);
     const { simpleTags, tagGroups } = hookForm.getValues();
     const bookingCategories = [...simpleTags, ...tagGroups];
-    logger.log('submit', bookingCategories);
+    logger.info('submit', bookingCategories);
     if (mode === 'update' && item) {
       await updateProject(projectOrganisationId, projectId, {
         ...item,
@@ -125,12 +125,12 @@ export const ProjectAddUpdateTagsForm: React.FC<Props> = ({ item, onSave, onCanc
   //     switch (name) {
   //       case 'simpleTags':
   //         if (value.simpleTags) {
-  //           logger.log('bookingCategories', value.simpleTags);
+  //           logger.info('bookingCategories', value.simpleTags);
   //         }
   //         break;
   //       case 'tagGroups':
   //         if (value.tagGroups) {
-  //           logger.log('bookingCategories', value.tagGroups);
+  //           logger.info('bookingCategories', value.tagGroups);
   //         }
   //         break;
   //       default:
@@ -162,7 +162,7 @@ export const ProjectAddUpdateTagsForm: React.FC<Props> = ({ item, onSave, onCanc
   const removeTagGroup = (index: number) => {
     const tagGroups = hookForm.getValues('tagGroups');
     tagGroups.splice(index, 1);
-    logger.log('tagGroups', tagGroups);
+    logger.info('tagGroups', tagGroups);
     hookForm.setValue('tagGroups', tagGroups);
     hookForm.trigger('tagGroups');
   };

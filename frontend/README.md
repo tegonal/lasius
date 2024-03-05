@@ -6,11 +6,11 @@ This project should run cross-platform but is currently only being tested and us
 
 ```
 > nvm --version
-0.39.1
+0.39.7
 ```
 ```
 > node --version
-v16.15.0
+v20.11.0
 ```
 ```
 > docker --version

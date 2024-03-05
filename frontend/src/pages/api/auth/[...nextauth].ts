@@ -52,7 +52,7 @@ const nextAuthOptions = (): NextAuthOptions => {
           }
 
           if (!signInResponse?.token) {
-            logger.log('usernameOrPasswordWrong');
+            logger.info('usernameOrPasswordWrong');
             throw new Error('usernameOrPasswordWrong');
           }
 
@@ -73,7 +73,7 @@ const nextAuthOptions = (): NextAuthOptions => {
             }
 
             if (!user) {
-              logger.log('noUserFoundOnBackend', user);
+              logger.info('noUserFoundOnBackend', user);
               throw new Error('noUserFoundOnBackend');
             }
 

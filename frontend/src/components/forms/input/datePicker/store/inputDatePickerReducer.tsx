@@ -26,10 +26,10 @@ import { InputDatePickerActionType } from 'components/forms/input/datePicker/sto
 
 export const inputDatePickerReducer = (state: Store, action: InputDatePickerActionType) => {
   if (!action.payload || !action.type) {
-    logger.log('date state remains unchanged');
+    logger.info('date state remains unchanged');
     return state;
   }
-  logger.log('inputDatePickerReducer', { action });
+  logger.info('inputDatePickerReducer', { action });
   let newState: Partial<Store> = state;
   switch (action.type) {
     case 'setDateFromIsoString':

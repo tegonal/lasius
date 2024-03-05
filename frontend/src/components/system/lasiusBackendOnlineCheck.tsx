@@ -33,11 +33,11 @@ export const LasiusBackendOnlineCheck: React.FC = () => {
 
   useEffect(() => {
     if (status !== CONNECTION_STATUS.CONNECTED && !isModalOpen) {
-      logger.log('LasiusBackendOnlineCheck', status);
+      logger.info('LasiusBackendOnlineCheck', status);
       openModal();
     }
     if (status === CONNECTION_STATUS.CONNECTED && isModalOpen) {
-      logger.log('LasiusBackendOnlineCheck', status);
+      logger.info('LasiusBackendOnlineCheck', status);
       closeModal();
     }
   }, [closeModal, isModalOpen, openModal, status]);

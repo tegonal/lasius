@@ -96,7 +96,7 @@ const Login: NextPage<{ csrfToken: string }> = ({ csrfToken }) => {
           status: 'failed',
         },
       });
-      logger.log(res);
+      logger.info(res);
     }
 
     if (!res?.error && invitationId) {

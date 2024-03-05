@@ -254,12 +254,12 @@ export const BookingAddUpdateForm: React.FC<Props> = ({
     mode === 'add'
       ? {}
       : mode === 'addBetween'
-      ? {}
-      : {
-          presetLabel: t('Use start time of next booking as end time for this one'),
-          presetDate: formatISOLocale(new Date(bookingAfterCurrent?.start?.dateTime || '')),
-          presetIcon: 'move-right-1' as IconNames,
-        };
+        ? {}
+        : {
+            presetLabel: t('Use start time of next booking as end time for this one'),
+            presetDate: formatISOLocale(new Date(bookingAfterCurrent?.start?.dateTime || '')),
+            presetIcon: 'move-right-1' as IconNames,
+          };
 
   return (
     <FormProvider {...hookForm}>

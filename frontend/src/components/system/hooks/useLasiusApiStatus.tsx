@@ -36,7 +36,7 @@ const testApiConnection = async () => {
     });
     return CONNECTION_STATUS.CONNECTED;
   } catch (error) {
-    logger.logEverywhere(error);
+    logger.info(error);
     if ((error as any)?.response?.status === 401) {
       return CONNECTION_STATUS.NOT_AUTHENTICATED;
     }

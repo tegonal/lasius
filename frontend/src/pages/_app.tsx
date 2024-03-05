@@ -96,7 +96,7 @@ const App = ({
 
   useAsync(async () => {
     if (!lasiusIsLoggedIn) {
-      logger.log('[App][UserNotLoggedIn]');
+      logger.info('[App][UserNotLoggedIn]');
       store.dispatch({ type: 'reset' });
       await removeAccessibleCookies();
     }
@@ -183,7 +183,7 @@ App.getInitialProps = async ({
   const token = session?.user?.xsrfToken;
 
   if (token && session) {
-    logger.log('App.getInitialProps', { token, session });
+    logger.info('App.getInitialProps', { token, session });
     try {
       profile = await getUserProfile(getServerSideRequestHeaders(token));
     } catch (error) {
