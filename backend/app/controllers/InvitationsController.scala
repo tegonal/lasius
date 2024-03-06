@@ -92,9 +92,10 @@ class InvitationsController @Inject() (
             _ <- userRepository.validateCreate(invitation.invitedEmail,
                                                request.body)
             // Create new private organisation
-            newOrg <- organisationRepository.create(request.body.key, true)(
-              systemServices.systemSubject,
-              dbSession)
+            newOrg <- organisationRepository.create(
+              key = request.body.key,
+              `private` = true,
+              settings = None)(systemServices.systemSubject, dbSession)
             // Create new user and assign to private organisation
             _ <- userRepository.create(invitation.invitedEmail,
                                        request.body,

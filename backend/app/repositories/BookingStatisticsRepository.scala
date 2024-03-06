@@ -31,15 +31,15 @@ import play.api.Logging
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import reactivemongo.api.bson.collection.BSONCollection
-import repositories.MongoDBCommandSet._
 import reactivemongo.play.json.compat._
+import repositories.MongoDBCommandSet._
 
 import javax.inject.Inject
 import scala.concurrent._
 
 trait BookingStatisticRepository[M <: models.OperatorEntity[I, M],
                                  I <: com.tegonal.play.json.TypedId.BaseId[_]]
-    extends BaseRepository[M, I]
+    extends BaseRepositoryWithOrgRef[M, I]
     with PersistentUserViewRepository[M, I] {
 
   def findAggregatedByUserAndRange(userReference: UserReference,
@@ -81,11 +81,15 @@ trait BookingByProjectRepository
 trait BookingByTagRepository
     extends BookingStatisticRepository[BookingByTag, BookingByTagId] {}
 
+@ImplementedBy(classOf[BookingByTypeMongoRepository])
+trait BookingByTypeRepository
+    extends BookingStatisticRepository[BookingByType, BookingByTypeId] {}
+
 abstract class BookingStatisticMongoRepository[
     M <: models.OperatorEntity[I, M],
     I <: com.tegonal.play.json.TypedId.BaseId[_]](implicit
     format: play.api.libs.json.Format[M])
-    extends BaseReactiveMongoRepository[M, I]
+    extends BaseReactiveMongoRepositoryWithOrgRef[M, I]
     with BookingStatisticRepository[M, I]
     with MongoPeristentUserViewRepository[M, I]
     with Logging {
@@ -140,7 +144,6 @@ abstract class BookingStatisticMongoRepository[
                                     to: LocalDate,
                                     aggregationProperty: String,
                                     granularity: Granularity)(implicit
-      format: play.api.libs.json.Format[M],
       dbSession: DBSession): Future[List[BookingStats]] = {
 
     val collection = coll
@@ -207,7 +210,7 @@ abstract class BookingStatisticMongoRepository[
   override def add(model: M)(implicit
       writes: Writes[I],
       dbSession: DBSession): Future[Boolean] = {
-    val sel = getUniqueContraint(model)
+    val sel = getUniqueConstraint(model)
     logger.debug(s"add [$sel]:$model")
     update(sel, Json.obj(Inc -> Json.obj("duration" -> model.duration)))
   }
@@ -215,7 +218,7 @@ abstract class BookingStatisticMongoRepository[
   override def subtract(model: M)(implicit
       writes: Writes[I],
       dbSession: DBSession): Future[Boolean] = {
-    val sel = getUniqueContraint(model)
+    val sel = getUniqueConstraint(model)
     logger.debug(s"subtract [$sel]:$model")
     update(
       sel,
@@ -224,7 +227,7 @@ abstract class BookingStatisticMongoRepository[
     )
   }
 
-  def getUniqueContraint(model: M): JsObject
+  def getUniqueConstraint(model: M): JsObject
 }
 
 class BookingByProjectMongoRepository @Inject() (
@@ -237,7 +240,7 @@ class BookingByProjectMongoRepository @Inject() (
     dbSession.db
       .collection[BSONCollection]("BookingByProject", failoverStrategy)
 
-  override def getUniqueContraint(model: BookingByProject): JsObject = {
+  override def getUniqueConstraint(model: BookingByProject): JsObject = {
     Json.obj("userReference"         -> model.userReference,
              "organisationReference" -> model.organisationReference,
              "day"                   -> model.day,
@@ -253,10 +256,26 @@ class BookingByTagMongoRepository @Inject() (
       dbSession: DBSession): BSONCollection =
     dbSession.db.collection[BSONCollection]("BookingByTag", failoverStrategy)
 
-  override def getUniqueContraint(model: BookingByTag): JsObject = {
+  override def getUniqueConstraint(model: BookingByTag): JsObject = {
     Json.obj("userReference"         -> model.userReference,
              "organisationReference" -> model.organisationReference,
              "day"                   -> model.day,
              "tagId"                 -> model.tagId)
+  }
+}
+
+class BookingByTypeMongoRepository @Inject() (
+    override implicit protected val executionContext: ExecutionContext)
+    extends BookingStatisticMongoRepository[BookingByType, BookingByTypeId]
+    with BookingByTypeRepository {
+  override protected[repositories] def coll(implicit
+      dbSession: DBSession): BSONCollection =
+    dbSession.db.collection[BSONCollection]("BookingByType", failoverStrategy)
+
+  override def getUniqueConstraint(model: BookingByType): JsObject = {
+    Json.obj("userReference"         -> model.userReference,
+             "organisationReference" -> model.organisationReference,
+             "day"                   -> model.day,
+             "bookingType"           -> model.bookingType)
   }
 }

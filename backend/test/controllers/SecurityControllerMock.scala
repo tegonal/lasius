@@ -66,7 +66,7 @@ trait SecurityControllerMock
     Project(
       id = ProjectId(),
       key = "project1",
-      organisationReference = organisation.getReference(),
+      organisationReference = organisation.reference,
       bookingCategories = Set(SimpleTag(TagId("tag1"))),
       active = projectActive,
       createdBy = userReference,
@@ -76,11 +76,11 @@ trait SecurityControllerMock
   val projectRole: ProjectRole = ProjectAdministrator
   val userProject = UserProject(
     sharedByOrganisationReference = None,
-    projectReference = project.getReference(),
+    projectReference = project.reference,
     role = projectRole
   )
   val userOrganisation = UserOrganisation(
-    organisationReference = organisation.getReference(),
+    organisationReference = organisation.reference,
     `private` = organisation.`private`,
     role = organisationRole,
     plannedWorkingHours = WorkingHours(),

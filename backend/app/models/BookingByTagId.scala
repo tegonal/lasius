@@ -23,7 +23,7 @@ package models
 
 import models.BaseFormat.BaseBSONObjectId
 import play.api.libs.json.Format
-import reactivemongo.api.bson.{BSONObjectID, Macros}
+import reactivemongo.api.bson.BSONObjectID
 
 case class BookingByTagId(value: BSONObjectID = BSONObjectID.generate())
     extends BaseBSONObjectId

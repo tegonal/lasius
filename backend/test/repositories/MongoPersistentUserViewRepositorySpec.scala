@@ -24,10 +24,9 @@ package repositories
 import models.LocalDateTimeWithTimeZone.DateTimeHelper
 import models._
 import mongo.EmbedMongo
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, Duration}
 import util.Awaitable
 import play.api.libs.json._
-import reactivemongo.api.bson.BSONObjectID
 
 class MongoPeristentUserViewRepositorySpec extends EmbedMongo with Awaitable {
 
@@ -45,29 +44,38 @@ class MongoPeristentUserViewRepositorySpec extends EmbedMongo with Awaitable {
       withDBSession() { implicit dbSession =>
         for {
           id1 <- repository.upsert(
-            BookingV2(BookingId(),
-                      DateTime.now().toLocalDateTimeWithZone(),
-                      None,
-                      user1,
-                      team,
-                      EntityReference(ProjectId(), "p1"),
-                      Set()))
+            BookingV3(
+              id = BookingId(),
+              start = DateTime.now().toLocalDateTimeWithZone,
+              end = None,
+              duration = new Duration(1),
+              userReference = user1,
+              organisationReference = team,
+              projectReference = EntityReference(ProjectId(), "p1"),
+              tags = Set()
+            ))
           id2 <- repository.upsert(
-            BookingV2(BookingId(),
-                      DateTime.now().toLocalDateTimeWithZone(),
-                      None,
-                      user1,
-                      team,
-                      EntityReference(ProjectId(), "p2"),
-                      Set()))
+            BookingV3(
+              id = BookingId(),
+              start = DateTime.now().toLocalDateTimeWithZone,
+              end = None,
+              duration = new Duration(2),
+              userReference = user1,
+              organisationReference = team,
+              projectReference = EntityReference(ProjectId(), "p2"),
+              tags = Set()
+            ))
           id3 <- repository.upsert(
-            BookingV2(BookingId(),
-                      DateTime.now().toLocalDateTimeWithZone(),
-                      None,
-                      user2,
-                      team,
-                      EntityReference(ProjectId(), "p3"),
-                      Set()))
+            BookingV3(
+              id = BookingId(),
+              start = DateTime.now().toLocalDateTimeWithZone,
+              end = None,
+              duration = new Duration(3),
+              userReference = user2,
+              organisationReference = team,
+              projectReference = EntityReference(ProjectId(), "p3"),
+              tags = Set()
+            ))
         } yield {
           Seq(id1, id2, id3)
         }

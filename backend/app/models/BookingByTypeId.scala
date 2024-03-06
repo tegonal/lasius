@@ -21,13 +21,14 @@
 
 package models
 
-import org.joda.time.DateTime
-import play.api.libs.json.{Json, OFormat}
-import BaseFormat._
+import models.BaseFormat.BaseBSONObjectId
+import play.api.libs.json.Format
+import reactivemongo.api.bson.BSONObjectID
 
-case class StopBookingRequest(end: Option[DateTime])
+case class BookingByTypeId(value: BSONObjectID = BSONObjectID.generate())
+    extends BaseBSONObjectId
 
-object StopBookingRequest {
-  implicit val stopBookingFormat: OFormat[StopBookingRequest] =
-    Json.format[StopBookingRequest]
+object BookingByTypeId {
+  implicit val idFormat: Format[BookingByTypeId] =
+    BaseFormat.idformat[BookingByTypeId](BookingByTypeId.apply)
 }

@@ -57,17 +57,36 @@ class MockServices(actorSystem: ActorSystem) extends SystemServices {
   override val systemSubject: Subject = Subject("", systemUserReference)
   implicit val timeout: Timeout = Timeout(5 seconds) // needed for `?` below
   val duration: Duration        = Duration.create(5, SECONDS)
-  val timeBookingViewService: ActorRef = TestProbe().ref
+  val timeBookingViewServiceProbe: TestProbe = TestProbe()
+  val timeBookingViewService: ActorRef       = timeBookingViewServiceProbe.ref
 
-  val loginStateAggregate: ActorRef = TestProbe().ref
+  val loginStateAggregateProbe: TestProbe = TestProbe()
+  val loginStateAggregate: ActorRef       = loginStateAggregateProbe.ref
 
-  val currentUserTimeBookingsViewService: ActorRef  = TestProbe().ref
-  val currentOrganisationTimeBookingsView: ActorRef = TestProbe().ref
-  val latestUserTimeBookingsViewService: ActorRef   = TestProbe().ref
-  val timeBookingStatisticsViewService: ActorRef    = TestProbe().ref
-  val tagCache: ActorRef                            = TestProbe().ref
-  val pluginHandler: ActorRef                       = TestProbe().ref
-  val loginHandler: ActorRef                        = TestProbe().ref
+  val currentUserTimeBookingsViewServiceProbe: TestProbe = TestProbe()
+  val currentUserTimeBookingsViewService: ActorRef =
+    currentUserTimeBookingsViewServiceProbe.ref
+
+  val currentOrganisationTimeBookingsViewProbe: TestProbe = TestProbe()
+  val currentOrganisationTimeBookingsView: ActorRef =
+    currentOrganisationTimeBookingsViewProbe.ref
+
+  val latestUserTimeBookingsViewServiceProbe: TestProbe = TestProbe()
+  val latestUserTimeBookingsViewService: ActorRef =
+    latestUserTimeBookingsViewServiceProbe.ref
+
+  val timeBookingStatisticsViewServiceProbe: TestProbe = TestProbe()
+  val timeBookingStatisticsViewService: ActorRef =
+    timeBookingStatisticsViewServiceProbe.ref
+
+  val tagCacheProbe: TestProbe = TestProbe()
+  val tagCache: ActorRef       = tagCacheProbe.ref
+
+  val pluginHandlerProbe: TestProbe = TestProbe()
+  val pluginHandler: ActorRef       = pluginHandlerProbe.ref
+
+  val loginHandlerProbe: TestProbe = TestProbe()
+  val loginHandler: ActorRef       = loginHandlerProbe.ref
 
   override def initialize(): Unit = {}
 }

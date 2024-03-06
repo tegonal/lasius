@@ -79,16 +79,28 @@ class PersistedEventAdapter(system: ExtendedActorSystem)
   @nowarn("cat=deprecation")
   def updatePersistedEvent(event: PersistedEvent): PersistedEvent = {
     event match {
-      case e: UserTimeBookingStarted     => e.toV2(allUsers, allProjects)
-      case e: UserTimeBookingStopped     => e.toV2(allUsers, allProjects)
-      case e: UserTimeBookingRemoved     => e.toV2(allUsers, allProjects)
-      case e: UserTimeBookingAdded       => e.toV2(allUsers, allProjects)
-      case e: UserTimeBookingEdited      => e.toV2().toV3(allUsers, allProjects)
-      case e: UserTimeBookingEditedV2    => e.toV3(allUsers, allProjects)
+      // V1 to V2 migrations
+      case e: UserTimeBookingStarted   => e.toV2(allUsers, allProjects).toV3
+      case e: UserTimeBookingStartedV2 => e.toV3
+
+      case e: UserTimeBookingStopped   => e.toV2(allUsers, allProjects).toV3
+      case e: UserTimeBookingStoppedV2 => e.toV3
+
+      case e: UserTimeBookingRemoved   => e.toV2(allUsers, allProjects).toV3
+      case e: UserTimeBookingRemovedV2 => e.toV3
+
+      case e: UserTimeBookingAdded   => e.toV2(allUsers, allProjects).toV3
+      case e: UserTimeBookingAddedV2 => e.toV3
+
+      case e: UserTimeBookingEdited   => e.toV2.toV3(allUsers, allProjects).toV4
+      case e: UserTimeBookingEditedV2 => e.toV3(allUsers, allProjects).toV4
+      case e: UserTimeBookingEditedV3 => e.toV4
+
       case e: UserLoggedIn               => e.toV2(allUsers)
       case e: UserLoggedOut              => e.toV2(allUsers)
       case e: UserTimeBookingInitialized => e.toV2(allUsers)
-      case e                             => e
+
+      case e => e
     }
   }
 }

@@ -22,16 +22,21 @@
 package core
 
 import akka.actor.ActorSystem
+import mongo.{EmbedMongo, MongoDb}
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{Injecting, PlaySpecification, WithApplication}
 
-trait TestApplication {
+trait TestApplication extends EmbedMongo {
   self: PlaySpecification =>
+
+  protected def appConfiguration: Map[String, Any] =
+    mongoDb.mongoConfiguration
 
   abstract class WithTestApplication
       extends WithApplication(
         app = GuiceApplicationBuilder()
+          .configure(appConfiguration)
           .overrides(inject
                        .bind[SystemServices]
                        .toProvider[MockServicesProvider],

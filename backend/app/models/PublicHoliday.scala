@@ -22,21 +22,31 @@
 package models
 
 import models.OrganisationId.OrganisationReference
-import models.ProjectId.ProjectReference
-import models.UserId.UserReference
-import play.api.libs.json._
+import org.joda.time.LocalDate
+import play.api.libs.json.{Format, Json}
+import models.BaseFormat._
 
-case class Project(id: ProjectId,
-                   key: String,
-                   organisationReference: OrganisationReference,
-                   bookingCategories: Set[Tag],
-                   active: Boolean,
-                   createdBy: UserReference,
-                   deactivatedBy: Option[UserReference])
-    extends BaseEntity[ProjectId] {
-  def getReference(): ProjectReference = EntityReference(id, key)
+case class PublicHoliday(id: PublicHolidayId,
+                         organisationReference: OrganisationReference,
+                         year: Int,
+                         date: LocalDate,
+                         name: String)
+    extends BaseEntityWithOrgRelation[PublicHolidayId]
+
+object PublicHoliday {
+  implicit val format: Format[PublicHoliday] = Json.format[PublicHoliday]
 }
 
-object Project {
-  implicit val projectFormat: Format[Project] = Json.format[Project]
+case class CreatePublicHoliday(date: LocalDate, name: String)
+
+object CreatePublicHoliday {
+  implicit val format: Format[CreatePublicHoliday] =
+    Json.format[CreatePublicHoliday]
+}
+
+case class UpdatePublicHoliday(name: String)
+
+object UpdatePublicHoliday {
+  implicit val format: Format[UpdatePublicHoliday] =
+    Json.format[UpdatePublicHoliday]
 }

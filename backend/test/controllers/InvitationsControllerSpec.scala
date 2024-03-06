@@ -47,7 +47,7 @@ class InvitationsControllerSpec
       controller: InvitationsControllerMock)(
       expiration: DateTime = DateTime.now().plusDays(1),
       invitedEmail: String = "someEmail",
-      projectReference: ProjectReference = controller.project.getReference(),
+      projectReference: ProjectReference = controller.project.reference,
       role: ProjectRole = ProjectMember,
       outcome: Option[InvitationOutcome] = None) = {
     val invitationId = InvitationId()
@@ -59,8 +59,7 @@ class InvitationsControllerSpec
           createDate = DateTime.now(),
           createdBy = controller.userReference,
           expiration = expiration,
-          sharedByOrganisationReference =
-            controller.organisation.getReference(),
+          sharedByOrganisationReference = controller.organisation.reference,
           projectReference = projectReference,
           role = role,
           outcome = outcome
@@ -74,7 +73,7 @@ class InvitationsControllerSpec
       expiration: DateTime = DateTime.now().plusDays(1),
       invitedEmail: String = "someEmail",
       organisationReference: OrganisationReference =
-        controller.organisation.getReference(),
+        controller.organisation.reference,
       role: OrganisationRole = OrganisationMember,
       outcome: Option[InvitationOutcome] = None) = {
     val invitationId = InvitationId()
@@ -441,7 +440,7 @@ class InvitationsControllerSpec
 
       // validate user is assigned to newly created organisation as administrator
       val userOrg = user.get.organisations.find(
-        _.organisationReference == organisation.get.getReference())
+        _.organisationReference == organisation.get.reference)
       userOrg must beSome
       userOrg.get.role === OrganisationAdministrator
 
@@ -625,7 +624,7 @@ class InvitationsControllerSpec
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(
             AcceptInvitationRequest(organisationReference =
-              Some(controller.organisation.getReference())))
+              Some(controller.organisation.reference)))
         val result: Future[Result] =
           controller.accept(invitationId)(request)
 
@@ -653,7 +652,7 @@ class InvitationsControllerSpec
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(
             AcceptInvitationRequest(organisationReference =
-              Some(controller.organisation.getReference())))
+              Some(controller.organisation.reference)))
         val result: Future[Result] =
           controller.accept(invitationId)(request)
 
@@ -675,7 +674,7 @@ class InvitationsControllerSpec
         val project = Project(
           id = ProjectId(),
           key = "newProject",
-          organisationReference = controller.organisation.getReference(),
+          organisationReference = controller.organisation.reference,
           bookingCategories = Set(),
           active = false,
           createdBy = controller.userReference,
@@ -688,12 +687,12 @@ class InvitationsControllerSpec
           createJoinProjectInvitation(controller)(invitedEmail =
                                                     controller.user.email,
                                                   projectReference =
-                                                    project.getReference())
+                                                    project.reference)
 
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(
             AcceptInvitationRequest(organisationReference =
-              Some(controller.organisation.getReference())))
+              Some(controller.organisation.reference)))
         val result: Future[Result] =
           controller.accept(invitationId)(request)
 
@@ -715,7 +714,7 @@ class InvitationsControllerSpec
         val project = Project(
           id = ProjectId(),
           key = "newProject",
-          organisationReference = controller.organisation.getReference(),
+          organisationReference = controller.organisation.reference,
           bookingCategories = Set(),
           active = true,
           createdBy = controller.userReference,
@@ -728,13 +727,13 @@ class InvitationsControllerSpec
           createJoinProjectInvitation(controller)(invitedEmail =
                                                     controller.user.email,
                                                   projectReference =
-                                                    project.getReference(),
+                                                    project.reference,
                                                   role = ProjectMember)
 
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(
             AcceptInvitationRequest(organisationReference =
-              Some(controller.organisation.getReference())))
+              Some(controller.organisation.reference)))
         val result: Future[Result] =
           controller.accept(invitationId)(request)
 
@@ -811,7 +810,8 @@ class InvitationsControllerSpec
         val invitationId =
           createJoinOrganisationInvitation(controller)(
             invitedEmail = controller.user.email,
-            organisationReference = organisation.getReference())
+            organisationReference = organisation.reference
+          )
 
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(AcceptInvitationRequest(organisationReference = None))
@@ -847,7 +847,8 @@ class InvitationsControllerSpec
         val invitationId =
           createJoinOrganisationInvitation(controller)(
             invitedEmail = controller.user.email,
-            organisationReference = organisation.getReference())
+            organisationReference = organisation.reference
+          )
 
         val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
           .withBody(AcceptInvitationRequest(organisationReference = None))

@@ -22,11 +22,42 @@
 package akka
 
 import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import akka.testkit.{TestKit, TestKitBase}
+import com.typesafe.config.ConfigFactory
+import core.TestApplication
 import org.specs2.matcher.Scope
+import play.api.test.PlaySpecification
+
+import java.util
+import scala.jdk.CollectionConverters.{IterableHasAsJava, MapHasAsJava}
 
 class ActorTestScope
     extends TestKit(ActorSystem("lasius-test-actor-system"))
     with Scope
 
-abstract class PersistentActorTestScope extends ActorTestScope {}
+trait PersistentActorTestScope extends TestApplication {
+  self: PlaySpecification =>
+
+  abstract class WithPersistentActorTestScope
+      extends WithTestApplication
+      with TestKitBase {
+
+    implicit val system: ActorSystem = ActorSystem(
+      name = "lasius-test-actor-system",
+      config = ConfigFactory
+        .parseMap(appConfiguration.asJavaNested)
+        .withFallback(ConfigFactory.load())
+    )
+  }
+
+  implicit class MyMap(map: Map[String, Any]) {
+    def asJavaNested: util.Map[String, Any] =
+      map.view
+        .mapValues {
+          case i: Iterable[_] => i.asJava
+          case x              => x
+        }
+        .toMap
+        .asJava
+  }
+}

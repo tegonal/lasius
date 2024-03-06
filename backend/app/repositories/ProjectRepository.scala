@@ -34,7 +34,7 @@ import scala.concurrent._
 
 @ImplementedBy(classOf[ProjectMongoRepository])
 trait ProjectRepository
-    extends BaseRepository[Project, ProjectId]
+    extends BaseRepositoryWithOrgRef[Project, ProjectId]
     with DropAllSupport[Project, ProjectId]
     with Validation {
   def findByOrganisation(organisationReference: OrganisationReference)(implicit
@@ -66,7 +66,7 @@ trait ProjectRepository
 
 class ProjectMongoRepository @Inject() (
     override implicit protected val executionContext: ExecutionContext)
-    extends BaseReactiveMongoRepository[Project, ProjectId]
+    extends BaseReactiveMongoRepositoryWithOrgRef[Project, ProjectId]
     with ProjectRepository
     with MongoDropAllSupport[Project, ProjectId] {
   override protected[repositories] def coll(implicit
@@ -170,15 +170,16 @@ class ProjectMongoRepository @Inject() (
       }
 
       _ <- validate(
-        !updateObject.isEmpty,
+        updateObject.nonEmpty,
         s"cannot update project ${projectId.value} in organisation ${organisationReference.id.value}, at least one field must be specified"
       )
       _ <- updateFields(
         Json.obj("id"                       -> projectId,
                  "organisationReference.id" -> organisationReference.id),
         updateObject)
-      project <- findById(projectId).noneToFailed(
-        s"Failed loading updated project ${projectId.value} in organisation ${organisationReference.key}")
+      project <- findByOrganisationAndId(organisationReference, projectId)
+        .noneToFailed(
+          s"Failed loading updated project ${projectId.value} in organisation ${organisationReference.key}")
     } yield project
   }
 }

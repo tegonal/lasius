@@ -58,7 +58,8 @@ class OrganisationsControllerSpec
         .withBody(
           CreateOrganisation(
             key = "",
-            plannedWorkingHours = None
+            plannedWorkingHours = None,
+            settings = None
           ))
       val result: Future[Result] =
         controller.createOrganisation()(request)
@@ -82,7 +83,8 @@ class OrganisationsControllerSpec
         .withBody(
           CreateOrganisation(
             key = controller.organisation.key,
-            plannedWorkingHours = None
+            plannedWorkingHours = None,
+            settings = None
           ))
       val result: Future[Result] =
         controller.createOrganisation()(request)
@@ -107,7 +109,8 @@ class OrganisationsControllerSpec
         .withBody(
           CreateOrganisation(
             key = newOrganisationKey,
-            plannedWorkingHours = None
+            plannedWorkingHours = None,
+            settings = None
           ))
       val result: Future[Result] =
         controller.createOrganisation()(request)
@@ -123,7 +126,7 @@ class OrganisationsControllerSpec
       maybeUser must beSome
       val user = maybeUser.get
       val userOrg = user.organisations.find(
-        _.organisationReference == resultingOrganisation.getReference())
+        _.organisationReference == resultingOrganisation.reference)
       userOrg must beSome
       userOrg.get.role === OrganisationAdministrator
     }
@@ -348,11 +351,11 @@ class OrganisationsControllerSpec
       // initialize second user
       val userProject2 = UserProject(
         sharedByOrganisationReference = None,
-        projectReference = controller.project.getReference(),
+        projectReference = controller.project.reference,
         role = ProjectMember
       )
       val userOrganisation2 = UserOrganisation(
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         `private` = controller.organisation.`private`,
         role = OrganisationMember,
         plannedWorkingHours = WorkingHours(),
@@ -370,7 +373,7 @@ class OrganisationsControllerSpec
         organisations = Seq(userOrganisation2),
         settings = Some(
           UserSettings(lastSelectedOrganisation =
-            Some(controller.organisation.getReference())))
+            Some(controller.organisation.reference)))
       )
       withDBSession()(implicit dbSession =>
         controller.userRepository.upsert(user2)).awaitResult()
@@ -383,7 +386,7 @@ class OrganisationsControllerSpec
 
       val remainingUsers = withDBSession()(implicit dbSession =>
         controller.userRepository.findByOrganisation(
-          controller.organisation.getReference()))
+          controller.organisation.reference))
         .awaitResult()
       remainingUsers should haveSize(1)
 
@@ -465,11 +468,11 @@ class OrganisationsControllerSpec
       // initialize second user to be able to remove ourself
       val userProject2 = UserProject(
         sharedByOrganisationReference = None,
-        projectReference = controller.project.getReference(),
+        projectReference = controller.project.reference,
         role = ProjectAdministrator
       )
       val userOrganisation2 = UserOrganisation(
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         `private` = controller.organisation.`private`,
         role = OrganisationAdministrator,
         plannedWorkingHours = WorkingHours(),
@@ -497,7 +500,7 @@ class OrganisationsControllerSpec
       status(result) must equalTo(OK)
       val remainingUsers = withDBSession()(implicit dbSession =>
         controller.userRepository.findByOrganisation(
-          controller.organisation.getReference()))
+          controller.organisation.reference))
         .awaitResult()
       remainingUsers should haveSize(1)
     }
@@ -515,7 +518,7 @@ class OrganisationsControllerSpec
                                                 reactiveMongoApi)
 
       val request: FakeRequest[UpdateOrganisation] =
-        FakeRequest().withBody(UpdateOrganisation(key = None))
+        FakeRequest().withBody(UpdateOrganisation(key = None, settings = None))
       val result: Future[Result] =
         controller.updateOrganisation(controller.organisationId)(request)
 
@@ -535,7 +538,8 @@ class OrganisationsControllerSpec
                                                 reactiveMongoApi)
 
       val request: FakeRequest[UpdateOrganisation] =
-        FakeRequest().withBody(UpdateOrganisation(key = Some("")))
+        FakeRequest().withBody(
+          UpdateOrganisation(key = Some(""), settings = None))
       val result: Future[Result] =
         controller.updateOrganisation(controller.organisationId)(request)
 
@@ -556,7 +560,6 @@ class OrganisationsControllerSpec
 
       val organisation2Key: String = "org2"
 
-      // create second project in same organisation
       withDBSession()(implicit dbSession =>
         controller.organisationRepository.upsert(
           Organisation(
@@ -569,7 +572,8 @@ class OrganisationsControllerSpec
           ))).awaitResult()
 
       val request: FakeRequest[UpdateOrganisation] =
-        FakeRequest().withBody(UpdateOrganisation(key = Some(organisation2Key)))
+        FakeRequest().withBody(
+          UpdateOrganisation(key = Some(organisation2Key), settings = None))
       val result: Future[Result] =
         controller.updateOrganisation(controller.organisationId)(request)
 
@@ -602,7 +606,7 @@ class OrganisationsControllerSpec
         role = Administrator,
         organisations = Seq(
           UserOrganisation(
-            organisationReference = controller.organisation.getReference(),
+            organisationReference = controller.organisation.reference,
             `private` = false,
             role = OrganisationMember,
             plannedWorkingHours = WorkingHours(),
@@ -625,7 +629,7 @@ class OrganisationsControllerSpec
         createDate = DateTime.now(),
         createdBy = controller.userReference,
         expiration = DateTime.now().plusDays(1),
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         role = OrganisationMember,
         outcome = None
       )
@@ -639,7 +643,8 @@ class OrganisationsControllerSpec
       }.awaitResult()
 
       val request: FakeRequest[UpdateOrganisation] =
-        FakeRequest().withBody(UpdateOrganisation(key = Some(newKey)))
+        FakeRequest().withBody(
+          UpdateOrganisation(key = Some(newKey), settings = None))
       val result: Future[Result] =
         controller.updateOrganisation(controller.organisationId)(request)
 

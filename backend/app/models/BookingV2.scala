@@ -24,8 +24,12 @@ package models
 import models.OrganisationId.OrganisationReference
 import models.ProjectId.ProjectReference
 import models.UserId.UserReference
+import org.joda.time.Duration
 import play.api.libs.json.{Format, Json}
 
+import scala.annotation.nowarn
+
+@deprecated("Don't use events based on Booking V2", "LasiusV1.2")
 case class BookingV2(id: BookingId,
                      start: LocalDateTimeWithTimeZone,
                      end: Option[LocalDateTimeWithTimeZone],
@@ -36,13 +40,33 @@ case class BookingV2(id: BookingId,
                      bookingHash: Long)
     extends BaseEntity[BookingId] {
 
-  def createStub: BookingStub = {
-    BookingStub(projectReference, tags, bookingHash)
+  /** Migration to V3 by:
+    *   - map projectReference to optional type
+    *   - provide empty duration
+    *   - map to default type 'project'
+    * @return
+    */
+  def toV3: BookingV3 = {
+    BookingV3(
+      id = id,
+      bookingType = ProjectBooking,
+      start = start,
+      end = end,
+      duration = end.fold(new Duration(0))(e =>
+        new Duration(start.toDateTime, e.toDateTime)),
+      userReference = userReference,
+      organisationReference = organisationReference,
+      projectReference = Some(projectReference),
+      tags = tags,
+      bookingHash = bookingHash
+    )
   }
 }
 
 object BookingV2 {
 
+  // noinspection ScalaDeprecation
+  @nowarn("cat=deprecation")
   def apply(id: BookingId,
             start: LocalDateTimeWithTimeZone,
             end: Option[LocalDateTimeWithTimeZone],
@@ -50,15 +74,19 @@ object BookingV2 {
             organisationReference: OrganisationReference,
             projectReference: ProjectReference,
             tags: Set[Tag]): BookingV2 =
-    BookingV2(id,
-              start,
-              end,
-              userReference,
-              organisationReference,
-              projectReference,
-              tags,
-              BookingHash.createHash(projectReference, tags))
+    BookingV2(
+      id = id,
+      start = start,
+      end = end,
+      userReference = userReference,
+      organisationReference = organisationReference,
+      projectReference = projectReference,
+      tags = tags,
+      bookingHash = BookingHash.createHash(Some(projectReference), tags)
+    )
 
+  // noinspection ScalaDeprecation
+  @nowarn("cat=deprecation")
   implicit val bookingFormat: Format[BookingV2] =
     Json.using[Json.WithDefaultValues].format[BookingV2]
 }

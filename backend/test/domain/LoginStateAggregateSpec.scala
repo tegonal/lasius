@@ -26,12 +26,17 @@ import akka.testkit.TestProbe
 import domain.AggregateRoot._
 import domain.LoginStateAggregate._
 import models.{EntityReference, UserId, UserLoggedInV2, UserLoggedOutV2}
-import org.specs2.mutable.Specification
+import mongo.EmbedMongo
+import play.api.test.PlaySpecification
 
-class LoginStateAggregateSpec extends Specification {
+import scala.language.postfixOps
+class LoginStateAggregateSpec
+    extends PlaySpecification
+    with EmbedMongo
+    with PersistentActorTestScope {
 
-  "LoginStateggregate" should {
-    "user login" in new PersistentActorTestScope {
+  "LoginStateAggregate" should {
+    "user login" in new WithPersistentActorTestScope {
 
       val probe    = TestProbe()
       val actorRef = system.actorOf(LoginStateAggregate.props)
@@ -43,7 +48,7 @@ class LoginStateAggregateSpec extends Specification {
       probe.expectMsg(LoggedInState(Set(userId)))
     }
 
-    "user logout" in new PersistentActorTestScope {
+    "user logout" in new WithPersistentActorTestScope {
       val probe    = TestProbe()
       val actorRef = system.actorOf(LoginStateAggregate.props)
 

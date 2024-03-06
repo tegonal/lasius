@@ -27,7 +27,7 @@ import BaseFormat._
 
 case class LocalDateTimeWithTimeZone(dateTime: LocalDateTime,
                                      zone: DateTimeZone) {
-  def toDateTime(): DateTime = dateTime.toDateTime(zone)
+  def toDateTime: DateTime = dateTime.toDateTime(zone)
 
   def withTimeAtStartOfDay: LocalDateTime = {
     dateTime.toLocalDate.toDateTimeAtStartOfDay().toLocalDateTime
@@ -37,7 +37,7 @@ case class LocalDateTimeWithTimeZone(dateTime: LocalDateTime,
 
 object LocalDateTimeWithTimeZone {
   implicit class DateTimeHelper(self: DateTime) {
-    def toLocalDateTimeWithZone(): LocalDateTimeWithTimeZone =
+    def toLocalDateTimeWithZone: LocalDateTimeWithTimeZone =
       LocalDateTimeWithTimeZone(self.toLocalDateTime, self.getZone)
   }
 

@@ -137,8 +137,7 @@ class ProjectsControllerSpec
       status(result) must equalTo(CREATED)
       val resultingProject: Project = contentAsJson(result).as[Project]
       resultingProject.key === newProjectKey
-      resultingProject.organisationReference === controller.organisation
-        .getReference()
+      resultingProject.organisationReference === controller.organisation.reference
 
       // verify user gets automatically assigned to this project
       val maybeUser: Option[User] = withDBSession()(implicit dbSession =>
@@ -150,7 +149,7 @@ class ProjectsControllerSpec
         _.organisationReference.id == controller.organisationId)
       userOrg must beSome
       val userProject: Option[UserProject] = userOrg.get.projects.find(
-        _.projectReference == resultingProject.getReference())
+        _.projectReference == resultingProject.reference)
       userProject must beSome
       userProject.get.role === ProjectAdministrator
     }
@@ -194,7 +193,7 @@ class ProjectsControllerSpec
 
       status(result) must equalTo(BAD_REQUEST)
       contentAsString(result) must equalTo(
-        s"Project ${newProjectId.value} does not exist")
+        s"Project ${newProjectId.value} does not exist in organisation ${controller.organisation.key}")
     }
 
     "successful, project unassigned from all users" in new WithTestApplication {
@@ -223,7 +222,7 @@ class ProjectsControllerSpec
         _.organisationReference.id == controller.organisationId)
       userOrg must beSome
       val userProject: Option[UserProject] = userOrg.get.projects.find(
-        _.projectReference == controller.project.getReference())
+        _.projectReference == controller.project.reference)
       userProject must beNone
     }
   }
@@ -320,7 +319,7 @@ class ProjectsControllerSpec
 
       status(result) must equalTo(BAD_REQUEST)
       contentAsString(result) must equalTo(
-        s"Project ${controller.project.id.value} does not exist")
+        s"Project ${controller.project.id.value} does not exist in organisation ${controller.organisation.key}")
     }
 
     "badrequest if project is inactive" in new WithTestApplication {
@@ -409,7 +408,7 @@ class ProjectsControllerSpec
 
       val email = "ivnitedUser@test.com"
       val userOrganisation: UserOrganisation = UserOrganisation(
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         `private` = controller.organisation.`private`,
         role = OrganisationMember,
         plannedWorkingHours = WorkingHours(),
@@ -492,11 +491,11 @@ class ProjectsControllerSpec
       // initialize second user
       val userProject = UserProject(
         sharedByOrganisationReference = None,
-        projectReference = controller.project.getReference(),
+        projectReference = controller.project.reference,
         role = ProjectMember
       )
       val userOrganisation = UserOrganisation(
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         `private` = controller.organisation.`private`,
         role = OrganisationMember,
         plannedWorkingHours = WorkingHours(),
@@ -614,11 +613,11 @@ class ProjectsControllerSpec
       // initialize second user to be able to remove ourself
       val userProject2: UserProject = UserProject(
         sharedByOrganisationReference = None,
-        projectReference = controller.project.getReference(),
+        projectReference = controller.project.reference,
         role = ProjectAdministrator
       )
       val userOrganisation2 = UserOrganisation(
-        organisationReference = controller.organisation.getReference(),
+        organisationReference = controller.organisation.reference,
         `private` = controller.organisation.`private`,
         role = OrganisationMember,
         plannedWorkingHours = WorkingHours(),
@@ -731,7 +730,7 @@ class ProjectsControllerSpec
         controller.projectRepository.upsert(Project(
           id = ProjectId(),
           key = project2Key,
-          organisationReference = controller.organisation.getReference(),
+          organisationReference = controller.organisation.reference,
           bookingCategories = Set(),
           active = true,
           createdBy = controller.userReference,
@@ -773,7 +772,7 @@ class ProjectsControllerSpec
         role = Administrator,
         organisations = Seq(
           UserOrganisation(
-            organisationReference = controller.organisation.getReference(),
+            organisationReference = controller.organisation.reference,
             `private` = false,
             role = OrganisationMember,
             plannedWorkingHours = WorkingHours(),
@@ -783,7 +782,7 @@ class ProjectsControllerSpec
                             EntityReference(ProjectId(), "anotherProject"),
                           role = ProjectMember),
               UserProject(sharedByOrganisationReference = None,
-                          projectReference = controller.project.getReference(),
+                          projectReference = controller.project.reference,
                           role = ProjectMember),
             )
           ),
@@ -804,8 +803,8 @@ class ProjectsControllerSpec
         createDate = DateTime.now(),
         createdBy = controller.userReference,
         expiration = DateTime.now().plusDays(1),
-        sharedByOrganisationReference = controller.organisation.getReference(),
-        projectReference = controller.project.getReference(),
+        sharedByOrganisationReference = controller.organisation.reference,
+        projectReference = controller.project.reference,
         role = ProjectMember,
         outcome = None
       )

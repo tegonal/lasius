@@ -48,11 +48,11 @@ object CurrentOrganisationTimeBookingsView {
             clientReceiver: ClientReceiver,
             reactiveMongoApi: ReactiveMongoApi,
             supportTransaction: Boolean): Props =
-    Props(classOf[CurrentOrganisationTimeBookingsView],
-          userRepository,
-          clientReceiver,
-          reactiveMongoApi,
-          supportTransaction)
+    Props(
+      new CurrentOrganisationTimeBookingsView(userRepository,
+                                              clientReceiver,
+                                              reactiveMongoApi,
+                                              supportTransaction))
 }
 
 class CurrentOrganisationTimeBookingsView(
@@ -89,7 +89,7 @@ class CurrentOrganisationTimeBookingsView(
         if (users.nonEmpty) {
           val userMap = users.filter(_.active).flatMap { user =>
             user.organisations.map(t =>
-              (t.organisationReference, user.getReference()))
+              (t.organisationReference, user.reference))
           }
           val today = LocalDate.now()
 
@@ -193,7 +193,7 @@ class CurrentOrganisationTimeBookingsView(
   private def notifyOrganisations(userId: UserId,
                                   day: LocalDate,
                                   organisationId: OrganisationId,
-                                  newState: OrganisationBookingState) = {
+                                  newState: OrganisationBookingState): Unit = {
     val today = LocalDate.now()
 
     if (!today.isAfter(day)) {

@@ -40,7 +40,6 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 import services.{
   CurrentUserTimeBookingsViewService,
-  LatestUserTimeBookingsViewService,
   TimeBookingStatisticsViewService,
   TimeBookingViewService
 }
@@ -62,7 +61,6 @@ trait SystemServices {
   val loginStateAggregate: ActorRef
   val currentUserTimeBookingsViewService: ActorRef
   val currentOrganisationTimeBookingsView: ActorRef
-  val latestUserTimeBookingsViewService: ActorRef
   val timeBookingStatisticsViewService: ActorRef
   val tagCache: ActorRef
   val pluginHandler: ActorRef
@@ -87,6 +85,7 @@ class DefaultSystemServices @Inject() (
     clientReceiver: ClientReceiver,
     bookingByProjectRepository: BookingByProjectRepository,
     bookingByTagRepository: BookingByTagRepository,
+    bookingByTypeRepository: BookingByTypeRepository,
     bookingHistoryRepository: BookingHistoryRepository,
     wsClient: WSClient,
     injector: Injector)(implicit ec: ExecutionContext)
@@ -132,11 +131,6 @@ class DefaultSystemServices @Inject() (
                      supportTransaction),
             duration)
     .asInstanceOf[ActorRef]
-  val latestUserTimeBookingsViewService: ActorRef = Await
-    .result(
-      supervisor ? LatestUserTimeBookingsViewService.props(clientReceiver),
-      duration)
-    .asInstanceOf[ActorRef]
   val timeBookingStatisticsViewService: ActorRef = Await
     .result(
       supervisor ? TimeBookingStatisticsViewService.props(
@@ -144,6 +138,7 @@ class DefaultSystemServices @Inject() (
         this,
         bookingByProjectRepository,
         bookingByTagRepository,
+        bookingByTypeRepository,
         reactiveMongoApi),
       duration
     )

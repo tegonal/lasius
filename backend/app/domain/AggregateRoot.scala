@@ -30,6 +30,7 @@ import domain.views.RestoreViewFromStateSuccess
 import models.PersistedEvent
 import models.UserId.UserReference
 
+import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -59,6 +60,7 @@ object AggregateRoot {
 
   case object Created extends State
 
+  @unused
   case object Uninitialized extends State
 }
 
@@ -67,16 +69,17 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
   import AggregateRoot._
 
   var state: State
-  protected var snapshotReceived = false
+  // noinspection ActorMutableStateInspection
+  private var snapshotReceived = false
 
   def updateState(evt: PersistedEvent): Unit
 
   def restoreFromSnapshot(metadata: SnapshotMetadata, state: State): Unit
 
   // snapshot after every x event
-  protected val SnapshotInterval = 100
+  private val SnapshotInterval = 100
   // max number of snapshots to keep per aggregate
-  protected val KeepSnapshots = 1
+  private val KeepSnapshots = 1
 
   protected var recovering = true
 
@@ -116,15 +119,15 @@ trait AggregateRoot extends PersistentActor with ActorLogging {
     case _: SaveSnapshotSuccess =>
       log.debug("Successfully saved snapshot")
     case SaveSnapshotFailure(_, cause) =>
-      log.warning("Saving snapshot failed", cause)
+      log.warning(cause, "Saving snapshot failed")
     case _: DeleteSnapshotSuccess =>
       log.debug("Successfully deleted snapshot")
     case DeleteSnapshotFailure(_, cause) =>
-      log.warning("Deleting snapshot failed", cause)
+      log.warning(cause, "Deleting snapshot failed")
     case _: DeleteSnapshotsSuccess =>
       log.debug("Successfully deleted snapshots")
     case DeleteSnapshotsFailure(_, cause) =>
-      log.warning("Deleting snapshots failed", cause)
+      log.warning(cause, "Deleting snapshots failed")
     case RestoreViewFromStateSuccess =>
       log.debug("Successfully restored view from state")
   }

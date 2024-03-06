@@ -21,27 +21,13 @@
 
 package models
 
-import domain.UserTimeBookingAggregate.StartBookingCommand
-import models.OrganisationId.OrganisationReference
-import models.ProjectId.ProjectReference
 import org.joda.time.DateTime
 import play.api.libs.json.{Json, OFormat}
 import BaseFormat._
 
-case class StartBookingRequest(projectId: ProjectId,
-                               tags: Set[Tag],
-                               start: Option[DateTime]) {
-  def toCommand(organisationReference: OrganisationReference,
-                projectReference: ProjectReference)(implicit
-      subject: Subject): StartBookingCommand =
-    StartBookingCommand(subject.userReference,
-                        organisationReference,
-                        projectReference,
-                        tags,
-                        start.getOrElse(DateTime.now()))
-}
+case class StopProjectBookingRequest(end: DateTime)
 
-object StartBookingRequest {
-  implicit val startBookingFormat: OFormat[StartBookingRequest] =
-    Json.format[StartBookingRequest]
+object StopProjectBookingRequest {
+  implicit val stopBookingFormat: OFormat[StopProjectBookingRequest] =
+    Json.format[StopProjectBookingRequest]
 }

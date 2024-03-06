@@ -56,7 +56,7 @@ class UsersController @Inject() (
         {
           userRepository
             .findByUserReference(subject.userReference)
-            .map(_.map(user => Ok(Json.toJson(user.toDTO())))
+            .map(_.map(user => Ok(Json.toJson(user.toDTO)))
               .getOrElse(BadRequest))
         }
     }
@@ -69,7 +69,7 @@ class UsersController @Inject() (
         {
           userRepository
             .updateUserSettings(subject.userReference, request.body)
-            .map(user => Ok(Json.toJson(user.toDTO())))
+            .map(user => Ok(Json.toJson(user.toDTO)))
         }
     }
 
@@ -81,7 +81,7 @@ class UsersController @Inject() (
         {
           userRepository
             .updateUserData(subject.userReference, request.body)
-            .map(user => Ok(Json.toJson(user.toDTO())))
+            .map(user => Ok(Json.toJson(user.toDTO)))
         }
     }
 
@@ -110,8 +110,8 @@ class UsersController @Inject() (
               .noneToFailed(
                 s"Could not find user with user with id ${userId.value} in organisation ${orgId.value}")
             result <- userRepository
-              .updateUserData(user.getReference(), request.body)
-              .map(user => Ok(Json.toJson(user.toDTO())))
+              .updateUserData(user.reference, request.body)
+              .map(user => Ok(Json.toJson(user.toDTO)))
           } yield result
         }
     }
@@ -135,7 +135,8 @@ class UsersController @Inject() (
               .updateUserOrganisation(subject.userReference,
                                       organisationReference,
                                       request.body)
-          } yield Ok(Json.toJson(user.toDTO()))
+          } yield Ok(Json.toJson(user.toDTO))
         }
     }
+
 }

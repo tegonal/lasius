@@ -25,8 +25,10 @@ import com.tegonal.play.json.TypedId._
 import julienrf.json.derived
 import julienrf.json.derived.{DerivedReads, TypeTag}
 import models.BaseFormat.CompositeBaseId
-import org.joda.time.format.DateTimeFormat
+import models.OrganisationId.OrganisationReference
 import org.joda.time._
+import org.joda.time.format.DateTimeFormat
+import play.api.libs.functional.syntax.toAlternativeOps
 import play.api.libs.json._
 import reactivemongo.api.bson._
 import shapeless.Lazy
@@ -39,12 +41,20 @@ trait BaseEntity[I <: BaseId[_]] {
   val id: I
 }
 
+trait BaseEntityWithOrgRelation[I <: BaseId[_]] extends BaseEntity[I] {
+  val organisationReference: OrganisationReference
+}
+
 case class EntityReference[I <: BaseId[_]](id: I, key: String)
 
 object EntityReference {
   implicit def entityReferenceFormat[I <: BaseId[_]](implicit
       idFormat: Format[I]): Format[EntityReference[I]] =
     Json.format[EntityReference[I]]
+
+  implicit def optionEntityReferenceFormat[I <: BaseId[_]](implicit
+      idFormat: Format[I]): Format[Option[EntityReference[I]]] =
+    Format.optionWithNull
 }
 
 object BaseFormat {
@@ -117,6 +127,21 @@ object BaseFormat {
     implicit val dateTimeWriter: BSONWriter[DateTime] =
       BSONWriter.from[DateTime] { javaDateTime =>
         scala.util.Success(BSONDateTime(javaDateTime.getMillis))
+      }
+  }
+
+  implicit object BSONDurationHandler {
+
+    import reactivemongo.api.bson._
+
+    implicit val durationReader: BSONReader[Duration] =
+      BSONReader.from[Duration] { bson =>
+        bson.asTry[Long].map(time => new Duration(time))
+      }
+
+    implicit val durationWriter: BSONWriter[Duration] =
+      BSONWriter.from[Duration] { duration =>
+        scala.util.Success(BSONLong(duration.getMillis))
       }
   }
 
@@ -218,6 +243,22 @@ object BaseFormat {
   }
   implicit val localDateFormat: Format[LocalDate] =
     Format[LocalDate](localDateReads, localDateWrites)
+
+  private val eitherDateOrDurationWrites: Writes[Either[DateTime, Duration]] =
+    (o: Either[DateTime, Duration]) =>
+      Json.obj(
+        o.fold(
+          date => "date" -> date.getMillis,
+          duration => "duration" -> duration.getMillis
+        )
+      )
+
+  private val eitherDateOrDurationReads: Reads[Either[DateTime, Duration]] =
+    (__ \ "date").read[DateTime].map(Left(_)) |
+      (__ \ "duration").read[Duration].map(Right(_))
+
+  implicit val eitherDateOrDurationFormat: Format[Either[DateTime, Duration]] =
+    Format(eitherDateOrDurationReads, eitherDateOrDurationWrites)
 
   implicit object DateTimeZoneFormat extends Format[DateTimeZone] {
     def writes(zone: DateTimeZone): JsValue = {

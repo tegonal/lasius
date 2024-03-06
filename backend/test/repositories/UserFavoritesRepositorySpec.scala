@@ -62,7 +62,7 @@ class UserFavoritesRepositorySpec extends EmbedMongo {
         repository
           .addFavorite(user,
                        teamId,
-                       bookingStub.projectReference,
+                       bookingStub.projectReference.get,
                        bookingStub.tags))
         .awaitResult()
 
@@ -91,7 +91,7 @@ class UserFavoritesRepositorySpec extends EmbedMongo {
         repository
           .addFavorite(user,
                        teamId,
-                       bookingStub.projectReference,
+                       bookingStub.projectReference.get,
                        bookingStub.tags))
         .awaitResult()
 

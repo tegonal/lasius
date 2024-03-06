@@ -23,7 +23,7 @@ package domain
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.pattern.StatusReply.Ack
+import akka.pattern.StatusReply
 import akka.persistence._
 import domain.UserTimeBookingAggregate.StartAggregate
 import domain.views.RestoreViewFromStateSuccess
@@ -42,7 +42,7 @@ object LoginStateAggregate {
       Json.using[Json.WithDefaultValues].format[LoggedInState]
   }
 
-  def props: Props = Props(classOf[LoginStateAggregate])
+  def props: Props = Props(new LoginStateAggregate())
 
   val persistenceId: String = "login-state"
 }
@@ -79,14 +79,14 @@ class LoginStateAggregate extends AggregateRoot {
     }
   }
 
-  def userLoggerOut(state: LoggedInState,
-                    userReference: UserReference): LoggedInState = {
+  private def userLoggerOut(state: LoggedInState,
+                            userReference: UserReference): LoggedInState = {
     val users = state.loggedInUsers.filter(_ != userReference)
     state.copy(loggedInUsers = users)
   }
 
-  def userLoggerIn(state: LoggedInState,
-                   userReference: UserReference): LoggedInState = {
+  private def userLoggerIn(state: LoggedInState,
+                           userReference: UserReference): LoggedInState = {
     val users = state.loggedInUsers + userReference
     state.copy(loggedInUsers = users)
   }

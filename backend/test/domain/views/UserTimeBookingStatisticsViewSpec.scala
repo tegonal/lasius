@@ -31,44 +31,46 @@ import domain.AggregateRoot.{InitializeViewLive, RestoreViewFromState}
 import domain.UserTimeBookingAggregate.UserTimeBooking
 import models.LocalDateTimeWithTimeZone.DateTimeHelper
 import models._
-import mongo.EmbedMongo
 import org.joda.time._
 import org.specs2.matcher._
 import org.specs2.mock._
 import org.specs2.mock.mockito.MockitoMatchers
-import org.specs2.mutable._
 import util.MockAwaitable
 import play.api.libs.json._
+import play.api.test.PlaySpecification
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 
 class UserTimeBookingStatisticsViewSpec
-    extends Specification
+    extends PlaySpecification
     with Mockito
     with MockAwaitable
     with MockitoMatchers
-    with EmbedMongo {
+    with PersistentActorTestScope {
   sequential
 
   "UserTimeBookingStatisticsView UserTimeBookingInitialized" should {
-    "delete collections" in new PersistentActorTestScope {
+    "delete collections" in new WithPersistentActorTestScope {
 
       val userReference =
         EntityReference(UserId(), "noob")
       val probe                      = TestProbe()
       val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
-      val bookingByTagRepository = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTagRepository  = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTypeRepository = mockAwaitable[BookingByTypeMongoRepository]
 
       val actorRef = system.actorOf(
         UserTimeBookingStatisticsViewMock.props(userReference,
                                                 bookingByProjectRepository,
                                                 bookingByTagRepository,
+                                                bookingByTypeRepository,
                                                 reactiveMongoApi))
 
-      probe.send(actorRef,
-                 RestoreViewFromState(userReference,
-                                      0,
-                                      UserTimeBooking(userReference, Seq())))
+      probe.send(
+        actorRef,
+        RestoreViewFromState(userReference,
+                             0,
+                             UserTimeBooking(userReference, None, Seq())))
       probe.expectMsg(RestoreViewFromStateSuccess)
 
       there.was(
@@ -83,68 +85,100 @@ class UserTimeBookingStatisticsViewSpec
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingStopped" should {
-    "add new duration to stats" in new PersistentActorTestScope {
-      testAddDuration(booking => UserTimeBookingStoppedV2(booking))
+    "add new duration to stats" in new WithPersistentActorTestScope {
+      testAddDuration(booking => UserTimeBookingStoppedV3(booking))
     }
 
-    "don't add stats if no enddate is specified" in new PersistentActorTestScope {
-      testAddDurationWithoutEnd(booking => UserTimeBookingStoppedV2(booking))
+    "don't add stats if no enddate is specified" in new WithPersistentActorTestScope {
+      testAddDurationWithoutEnd(booking => UserTimeBookingStoppedV3(booking))
     }
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingAdded" should {
-    "add new duration to stats if end of booking is defined" in new PersistentActorTestScope {
-      testAddDuration(booking => UserTimeBookingAddedV2(booking))
+    "add new duration to stats if end of booking is defined" in new WithPersistentActorTestScope {
+      testAddDuration(booking =>
+        UserTimeBookingAddedV3(
+          id = booking.id,
+          bookingType = booking.bookingType,
+          userReference = booking.userReference,
+          organisationReference = booking.organisationReference,
+          projectReference = booking.projectReference,
+          tags = booking.tags,
+          start = booking.start.toDateTime,
+          endOrDuration = booking.end.map(_.toDateTime).toLeft(booking.duration)
+        ))
     }
 
-    "don't add stats if no enddate is specified" in new PersistentActorTestScope {
-      testAddDurationWithoutEnd(booking => UserTimeBookingAddedV2(booking))
+    "don't add stats if no enddate is specified" in new WithPersistentActorTestScope {
+      testAddDurationWithoutEnd(booking =>
+        UserTimeBookingAddedV3(
+          id = booking.id,
+          bookingType = booking.bookingType,
+          userReference = booking.userReference,
+          organisationReference = booking.organisationReference,
+          projectReference = booking.projectReference,
+          tags = booking.tags,
+          start = booking.start.toDateTime,
+          endOrDuration = booking.end.map(_.toDateTime).toLeft(booking.duration)
+        ))
     }
 
-    "add duration over multiple days" in new PersistentActorTestScope {
-      testAddDurationOverSeveralDays(booking => UserTimeBookingAddedV2(booking))
+    "add duration over multiple days" in new WithPersistentActorTestScope {
+      testAddDurationOverSeveralDays(booking =>
+        UserTimeBookingAddedV3(
+          id = booking.id,
+          bookingType = booking.bookingType,
+          userReference = booking.userReference,
+          organisationReference = booking.organisationReference,
+          projectReference = booking.projectReference,
+          tags = booking.tags,
+          start = booking.start.toDateTime,
+          endOrDuration = booking.end.map(_.toDateTime).toLeft(booking.duration)
+        ))
     }
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingRemoved" should {
-    "remove duration from total of same day" in new PersistentActorTestScope {
+    "remove duration from total of same day" in new WithPersistentActorTestScope {
       testRemoveDuration
     }
 
-    "remove duration over multiple days" in new PersistentActorTestScope {
+    "remove duration over multiple days" in new WithPersistentActorTestScope {
       testRemoveDurationOverSeveralDays
     }
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingEdited" should {
-    "edit duration from total of same day" in new PersistentActorTestScope {
+    "edit duration from total of same day" in new WithPersistentActorTestScope {
       testEditDuration
     }
 
-    "edit duration over multiple days" in new PersistentActorTestScope {
+    "edit duration over multiple days" in new WithPersistentActorTestScope {
       testEditDurationOverSeveralDays
     }
 
-    "add tag" in new PersistentActorTestScope {
+    "add tag" in new WithPersistentActorTestScope {
       testEditDurationAddTag
     }
 
-    "remove tag" in new PersistentActorTestScope {
+    "remove tag" in new WithPersistentActorTestScope {
       testEditDurationRemoveTag
     }
   }
 
   "UserTimeBookingStatisticsView UserTimeBookingStartTimeChanged" should {
-    "do nothing" in new PersistentActorTestScope {
+    "do nothing" in new WithPersistentActorTestScope {
       val userReference =
         EntityReference(UserId(), "noob")
       val probe                      = TestProbe()
       val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
-      val bookingByTagRepository = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTagRepository  = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTypeRepository = mockAwaitable[BookingByTypeMongoRepository]
       val actorRef = system.actorOf(
         UserTimeBookingStatisticsViewMock.props(userReference,
                                                 bookingByProjectRepository,
                                                 bookingByTagRepository,
+                                                bookingByTypeRepository,
                                                 reactiveMongoApi))
       val day       = DateTime.parse("2000-01-01")
       val stop      = day.plusHours(10)
@@ -169,16 +203,18 @@ class UserTimeBookingStatisticsViewSpec
   }
 
   "UserTimeBookingStatisticsView various cases" should {
-    "LAS-24" in new PersistentActorTestScope {
+    "LAS-24" in new WithPersistentActorTestScope {
       val userReference =
         EntityReference(UserId(), "noob")
       val probe                      = TestProbe()
       val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
-      val bookingByTagRepository = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTagRepository  = mockAwaitable[BookingByTagMongoRepository]
+      val bookingByTypeRepository = mockAwaitable[BookingByTypeMongoRepository]
       val actorRef = system.actorOf(
         UserTimeBookingStatisticsViewMock.props(userReference,
                                                 bookingByProjectRepository,
                                                 bookingByTagRepository,
+                                                bookingByTypeRepository,
                                                 reactiveMongoApi))
 
       probe.send(actorRef, InitializeViewLive(userReference, 0))
@@ -207,72 +243,71 @@ class UserTimeBookingStatisticsViewSpec
       val end1 =
         day6.withHourOfDay(9).withMinuteOfHour(17)
 
-      val booking1 = BookingV2(BookingId(),
-                               start1.toLocalDateTimeWithZone(),
-                               Some(end1.toLocalDateTimeWithZone()),
-                               userReference,
-                               teamReference,
-                               projectId1,
-                               Set(tag1))
+      val booking1 = BookingV3(
+        id = BookingId(),
+        start = start1.toLocalDateTimeWithZone,
+        end = Some(end1.toLocalDateTimeWithZone),
+        duration = new Duration(start1, end1),
+        userReference = userReference,
+        organisationReference = teamReference,
+        projectReference = projectId1,
+        tags = Set(tag1)
+      )
 
       // booking 2
       val start2 = end1
       val end2   = start2.withHourOfDay(12).withMinuteOfHour(2)
-      val booking2 = BookingV2(BookingId(),
-                               start2.toLocalDateTimeWithZone(),
-                               Some(end2.toLocalDateTimeWithZone()),
-                               userReference,
-                               teamReference,
-                               projectId2,
-                               Set(tag2))
+      val booking2 = BookingV3(
+        id = BookingId(),
+        start = start2.toLocalDateTimeWithZone,
+        end = Some(end2.toLocalDateTimeWithZone),
+        duration = new Duration(start2, end2),
+        userReference = userReference,
+        organisationReference = teamReference,
+        projectReference = projectId2,
+        tags = Set(tag2)
+      )
 
       // booking 3
       val start3 = start2.withHourOfDay(12).withMinuteOfHour(50)
       val end3   = start2.withHourOfDay(15).withMinuteOfHour(30)
-      val booking3 = BookingV2(BookingId(),
-                               start3.toLocalDateTimeWithZone(),
-                               Some(end3.toLocalDateTimeWithZone()),
-                               userReference,
-                               teamReference,
-                               projectId2,
-                               Set(tag2))
+      val booking3 = BookingV3(
+        id = BookingId(),
+        start = start3.toLocalDateTimeWithZone,
+        end = Some(end3.toLocalDateTimeWithZone),
+        duration = new Duration(start3, end3),
+        userReference = userReference,
+        organisationReference = teamReference,
+        projectReference = projectId2,
+        tags = Set(tag2)
+      )
 
       // booking 4
       val start4 = start2.withHourOfDay(16).withMinuteOfHour(28)
       val end4   = start2.withHourOfDay(21).withMinuteOfHour(41)
-      val booking4 = BookingV2(BookingId(),
-                               start4.toLocalDateTimeWithZone(),
-                               Some(end4.toLocalDateTimeWithZone()),
-                               userReference,
-                               teamReference,
-                               projectId2,
-                               Set(tag2))
+      val booking4 = BookingV3(
+        id = BookingId(),
+        start = start4.toLocalDateTimeWithZone,
+        end = Some(end4.toLocalDateTimeWithZone),
+        duration = new Duration(start4, end4),
+        userReference = userReference,
+        organisationReference = teamReference,
+        projectReference = projectId2,
+        tags = Set(tag2)
+      )
 
-      // durations
-      // whole day
-      val dayDuration = Duration.standardHours(24)
-      // category durations
-      // start of booking 1
-      val startCatDuration =
-        Duration.standardHours(24 - 14).plus(Duration.standardMinutes(60 - 42))
-      val endCatDuration1 =
-        Duration.standardHours(9).plus(Duration.standardMinutes(17))
-      val endCatDuration2 = new Interval(start2, end2).toDuration()
-      val endCatDuration3 = new Interval(start3, end3).toDuration()
-      val endCatDuration4 = new Interval(start4, end4).toDuration()
-
-      probe.send(actorRef, UserTimeBookingAddedV2(booking1))
+      probe.send(actorRef, UserTimeBookingAddedV3(booking1))
       probe.expectMsg(Ack)
-      probe.send(actorRef, UserTimeBookingAddedV2(booking2))
+      probe.send(actorRef, UserTimeBookingAddedV3(booking2))
       probe.expectMsg(Ack)
-      probe.send(actorRef, UserTimeBookingAddedV2(booking3))
+      probe.send(actorRef, UserTimeBookingAddedV3(booking3))
       probe.expectMsg(Ack)
-      probe.send(actorRef, UserTimeBookingAddedV2(booking4))
+      probe.send(actorRef, UserTimeBookingAddedV3(booking4))
       probe.expectMsg(Ack)
     }
   }
 
-  def testAddDurationOverSeveralDays(eventFactory: BookingV2 => PersistedEvent)(
+  def testAddDurationOverSeveralDays(eventFactory: BookingV3 => PersistedEvent)(
       implicit system: ActorSystem) = {
     testHandleDurationOverSeveralDays(eventFactory) {
       (bookingByProjectRepository,
@@ -391,7 +426,7 @@ class UserTimeBookingStatisticsViewSpec
 
   def testRemoveDurationOverSeveralDays(implicit system: ActorSystem) = {
     testHandleDurationOverSeveralDays(booking =>
-      UserTimeBookingRemovedV2(booking)) {
+      UserTimeBookingRemovedV3(booking)) {
       (bookingByProjectRepository,
        bookingByTagRepository,
        projectReference,
@@ -518,10 +553,10 @@ class UserTimeBookingStatisticsViewSpec
     val newDuration4 = Duration.standardHours(12)
 
     testHandleDurationOverSeveralDays(booking =>
-      UserTimeBookingEditedV3(
+      UserTimeBookingEditedV4(
         booking,
-        booking.copy(start = newStart.toLocalDateTimeWithZone(),
-                     end = Some(newStop.toLocalDateTimeWithZone())))) {
+        booking.copy(start = newStart.toLocalDateTimeWithZone,
+                     end = Some(newStop.toLocalDateTimeWithZone)))) {
       (bookingByProjectRepository,
        bookingByTagRepository,
        projectReference,
@@ -766,7 +801,7 @@ class UserTimeBookingStatisticsViewSpec
   }
 
   def testHandleDurationOverSeveralDays(
-      eventFactory: BookingV2 => PersistedEvent)(
+      eventFactory: BookingV3 => PersistedEvent)(
       verify: (BookingByProjectRepository,
                BookingByTagRepository,
                EntityReference[ProjectId],
@@ -787,11 +822,13 @@ class UserTimeBookingStatisticsViewSpec
     val probe                      = TestProbe()
     val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
     val bookingByTagRepository     = mockAwaitable[BookingByTagMongoRepository]
+    val bookingByTypeRepository    = mockAwaitable[BookingByTypeMongoRepository]
     val actorRef = system.actorOf(
       UserTimeBookingStatisticsViewMock
         .props(userReference,
                bookingByProjectRepository,
                bookingByTagRepository,
+               bookingByTypeRepository,
                reactiveMongoApi))
     val day1  = LocalDateTime.parse("2000-01-01")
     val day2  = day1.plusDays(1)
@@ -815,13 +852,16 @@ class UserTimeBookingStatisticsViewSpec
     val duration2 = Duration.standardHours(24)
     val duration3 = Duration.standardHours(10)
 
-    val booking = BookingV2(BookingId(),
-                            start.toLocalDateTimeWithZone(),
-                            Some(stop.toLocalDateTimeWithZone()),
-                            userReference,
-                            teamReference,
-                            projectReference,
-                            Set(tag1, tag2))
+    val booking = BookingV3(
+      id = BookingId(),
+      start = start.toLocalDateTimeWithZone,
+      end = Some(stop.toLocalDateTimeWithZone),
+      duration = new Duration(start, stop),
+      userReference = userReference,
+      organisationReference = teamReference,
+      projectReference = projectReference,
+      tags = Set(tag1, tag2)
+    )
 
     probe.send(actorRef, InitializeViewLive(userReference, 0))
     probe.expectMsg(JournalReadingViewIsLive)
@@ -847,7 +887,7 @@ class UserTimeBookingStatisticsViewSpec
     )
   }
 
-  def testAddDuration(eventFactory: BookingV2 => PersistedEvent)(implicit
+  def testAddDuration(eventFactory: BookingV3 => PersistedEvent)(implicit
       system: ActorSystem) = {
     testHandleDurationOfOneDay(eventFactory) {
       (bookingByProjectRepository,
@@ -901,7 +941,7 @@ class UserTimeBookingStatisticsViewSpec
   }
 
   def testRemoveDuration(implicit system: ActorSystem) = {
-    testHandleDurationOfOneDay(booking => UserTimeBookingRemovedV2(booking)) {
+    testHandleDurationOfOneDay(booking => UserTimeBookingRemovedV3(booking)) {
       (bookingByProjectRepository,
        bookingByTagRepository,
        projectReference,
@@ -959,10 +999,10 @@ class UserTimeBookingStatisticsViewSpec
     val newDuration = Duration.standardHours(10)
 
     testHandleDurationOfOneDay(booking =>
-      UserTimeBookingEditedV3(
+      UserTimeBookingEditedV4(
         booking,
-        booking.copy(start = newStart.toLocalDateTimeWithZone(),
-                     end = Some(newStop.toLocalDateTimeWithZone())))) {
+        booking.copy(start = newStart.toLocalDateTimeWithZone,
+                     end = Some(newStop.toLocalDateTimeWithZone)))) {
       (bookingByProjectRepository,
        bookingByTagRepository,
        projectReference,
@@ -1056,7 +1096,7 @@ class UserTimeBookingStatisticsViewSpec
     val tagId4 = TagId("tag4")
 
     testHandleDurationOfOneDay(booking =>
-      UserTimeBookingEditedV3(
+      UserTimeBookingEditedV4(
         booking,
         booking.copy(tags = booking.tags + SimpleTag(tagId4)))) {
       (_,
@@ -1137,7 +1177,7 @@ class UserTimeBookingStatisticsViewSpec
   def testEditDurationRemoveTag(implicit system: ActorSystem) = {
 
     testHandleDurationOfOneDay(booking =>
-      UserTimeBookingEditedV3(
+      UserTimeBookingEditedV4(
         booking,
         booking.copy(tags = booking.tags.filter(_.isInstanceOf[SimpleTag])))) {
       (_,
@@ -1194,7 +1234,7 @@ class UserTimeBookingStatisticsViewSpec
     }
   }
 
-  def testHandleDurationOfOneDay(eventFactory: BookingV2 => PersistedEvent)(
+  def testHandleDurationOfOneDay(eventFactory: BookingV3 => PersistedEvent)(
       verify: (BookingByProjectRepository,
                BookingByTagRepository,
                EntityReference[ProjectId],
@@ -1211,11 +1251,13 @@ class UserTimeBookingStatisticsViewSpec
     val probe                      = TestProbe()
     val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
     val bookingByTagRepository     = mockAwaitable[BookingByTagMongoRepository]
+    val bookingByTypeRepository    = mockAwaitable[BookingByTypeMongoRepository]
     val actorRef = system.actorOf(
       UserTimeBookingStatisticsViewMock
         .props(userReference,
                bookingByProjectRepository,
                bookingByTagRepository,
+               bookingByTypeRepository,
                reactiveMongoApi))
     val day   = LocalDateTime.parse("2000-01-01")
     val stop  = day.plusHours(10).toDateTime
@@ -1233,13 +1275,16 @@ class UserTimeBookingStatisticsViewSpec
                               relatedTags = Seq(SimpleTag(tagId3)),
                               issueLink = "")
 
-    val booking = BookingV2(BookingId(),
-                            start.toLocalDateTimeWithZone(),
-                            Some(stop.toLocalDateTimeWithZone()),
-                            userReference,
-                            teamReference,
-                            projectReference,
-                            Set(tag1, tag2))
+    val booking = BookingV3(
+      id = BookingId(),
+      start = start.toLocalDateTimeWithZone,
+      end = Some(stop.toLocalDateTimeWithZone),
+      duration = new Duration(start, stop),
+      userReference = userReference,
+      organisationReference = teamReference,
+      projectReference = projectReference,
+      tags = Set(tag1, tag2)
+    )
 
     probe.send(actorRef, InitializeViewLive(userReference, 0))
     probe.expectMsg(JournalReadingViewIsLive)
@@ -1259,7 +1304,7 @@ class UserTimeBookingStatisticsViewSpec
            duration)
   }
 
-  def testAddDurationWithoutEnd(eventFactory: BookingV2 => PersistedEvent)(
+  def testAddDurationWithoutEnd(eventFactory: BookingV3 => PersistedEvent)(
       implicit system: ActorSystem) = {
     val userReference = EntityReference(UserId(), "noob")
     val teamReference =
@@ -1267,11 +1312,13 @@ class UserTimeBookingStatisticsViewSpec
     val probe                      = TestProbe()
     val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
     val bookingByTagRepository     = mockAwaitable[BookingByTagMongoRepository]
+    val bookingByTypeRepository    = mockAwaitable[BookingByTypeMongoRepository]
     val actorRef = system.actorOf(
       UserTimeBookingStatisticsViewMock
         .props(userReference,
                bookingByProjectRepository,
                bookingByTagRepository,
+               bookingByTypeRepository,
                reactiveMongoApi))
     val start = DateTime.now().minusHours(2)
     val projectReference =
@@ -1279,13 +1326,16 @@ class UserTimeBookingStatisticsViewSpec
     val tag1 = SimpleTag(TagId("tag1"))
     val tag2 = SimpleTag(TagId("tag2"))
 
-    val booking = BookingV2(BookingId(),
-                            start.toLocalDateTimeWithZone(),
-                            None,
-                            userReference,
-                            teamReference,
-                            projectReference,
-                            Set(tag1, tag2))
+    val booking = BookingV3(
+      id = BookingId(),
+      start = start.toLocalDateTimeWithZone,
+      end = None,
+      duration = new Duration(0),
+      userReference = userReference,
+      organisationReference = teamReference,
+      projectReference = projectReference,
+      tags = Set(tag1, tag2)
+    )
 
     probe.send(actorRef, InitializeViewLive(userReference, 0))
     probe.expectMsg(JournalReadingViewIsLive)
@@ -1307,19 +1357,19 @@ object UserTimeBookingStatisticsViewMock extends Mockito {
   def props(userReference: EntityReference[UserId],
             bookingByProjectRepository: BookingByProjectRepository,
             bookingByTagRepository: BookingByTagRepository,
+            bookingByTypeRepository: BookingByTypeRepository,
             reactiveMongoApi: ReactiveMongoApi) = {
 
     val clientReceiver = mock[ClientReceiver]
     val systemServices = mock[SystemServices]
 
     Props(
-      classOf[UserTimeBookingStatisticsView],
-      clientReceiver,
-      systemServices,
-      bookingByProjectRepository,
-      bookingByTagRepository,
-      userReference,
-      reactiveMongoApi
-    )
+      new UserTimeBookingStatisticsView(clientReceiver,
+                                        systemServices,
+                                        bookingByProjectRepository,
+                                        bookingByTagRepository,
+                                        bookingByTypeRepository,
+                                        userReference,
+                                        reactiveMongoApi))
   }
 }

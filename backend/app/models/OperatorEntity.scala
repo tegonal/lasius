@@ -24,7 +24,7 @@ package models
 import com.tegonal.play.json.TypedId.BaseId
 import org.joda.time.{DateTime, Duration, LocalDate, LocalDateTime}
 
-trait OperatorEntity[I <: BaseId[_], E] extends BaseEntity[I] {
+trait OperatorEntity[I <: BaseId[_], E] extends BaseEntityWithOrgRelation[I] {
   val duration: Duration
   val day: LocalDate
 

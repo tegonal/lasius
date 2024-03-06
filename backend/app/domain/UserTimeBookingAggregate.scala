@@ -43,20 +43,18 @@ object UserTimeBookingAggregate {
 
   import AggregateRoot._
 
-  case class UserTimeBooking(userReference: UserReference,
-                             bookings: Seq[BookingV2])
-      extends State {
-    def bookingInProgress: Option[BookingV2] = {
-      bookings.find(_.end.isEmpty)
-    }
-  }
+  case class UserTimeBooking(
+      userReference: UserReference,
+      bookingInProgress: Option[UserTimeBookingStartedV3],
+      bookings: Seq[BookingV3])
+      extends State
 
   object UserTimeBooking {
     implicit val userTimeBookingFormat: Format[UserTimeBooking] =
       Json.using[Json.WithDefaultValues].format[UserTimeBooking]
   }
 
-  case object KillAggregate extends Command
+  private case object KillAggregate extends Command
 
   trait UserTimeBookingCommand extends Command {
     val userReference: UserReference
@@ -72,17 +70,19 @@ object UserTimeBookingAggregate {
       newStart: DateTime)
       extends UserTimeBookingCommand
 
-  case class StartBookingCommand(userReference: UserReference,
-                                 organisationReference: OrganisationReference,
-                                 projectReference: ProjectReference,
-                                 tags: Set[Tag],
-                                 start: DateTime)
+  case class StartProjectBookingCommand(
+      userReference: UserReference,
+      organisationReference: OrganisationReference,
+      projectReference: ProjectReference,
+      tags: Set[Tag],
+      start: DateTime)
       extends UserTimeBookingCommand
 
-  case class EndBookingCommand(userReference: UserReference,
-                               organisationReference: OrganisationReference,
-                               bookingId: BookingId,
-                               end: DateTime)
+  case class EndProjectBookingCommand(
+      userReference: UserReference,
+      organisationReference: OrganisationReference,
+      bookingId: BookingId,
+      end: DateTime)
       extends UserTimeBookingCommand
 
   case class RemoveBookingCommand(userReference: UserReference,
@@ -90,21 +90,24 @@ object UserTimeBookingAggregate {
                                   bookingId: BookingId)
       extends UserTimeBookingCommand
 
-  case class AddBookingCommand(userReference: UserReference,
-                               organisationReference: OrganisationReference,
-                               projectReference: ProjectReference,
-                               tags: Set[Tag],
-                               start: DateTime,
-                               end: DateTime)
+  case class AddBookingCommand(
+      bookingType: BookingType,
+      userReference: UserReference,
+      organisationReference: OrganisationReference,
+      projectReference: Option[ProjectReference],
+      tags: Set[Tag],
+      start: DateTime,
+      endOrDuration: Either[DateTime, org.joda.time.Duration])
       extends UserTimeBookingCommand
 
-  case class EditBookingCommand(userReference: UserReference,
-                                organisationReference: OrganisationReference,
-                                bookingId: BookingId,
-                                projectReference: Option[ProjectReference],
-                                tags: Option[Set[Tag]],
-                                start: Option[DateTime],
-                                end: Option[Option[DateTime]])
+  case class UpdateBookingCommand(
+      userReference: UserReference,
+      organisationReference: OrganisationReference,
+      bookingId: BookingId,
+      projectReference: Option[ProjectReference],
+      tags: Option[Set[Tag]],
+      start: Option[DateTime],
+      endOrDuration: Option[Either[DateTime, org.joda.time.Duration]])
       extends UserTimeBookingCommand
 
   def props(systemServices: SystemServices,
@@ -112,13 +115,12 @@ object UserTimeBookingAggregate {
             bookingHistoryRepository: BookingHistoryRepository,
             userReference: UserReference,
             reactiveMongoApi: ReactiveMongoApi): Props =
-    Props(classOf[UserTimeBookingAggregate],
-          systemServices,
-          clientReceiver,
-          bookingHistoryRepository,
-          userReference,
-          reactiveMongoApi)
-
+    Props(
+      new UserTimeBookingAggregate(systemServices,
+                                   clientReceiver,
+                                   bookingHistoryRepository,
+                                   userReference,
+                                   reactiveMongoApi))
 }
 
 class UserTimeBookingAggregate(
@@ -140,11 +142,11 @@ class UserTimeBookingAggregate(
   override def persistenceId: String =
     s"user-time-booking-${userReference.id.value}"
 
-  override var state: State = UserTimeBooking(userReference, Seq())
+  override var state: State = UserTimeBooking(userReference, None, Seq())
 
   implicit val executionContext: ExecutionContextExecutor = context.dispatcher
 
-  def newBookingId: BookingId = BookingId()
+  private def newBookingId: BookingId = BookingId()
 
   /** Updates internal processor state according to event that is to be applied.
     *
@@ -158,41 +160,51 @@ class UserTimeBookingAggregate(
         log.debug(s"UserTimeBookingInitialized")
         context.become(created)
         notifyClient(UserTimeBookingHistoryEntryCleaned(userReference.id))
-      case UserTimeBookingStartedV2(booking) =>
+      case booking: UserTimeBookingStartedV3 =>
         log.debug(s"UserBookingStarted - $booking")
         state = state match {
           case ub: UserTimeBooking => startUserBooking(ub, booking)
           case _                   => state
         }
-      case UserTimeBookingStoppedV2(booking) =>
+      case UserTimeBookingStoppedV3(booking) =>
         log.debug(s"UserBookingStopped - $booking")
         state = state match {
-          case ub: UserTimeBooking => endAndLogUserBooking(ub, booking)
-          case _                   => state
+          case ub: UserTimeBooking if booking.end.isDefined =>
+            endAndLogUserBooking(ub, booking.id, booking.end.get)
+          case _ => state
         }
       case e: UserTimeBookingPaused @nowarn("cat=deprecation") =>
         log.debug(s"UserBookingPaused - ${e.bookingId}")
         state = state match {
           case ub: UserTimeBooking =>
-            endUserBooking(ub, e.bookingId, e.time.toLocalDateTimeWithZone())
+            endAndLogUserBooking(ub,
+                                 e.bookingId,
+                                 e.time.toLocalDateTimeWithZone)
           case _ => state
         }
-      case UserTimeBookingRemovedV2(booking) =>
+      case UserTimeBookingRemovedV3(booking) =>
         log.debug(s"UserBookingRemoved - $booking")
         state = state match {
           case ub: UserTimeBooking => removeUserBooking(ub, booking)
           case _                   => state
         }
-      case UserTimeBookingAddedV2(booking) =>
+      case e: UserTimeBookingAddedV3 =>
+        val booking = e.toBooking
         log.debug(s"UserBookingAdded - $booking")
         state = state match {
-          case ub: UserTimeBooking => startUserBooking(ub, booking)
+          case ub: UserTimeBooking => addUserBooking(ub, booking)
           case _                   => state
         }
-      case UserTimeBookingEditedV3(booking, newBooking) =>
+      case UserTimeBookingEditedV4(booking, newBooking) =>
         log.debug(s"UserBookingEdited- $booking: $newBooking")
         state = state match {
           case ub: UserTimeBooking => editUserBooking(ub, newBooking)
+          case _                   => state
+        }
+      case UserTimeBookingInProgressEdited(booking, newBooking) =>
+        log.debug(s"UserTimeBookingInProgressEdited- $booking: $newBooking")
+        state = state match {
+          case ub: UserTimeBooking => editUserBookingInProgress(ub, newBooking)
           case _                   => state
         }
       case UserTimeBookingStartTimeChanged(bookingId, fromStart, toStart) =>
@@ -200,47 +212,56 @@ class UserTimeBookingAggregate(
           s"UserBookingStartTimeChanged - $bookingId - $fromStart -> $toStart")
         state = state match {
           case ub: UserTimeBooking =>
-            updateStartTime(ub, bookingId, fromStart, toStart)
+            updateStartTime(ub, bookingId, toStart)
           case _ => state
         }
       case _ =>
     }
   }
 
-  def startUserBooking(ub: UserTimeBooking,
-                       booking: BookingV2): UserTimeBooking = {
-    if (booking.end.isDefined) {
-      notifyClient(UserTimeBookingHistoryEntryAdded(booking))
-      Await.ready(withDBSession()(implicit dbSession =>
-                    bookingHistoryRepository.upsert(booking)),
-                  systemServices.duration)
-    }
-
-    ub.copy(bookings = ub.bookings :+ booking)
+  private def startUserBooking(
+      ub: UserTimeBooking,
+      booking: UserTimeBookingStartedV3): UserTimeBooking = {
+    ub.copy(bookingInProgress = Some(booking))
   }
 
-  def endAndLogUserBooking(ub: UserTimeBooking,
-                           booking: BookingV2): UserTimeBooking = {
+  private def addUserBooking(ub: UserTimeBooking,
+                             booking: BookingV3): UserTimeBooking = {
+
     notifyClient(UserTimeBookingHistoryEntryAdded(booking))
     Await.ready(withDBSession()(implicit dbSession =>
                   bookingHistoryRepository.upsert(booking)),
                 systemServices.duration)
-    endUserBooking(ub, booking.id, booking.end.get)
+
+    ub.copy(bookings = ub.bookings :+ booking)
   }
 
-  def endUserBooking(ub: UserTimeBooking,
-                     bookingId: BookingId,
-                     endTime: LocalDateTimeWithTimeZone): UserTimeBooking = {
-    val newBookings = ub.bookings.map { b =>
-      if (b.id == bookingId)
-        b.copy(end = Some(endTime))
-      else b
-    }
-    ub.copy(bookings = newBookings)
+  private def endAndLogUserBooking(
+      ub: UserTimeBooking,
+      bookingId: BookingId,
+      endTime: LocalDateTimeWithTimeZone): UserTimeBooking = {
+
+    ub.bookingInProgress
+      .flatMap { b =>
+        if (b.id == bookingId) {
+          val newBooking = b.toBooking(Left(endTime))
+
+          notifyClient(UserTimeBookingHistoryEntryAdded(newBooking))
+          Await.ready(withDBSession()(implicit dbSession =>
+                        bookingHistoryRepository.upsert(newBooking)),
+                      systemServices.duration)
+          Some(
+            ub.copy(bookings = ub.bookings :+ newBooking,
+                    bookingInProgress = None))
+        } else {
+          None
+        }
+      }
+      .getOrElse(ub)
   }
 
-  def removeUserBooking(ub: UserTimeBooking,
-                        booking: BookingV2): UserTimeBooking = {
+  private def removeUserBooking(ub: UserTimeBooking,
+                                booking: BookingV3): UserTimeBooking = {
     notifyClient(UserTimeBookingHistoryEntryRemoved(booking.id))
     Await.ready(withDBSession()(implicit dbSession =>
                   bookingHistoryRepository.remove(booking)),
@@ -250,8 +271,8 @@ class UserTimeBookingAggregate(
     ub.copy(bookings = newBookings)
   }
 
-  def editUserBooking(ub: UserTimeBooking,
-                      newBooking: BookingV2): UserTimeBooking = {
+  private def editUserBooking(ub: UserTimeBooking,
+                              newBooking: BookingV3): UserTimeBooking = {
     notifyClient(UserTimeBookingHistoryEntryChanged(newBooking))
     Await.ready(
       withDBSession()(implicit dbSession =>
@@ -270,16 +291,24 @@ class UserTimeBookingAggregate(
     ub.copy(bookings = newBookings)
   }
 
-  def updateStartTime(ub: UserTimeBooking,
-                      bookingId: BookingId,
-                      fromStart: DateTime,
-                      toStart: DateTime): UserTimeBooking = {
-    val newBookings = ub.bookings.map { b =>
+  private def editUserBookingInProgress(
+      ub: UserTimeBooking,
+      newBooking: UserTimeBookingStartedV3): UserTimeBooking = {
+    notifyClient(UserTimeBookingInProgressEntryChanged(Some(newBooking)))
+
+    ub.copy(bookingInProgress = Some(newBooking))
+  }
+
+  private def updateStartTime(ub: UserTimeBooking,
+                              bookingId: BookingId,
+                              toStart: DateTime): UserTimeBooking = {
+    val updatedBooking = ub.bookingInProgress.map { b =>
       if (b.id == bookingId)
-        b.copy(start = toStart.toLocalDateTimeWithZone())
+        b.copy(start = toStart.toLocalDateTimeWithZone)
       else b
     }
-    ub.copy(bookings = newBookings)
+    notifyClient(UserTimeBookingInProgressEntryChanged(updatedBooking))
+    ub.copy(bookingInProgress = updatedBooking)
   }
 
   override def restoreFromSnapshot(metadata: SnapshotMetadata,
@@ -294,8 +323,7 @@ class UserTimeBookingAggregate(
           withinTransaction { implicit dbSession =>
             for {
               _ <- bookingHistoryRepository.deleteByUserReference(userReference)
-              _ <- bookingHistoryRepository.bulkInsert(
-                s.bookings.filter(_.end.isDefined).toList)
+              _ <- bookingHistoryRepository.bulkInsert(s.bookings.toList)
             } yield ()
           },
           Duration.create(5, MINUTES)
@@ -320,12 +348,11 @@ class UserTimeBookingAggregate(
 
   private def sendToUserServices(message: AnyRef): Unit = {
     systemServices.currentUserTimeBookingsViewService ! message
-    systemServices.latestUserTimeBookingsViewService ! message
     systemServices.timeBookingStatisticsViewService ! message
     systemServices.currentOrganisationTimeBookingsView ! message
   }
 
-  val uninitialized: Receive = defaultReceive.orElse {
+  private val uninitialized: Receive = defaultReceive.orElse {
     case GetState =>
       sender() ! state
     case Initialize(state) =>
@@ -339,40 +366,48 @@ class UserTimeBookingAggregate(
       created(e)
   }
 
-  val created: Receive = defaultReceive.orElse {
-    case StartBookingCommand(_,
-                             organisationReference,
-                             projectReference,
-                             tags,
-                             start) =>
+  private val created: Receive = defaultReceive.orElse {
+    case StartProjectBookingCommand(_,
+                                    organisationReference,
+                                    projectReference,
+                                    tags,
+                                    start) =>
       log.debug(
         s"StartBooking -> projectId:${projectReference.id}, tags:$tags, start:$start")
+      val startTime = start.toLocalDateTimeWithZone
       // if another booking is still in progress
       state match {
-        case b: UserTimeBooking => stopBookingInProgress(b, start)
+        case ub: UserTimeBooking =>
+          ub.bookingInProgress.foreach { b =>
+            val stoppedB = b.toBooking(Left(startTime))
+            persist(UserTimeBookingStoppedV3(stoppedB))(afterEventPersisted)
+          }
+        case _ =>
       }
 
-      val newBooking =
-        BookingV2(newBookingId,
-                  start.toLocalDateTimeWithZone(),
-                  None,
-                  userReference,
-                  organisationReference,
-                  projectReference,
-                  tags)
-      persist(UserTimeBookingStartedV2(newBooking))(afterEventPersisted)
-    case EndBookingCommand(userReference,
-                           organisationReference,
-                           bookingId,
-                           end) =>
+      persist(
+        UserTimeBookingStartedV3(
+          id = newBookingId,
+          bookingType = ProjectBooking,
+          start = startTime,
+          userReference = userReference,
+          organisationReference = organisationReference,
+          projectReference = Some(projectReference),
+          tags = tags
+        ))(afterEventPersisted)
+    case EndProjectBookingCommand(userReference,
+                                  organisationReference,
+                                  bookingId,
+                                  end) =>
       log.debug(s"EndBooking -> bookingId:$bookingId")
       state match {
         case b: UserTimeBooking =>
           b.bookingInProgress.foreach { b =>
             if (b.id == bookingId && b.userReference == userReference && b.organisationReference == organisationReference) {
-              val stoppedB =
-                b.copy(end = Some(end.toLocalDateTimeWithZone()))
-              persist(UserTimeBookingStoppedV2(stoppedB))(afterEventPersisted)
+              persist(
+                UserTimeBookingStoppedV3(
+                  b.toBooking(Left(end.toLocalDateTimeWithZone))))(
+                afterEventPersisted)
             }
           }
       }
@@ -387,78 +422,126 @@ class UserTimeBookingAggregate(
               b.id == bookingId && b.userReference == userReference && b.organisationReference == organisationReference)
             .foreach { removedB =>
               log.debug(s"RemoveBooking, found existing booking:$removedB")
-              persist(UserTimeBookingRemovedV2(removedB))(afterEventPersisted)
+              persist(UserTimeBookingRemovedV3(removedB))(afterEventPersisted)
             }
       }
-    case EditBookingCommand(userReference,
-                            organisationReference,
-                            bookingId,
-                            projectReference,
-                            tags,
-                            start,
-                            end) =>
+    case UpdateBookingCommand(userReference,
+                              organisationReference,
+                              bookingId,
+                              projectReference,
+                              tags,
+                              start,
+                              endOrDuration) =>
       log.debug(s"EditBooking, current state:$state")
       state match {
         case b: UserTimeBooking =>
-          b.bookings
+          b.bookingInProgress
             .find(b =>
               b.userReference == userReference && b.organisationReference == organisationReference && b.id == bookingId)
-            .foreach { edited =>
-              val newBooking = edited.copy(
+            .foreach { currentBooking =>
+              val updatedStart = start
+                .map(_.toLocalDateTimeWithZone)
+                .getOrElse(currentBooking.start)
+              val newBooking = currentBooking.copy(
                 projectReference =
-                  projectReference.getOrElse(edited.projectReference),
-                tags = tags.getOrElse(edited.tags),
-                start = start
-                  .map(_.toLocalDateTimeWithZone())
-                  .getOrElse(edited.start),
-                end = end
-                  .map(_.map(_.toLocalDateTimeWithZone()))
-                  .getOrElse(edited.end),
+                  projectReference.orElse(currentBooking.projectReference),
+                tags = tags.getOrElse(currentBooking.tags),
+                start = updatedStart,
                 // recalculate hash
                 bookingHash = (projectReference, tags) match {
-                  case (None, None) => edited.bookingHash
+                  case (None, None) => currentBooking.bookingHash
                   case (_, _) =>
                     BookingHash.createHash(
-                      projectReference.getOrElse(edited.projectReference),
-                      tags.getOrElse(edited.tags))
+                      projectReference.orElse(currentBooking.projectReference),
+                      tags.getOrElse(currentBooking.tags))
                 }
               )
               log.debug(
-                s"EditBooking, found existing booking:$edited, updatedBooking: $newBooking")
-              persist(UserTimeBookingEditedV3(edited, newBooking))(
+                s"EditBooking, found existing booking in progress :$currentBooking, updatedBooking: $newBooking")
+              persist(
+                UserTimeBookingInProgressEdited(currentBooking, newBooking))(
+                afterEventPersisted)
+            }
+
+          b.bookings
+            .find(b =>
+              b.userReference == userReference && b.organisationReference == organisationReference && b.id == bookingId)
+            .foreach { currentBooking =>
+              val updatedStart = start
+                .map(_.toLocalDateTimeWithZone)
+                .getOrElse(currentBooking.start)
+              val newBooking = currentBooking.copy(
+                projectReference =
+                  projectReference.orElse(currentBooking.projectReference),
+                tags = tags.getOrElse(currentBooking.tags),
+                start = updatedStart,
+                end = endOrDuration
+                  .map(
+                    _.fold(end => Some(end.toLocalDateTimeWithZone),
+                           // reset end in case an updated duration values was provided
+                           _ => None))
+                  .getOrElse(currentBooking.end),
+                duration = endOrDuration
+                  .map(
+                    // recalculate duration in case an end was provided
+                    _.fold(new org.joda.time.Duration(updatedStart.toDateTime,
+                                                      _),
+                           identity)
+                  )
+                  .getOrElse(
+                    // recalculate as start might have changed
+                    currentBooking.end.fold(currentBooking.duration)(
+                      currentEnd =>
+                        new org.joda.time.Duration(updatedStart.toDateTime,
+                                                   currentEnd.toDateTime))
+                  ),
+                // recalculate hash
+                bookingHash = (projectReference, tags) match {
+                  case (None, None) => currentBooking.bookingHash
+                  case (_, _) =>
+                    BookingHash.createHash(
+                      projectReference.orElse(currentBooking.projectReference),
+                      tags.getOrElse(currentBooking.tags))
+                }
+              )
+              log.debug(
+                s"EditBooking, found existing booking:$currentBooking, updatedBooking: $newBooking")
+              persist(UserTimeBookingEditedV4(currentBooking, newBooking))(
                 afterEventPersisted)
             }
       }
-    case AddBookingCommand(userReference,
+    case AddBookingCommand(bookingType,
+                           userReference,
                            organisationReference,
                            projectReference,
                            tags,
                            start,
-                           end) =>
+                           endOrDuration) =>
       persist(
-        UserTimeBookingAddedV2(
-          BookingV2(newBookingId,
-                    start.toLocalDateTimeWithZone(),
-                    Some(end.toLocalDateTimeWithZone()),
-                    userReference,
-                    organisationReference,
-                    projectReference,
-                    tags)))(afterEventPersisted)
+        UserTimeBookingAddedV3(
+          id = newBookingId,
+          bookingType = bookingType,
+          start = start,
+          endOrDuration = endOrDuration,
+          userReference = userReference,
+          organisationReference = organisationReference,
+          projectReference = projectReference,
+          tags = tags
+        ))(afterEventPersisted)
     case ChangeStartTimeOfBooking(userReference,
                                   organisationReference,
                                   bookingId,
                                   newStart) =>
       state match {
         case b: UserTimeBooking =>
-          b.bookings
+          b.bookingInProgress
             .find(b =>
               b.id == bookingId && b.userReference == userReference && b.organisationReference == organisationReference)
-            .filter(_.end.isEmpty)
             .foreach { b =>
               val oldStart = b.start
               persist(
                 UserTimeBookingStartTimeChanged(b.id,
-                                                oldStart.toDateTime(),
+                                                oldStart.toDateTime,
                                                 newStart))(afterEventPersisted)
             }
       }
@@ -471,13 +554,6 @@ class UserTimeBookingAggregate(
       log.debug(s"StartAggregate for user: $userReference")
     case other =>
       log.warning(s"Received unknown command $other")
-  }
-
-  def stopBookingInProgress(b: UserTimeBooking, time: DateTime): Unit = {
-    b.bookingInProgress.foreach { b =>
-      val stoppedB = b.copy(end = Some(time.toLocalDateTimeWithZone()))
-      persist(UserTimeBookingStoppedV2(stoppedB))(afterEventPersisted)
-    }
   }
 
   private def notifyClient(event: OutEvent): Unit = {

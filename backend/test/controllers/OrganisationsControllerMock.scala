@@ -40,6 +40,7 @@ class OrganisationsControllerMock(
     userMongoRepository: UserMongoRepository,
     val invitationRepository: InvitationMongoRepository,
     val projectRepository: ProjectMongoRepository,
+    val publicHolidayRepository: PublicHolidayRepository,
     authConfig: AuthConfig,
     cache: AsyncCacheApi,
     reactiveMongoApi: ReactiveMongoApi,
@@ -52,6 +53,7 @@ class OrganisationsControllerMock(
                                     userMongoRepository,
                                     invitationRepository,
                                     projectRepository,
+                                    publicHolidayRepository,
                                     authConfig,
                                     cache,
                                     reactiveMongoApi)
@@ -74,10 +76,11 @@ object OrganisationsControllerMock
             isOrganisationPrivate: Boolean = false,
             organisationActive: Boolean = true)(implicit
       ec: ExecutionContext): OrganisationsControllerMock = {
-    val userMongoRepository         = new UserMongoRepository()
-    val projectMongoRepository      = new ProjectMongoRepository()
-    val invitationMongoRepository   = new InvitationMongoRepository()
-    val organisationMongoRepository = new OrganisationMongoRepository()
+    val userMongoRepository          = new UserMongoRepository()
+    val projectMongoRepository       = new ProjectMongoRepository()
+    val invitationMongoRepository    = new InvitationMongoRepository()
+    val organisationMongoRepository  = new OrganisationMongoRepository()
+    val publicHolidayMongoRepository = new PublicHolidayMongoRepository()
 
     val controller = new OrganisationsControllerMock(
       Helpers.stubControllerComponents(),
@@ -86,6 +89,7 @@ object OrganisationsControllerMock
       userMongoRepository,
       invitationMongoRepository,
       projectMongoRepository,
+      publicHolidayMongoRepository,
       authConfig,
       MockCache,
       reactiveMongoApi,

@@ -136,7 +136,6 @@ class SecuritySpec
         .withHeaders(controller.AuthTokenHeader -> token)
         .asInstanceOf[Request[Unit]]
       cache.set(token, EntityReference(UserId(), "userId"))
-      implicit val req = FakeRequest()
 
       // execute
       val result = runHasToken(controller, request)

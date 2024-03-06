@@ -403,4 +403,8 @@ object Binders {
   implicit def InvitationIdPathBindable(implicit
       stringBinder: PathBindable[String]): PathBindable[InvitationId] =
     uuidBaseIdPathBindable[InvitationId](stringBinder, InvitationId.apply)
+
+  implicit def PublicHolidayIdPathBindable(implicit
+      stringBinder: PathBindable[String]): PathBindable[PublicHolidayId] =
+    uuidBaseIdPathBindable[PublicHolidayId](stringBinder, PublicHolidayId.apply)
 }

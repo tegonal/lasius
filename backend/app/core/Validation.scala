@@ -45,6 +45,18 @@ trait Validation extends FutureHelper {
     }
   }
 
+  protected def validateMutualExclusive[A, B](
+      option1: (String, Option[A]),
+      option2: (String, Option[B])): Future[Option[Either[A, B]]] =
+    (option1._2, option2._2) match {
+      case (None, None)    => Future.successful(None)
+      case (Some(a), None) => Future.successful(Some(Left(a)))
+      case (None, Some(b)) => Future.successful(Some(Right(b)))
+      case (_, _) =>
+        Future.failed(ValidationFailedException(
+          s"Provided non mutual values for '${option1._1}' and '${option2._1}'"))
+    }
+
   protected def validateStartBeforeEnd(start: DateTime,
                                        end: DateTime): Future[Status] =
     validate(start.isBefore(end) || start == end,

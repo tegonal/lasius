@@ -23,6 +23,7 @@ package services
 
 import actors.ClientReceiver
 import akka.actor.Props
+import akka.pattern.StatusReply.Ack
 import core.SystemServices
 import domain.AggregateRoot.{
   ForwardPersistentEvent,
@@ -30,12 +31,14 @@ import domain.AggregateRoot.{
   RestoreViewFromState
 }
 import domain.views.UserTimeBookingStatisticsView
-import models.{EntityReference, UserId}
-import repositories.{BookingByProjectRepository, BookingByTagRepository}
-import services.UserService.StartUserTimeBookingView
-import akka.pattern.StatusReply.Ack
 import models.UserId.UserReference
 import play.modules.reactivemongo.ReactiveMongoApi
+import repositories.{
+  BookingByProjectRepository,
+  BookingByTagRepository,
+  BookingByTypeRepository
+}
+import services.UserService.StartUserTimeBookingView
 
 object TimeBookingStatisticsViewService {
 
@@ -43,13 +46,15 @@ object TimeBookingStatisticsViewService {
             systemServices: SystemServices,
             bookingByProjectRepository: BookingByProjectRepository,
             bookingByTagRepository: BookingByTagRepository,
+            bookingByTypeRepository: BookingByTypeRepository,
             reactiveMongoApi: ReactiveMongoApi): Props =
-    Props(classOf[TimeBookingStatisticsViewService],
-          clientReceiver,
-          systemServices,
-          bookingByProjectRepository,
-          bookingByTagRepository,
-          reactiveMongoApi)
+    Props(
+      new TimeBookingStatisticsViewService(clientReceiver,
+                                           systemServices,
+                                           bookingByProjectRepository,
+                                           bookingByTagRepository,
+                                           bookingByTypeRepository,
+                                           reactiveMongoApi))
 }
 
 class TimeBookingStatisticsViewService(
@@ -57,6 +62,7 @@ class TimeBookingStatisticsViewService(
     systemServices: SystemServices,
     bookingByProjectRepository: BookingByProjectRepository,
     bookingByTagRepository: BookingByTagRepository,
+    bookingByTypeRepository: BookingByTypeRepository,
     reactiveMongoApi: ReactiveMongoApi)
     extends UserService[StartUserTimeBookingView] {
 
@@ -79,6 +85,7 @@ class TimeBookingStatisticsViewService(
                                         systemServices,
                                         bookingByProjectRepository,
                                         bookingByTagRepository,
+                                        bookingByTypeRepository,
                                         id,
                                         reactiveMongoApi)
 }

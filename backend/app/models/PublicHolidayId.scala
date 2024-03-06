@@ -21,13 +21,14 @@
 
 package models
 
-import play.api.libs.json.{Format, Json}
+import models.BaseFormat.UUIDBaseId
+import play.api.libs.json.Format
 
-case class CreateOrganisation(key: String,
-                              plannedWorkingHours: Option[WorkingHours],
-                              settings: Option[OrganisationSettings])
+import java.util.UUID
 
-object CreateOrganisation {
-  implicit val format: Format[CreateOrganisation] =
-    Json.format[CreateOrganisation]
+case class PublicHolidayId(value: UUID = UUID.randomUUID()) extends UUIDBaseId
+
+object PublicHolidayId {
+  implicit val idFormat: Format[PublicHolidayId] =
+    BaseFormat.idformat[PublicHolidayId](PublicHolidayId.apply _)
 }

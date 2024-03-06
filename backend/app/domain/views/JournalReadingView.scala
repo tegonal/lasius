@@ -45,7 +45,7 @@ case object JournalReadingViewIsLive
 trait JournalReadingView extends Actor with ActorLogging {
   val persistenceId: String
 
-  lazy val readJournal: ScalaDslMongoReadJournal =
+  private lazy val readJournal: ScalaDslMongoReadJournal =
     PersistenceQuery(context.system)
       .readJournalFor[ScalaDslMongoReadJournal](MongoReadJournal.Identifier)
 
@@ -55,7 +55,7 @@ trait JournalReadingView extends Actor with ActorLogging {
         Restart
     }
 
-  def journalSource(fromSequenceNr: Long): Source[Any, NotUsed] =
+  private def journalSource(fromSequenceNr: Long): Source[Any, NotUsed] =
     readJournal
       .currentEventsByPersistenceId(persistenceId,
                                     fromSequenceNr = fromSequenceNr,
@@ -66,7 +66,7 @@ trait JournalReadingView extends Actor with ActorLogging {
         }
       })
 
-  def replayJournalSource(fromSequenceNr: Long): Unit = {
+  private def replayJournalSource(fromSequenceNr: Long): Unit = {
     implicit val materializer: Materializer =
       Materializer.matFromSystem(context.system)
     journalSource(fromSequenceNr).runForeach(event => context.self ! event)

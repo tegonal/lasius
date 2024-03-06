@@ -22,14 +22,11 @@
 package repositories
 
 import models.LocalDateTimeWithTimeZone.DateTimeHelper
-import models.{EntityReference, _}
+import models._
 import mongo.EmbedMongo
-import org.joda.time.{DateTime, LocalDateTime}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
-import reactivemongo.api.bson.BSONObjectID
+import org.joda.time.{DateTime, Duration, LocalDateTime}
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class BookingHistoryRepositorySpec extends EmbedMongo {
@@ -47,21 +44,22 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
                                 bookingDates: Seq[(DateTime, DateTime)],
                                 limit: Option[Int] = None,
                                 skip: Option[Int] = None)(
-      test: Iterable[BookingV2] => T)(implicit
+      test: Iterable[BookingV3] => T)(implicit
       evidence$1: org.specs2.execute.AsResult[T]): T = {
     val user = EntityReference(UserId(), "userBookingHistoryRepositorySpec")
     val org  = EntityReference(OrganisationId(), "team1")
     // initialize
     val bookings = {
       bookingDates.map { case (start, end) =>
-        BookingV2(
-          BookingId(),
-          start.toLocalDateTimeWithZone(),
-          Some(end.toLocalDateTimeWithZone()),
-          user,
-          org,
-          EntityReference(ProjectId(), "p1"),
-          Set()
+        BookingV3(
+          id = BookingId(),
+          start = start.toLocalDateTimeWithZone,
+          end = Some(end.toLocalDateTimeWithZone),
+          duration = new Duration(start, end),
+          userReference = user,
+          organisationReference = org,
+          projectReference = EntityReference(ProjectId(), "p1"),
+          tags = Set()
         )
       }
     }
@@ -87,8 +85,8 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
 
       testFindByUserAndRange(from, to, Seq((start, end))) { result =>
         result must have size 1
-        result.head.start must equalTo(start.toLocalDateTimeWithZone())
-        result.head.end must beSome(end.toLocalDateTimeWithZone())
+        result.head.start must equalTo(start.toLocalDateTimeWithZone)
+        result.head.end must beSome(end.toLocalDateTimeWithZone)
       }
     }
   }
@@ -102,8 +100,8 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
 
     testFindByUserAndRange(from, to, Seq((start, end))) { result =>
       result must have size 1
-      result.head.start must equalTo(start.toLocalDateTimeWithZone())
-      result.head.end must beSome(end.toLocalDateTimeWithZone())
+      result.head.start must equalTo(start.toLocalDateTimeWithZone)
+      result.head.end must beSome(end.toLocalDateTimeWithZone)
     }
   }
 
@@ -115,8 +113,8 @@ class BookingHistoryRepositorySpec extends EmbedMongo {
     val end   = date("01.03.2010")
 
     testFindByUserAndRange(from, to, Seq((start, end))) { result =>
-      result.head.start must equalTo(start.toLocalDateTimeWithZone())
-      result.head.end must beSome(end.toLocalDateTimeWithZone())
+      result.head.start must equalTo(start.toLocalDateTimeWithZone)
+      result.head.end must beSome(end.toLocalDateTimeWithZone)
     }
   }
   "Not find BookingV2 outside of range" in {

@@ -30,11 +30,21 @@ case class Organisation(id: OrganisationId,
                         `private`: Boolean,
                         active: Boolean,
                         createdBy: UserReference,
-                        deactivatedBy: Option[UserReference])
+                        deactivatedBy: Option[UserReference],
+                        settings: Option[OrganisationSettings] = None)
     extends BaseEntity[OrganisationId] {
-  def getReference(): OrganisationReference = EntityReference(id, key)
+  def reference: OrganisationReference = EntityReference(id, key)
 }
 
 object Organisation {
   implicit val format: Format[Organisation] = Json.format[Organisation]
+}
+
+case class OrganisationSettings(
+    absence: AbsenceSettings
+)
+
+object OrganisationSettings {
+  implicit val format: Format[OrganisationSettings] =
+    Json.format[OrganisationSettings]
 }

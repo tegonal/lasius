@@ -172,7 +172,7 @@ class InitialDemoDataLoader @Inject() (
       Project(
         ProjectId(),
         "Lasius",
-        org.getReference(),
+        org.reference,
         Set(
           TagGroup(TagId("Development"),
                    relatedTags = Seq(SimpleTag(TagId("Billable")))),
@@ -190,7 +190,7 @@ class InitialDemoDataLoader @Inject() (
       Project(
         ProjectId(),
         "Marketing",
-        org.getReference(),
+        org.reference,
         Set(
           TagGroup(TagId("Sales"),
                    relatedTags = Seq(SimpleTag(TagId("Non-Billable")),
@@ -206,7 +206,7 @@ class InitialDemoDataLoader @Inject() (
       Project(
         ProjectId(),
         "KnowHow",
-        org.getReference(),
+        org.reference,
         Set(SimpleTag(TagId("Billable")), SimpleTag(TagId("Non-Billable"))),
         active = true,
         userReference,
@@ -214,7 +214,7 @@ class InitialDemoDataLoader @Inject() (
       Project(
         ProjectId(),
         "Others",
-        org.getReference(),
+        org.reference,
         Set(SimpleTag(TagId("Billable")), SimpleTag(TagId("Non-Billable"))),
         active = true,
         userReference,
@@ -241,28 +241,28 @@ class InitialDemoDataLoader @Inject() (
       FreeUser,
       Seq(
         UserOrganisation(
-          user1Org.getReference(),
+          user1Org.reference,
           `private` = user1Org.`private`,
           OrganisationAdministrator,
           WorkingHours(),
           Seq()
         ),
         UserOrganisation(
-          publicOrg.getReference(),
+          publicOrg.reference,
           publicOrg.`private`,
           OrganisationAdministrator,
           WorkingHours(monday = 8, tuesday = 4, wednesday = 2),
           projects
             .filter(p => Seq("Lasius", "KnowHow").contains(p.key))
-            .map(p =>
-              UserProject(None, p.getReference(), ProjectAdministrator)) ++
+            .map(p => UserProject(None, p.reference, ProjectAdministrator)) ++
             projects
               .filter(p => Seq("Marketing", "Others").contains(p.key))
-              .map(p => UserProject(None, p.getReference(), ProjectMember))
+              .map(p => UserProject(None, p.reference, ProjectMember))
         )
       ),
       settings = Some(
-        UserSettings(lastSelectedOrganisation = Some(publicOrg.getReference())))
+        UserSettings(lastSelectedOrganisation = Some(publicOrg.reference))
+      )
     )
 
     val user2 = User(
@@ -276,28 +276,28 @@ class InitialDemoDataLoader @Inject() (
       FreeUser,
       Seq(
         UserOrganisation(
-          user2Org.getReference(),
+          user2Org.reference,
           `private` = user2Org.`private`,
           OrganisationAdministrator,
           WorkingHours(),
           Seq()
         ),
         UserOrganisation(
-          publicOrg.getReference(),
+          publicOrg.reference,
           `private` = publicOrg.`private`,
           OrganisationAdministrator,
           WorkingHours(monday = 8, tuesday = 4, wednesday = 2),
           projects
             .filter(p => Seq("Lasius", "KnowHow").contains(p.key))
-            .map(p => UserProject(None, p.getReference(), ProjectMember)) ++
+            .map(p => UserProject(None, p.reference, ProjectMember)) ++
             projects
               .filter(p => Seq("Marketing", "Others").contains(p.key))
-              .map(p =>
-                UserProject(None, p.getReference(), ProjectAdministrator))
+              .map(p => UserProject(None, p.reference, ProjectAdministrator))
         )
       ),
       settings = Some(
-        UserSettings(lastSelectedOrganisation = Some(publicOrg.getReference())))
+        UserSettings(lastSelectedOrganisation = Some(publicOrg.reference))
+      )
     )
 
     val users = List(user1, user2)
@@ -321,9 +321,9 @@ class InitialDemoDataLoader @Inject() (
                                            user: User)(implicit
       dbSession: DBSession): Seq[Seq[Unit]] = {
     val now           = DateTime.now()
-    val orgRef        = org.getReference()
+    val orgRef        = org.reference
     val random        = new Random
-    val userReference = user.getReference()
+    val userReference = user.reference
     (1 to 60).map { dayDiff =>
       val day = now.minusDays(dayDiff)
       generateRandomTimeSlots(day).map { timeSlot =>
@@ -337,12 +337,13 @@ class InitialDemoDataLoader @Inject() (
         val randomPhrase = random.shuffle(randomPhraseList).head
 
         systemServices.timeBookingViewService ! AddBookingCommand(
+          bookingType = ProjectBooking,
           userReference = userReference,
           organisationReference = orgRef,
-          projectReference = project.getReference(),
+          projectReference = Some(project.reference),
           tags = projectTags + randomPhrase,
           start = timeSlot._1,
-          end = timeSlot._2
+          endOrDuration = Left(timeSlot._2)
         )
       }
     }

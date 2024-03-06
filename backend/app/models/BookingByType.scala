@@ -21,31 +21,36 @@
 
 package models
 
-import domain.UserTimeBookingAggregate.AddBookingCommand
 import models.OrganisationId.OrganisationReference
-import models.ProjectId.ProjectReference
-import org.joda.time.DateTime
+import models.UserId.UserReference
+import org.joda.time.{Duration, LocalDate}
 import play.api.libs.json.{Json, OFormat}
 import models.BaseFormat._
 
-case class AddBookingRequest(projectId: ProjectId,
-                             tags: Set[Tag],
-                             start: DateTime,
-                             end: DateTime) {
-  def toCommand(organisationReference: OrganisationReference,
-                projectReference: ProjectReference)(implicit
-      subject: Subject): AddBookingCommand =
-    AddBookingCommand(
-      subject.userReference,
-      organisationReference,
-      projectReference,
-      tags,
-      start,
-      end
-    )
+case class BookingByType(_id: BookingByTypeId,
+                         userReference: UserReference,
+                         organisationReference: OrganisationReference,
+                         day: LocalDate,
+                         bookingType: BookingType,
+                         duration: Duration)
+    extends OperatorEntity[BookingByTypeId, BookingByType] {
+  val id: BookingByTypeId = _id
+
+  def invert: BookingByType = {
+    BookingByType(id,
+                  userReference,
+                  organisationReference,
+                  day,
+                  bookingType,
+                  Duration.ZERO.minus(duration))
+  }
+
+  def duration(duration: Duration): BookingByType = {
+    copy(duration = duration)
+  }
 }
 
-object AddBookingRequest {
-  implicit val addBookingFormat: OFormat[AddBookingRequest] =
-    Json.format[AddBookingRequest]
+object BookingByType {
+  implicit val bookingByTypeFormat: OFormat[BookingByType] =
+    Json.format[BookingByType]
 }

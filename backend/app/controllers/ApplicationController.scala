@@ -116,12 +116,12 @@ class ApplicationController @Inject() (
             case None =>
               BadRequest("Authentication failed")
             case Some(user) =>
-              logger.debug(s"Store token for user: ${user.getReference()}")
+              logger.debug(s"Store token for user: ${user.reference}")
               val uuid = UUID.randomUUID.toString
-              cache.set(uuid, user.getReference())
+              cache.set(uuid, user.reference)
 
               systemServices.loginStateAggregate ! UserLoggedInV2(
-                user.getReference())
+                user.reference)
 
               Ok(Json.obj("token" -> uuid))
                 .withCookies(

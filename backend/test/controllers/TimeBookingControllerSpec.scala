@@ -28,14 +28,24 @@ import core.{
   SystemServices,
   TestApplication
 }
+import domain.UserTimeBookingAggregate.{
+  AddBookingCommand,
+  StartProjectBookingCommand,
+  UpdateBookingCommand
+}
+import models.LocalDateTimeWithTimeZone._
+import models.OrganisationId.OrganisationReference
+import models.ProjectId.ProjectReference
+import models.UserId.UserReference
 import models._
 import mongo.EmbedMongo
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, Duration}
 import org.specs2.mock.Mockito
 import org.specs2.mock.mockito.MockitoMatchers
 import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
+import repositories.BookingHistoryRepository
 import util.MockAwaitable
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,27 +58,31 @@ class TimeBookingControllerSpec
     with TestApplication
     with EmbedMongo {
 
-  "start booking" should {
+  "start project booking" should {
 
     "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
 
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
       val projectId: ProjectId = ProjectId()
-      val request: FakeRequest[StartBookingRequest] = FakeRequest()
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
         .withBody(
-          StartBookingRequest(
+          StartOrAddProjectBookingRequest(
             projectId = projectId,
             tags = Set(SimpleTag(TagId("tag1"))),
-            start = None
+            start = DateTime.now(),
           ))
       val result: Future[Result] =
-        controller.start(controller.organisationId)(request)
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
 
       status(result) must equalTo(FORBIDDEN)
     }
@@ -77,47 +91,94 @@ class TimeBookingControllerSpec
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
-      val request: FakeRequest[StartBookingRequest] = FakeRequest()
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
         .withBody(
-          StartBookingRequest(
+          StartOrAddProjectBookingRequest(
             projectId = controller.project.id,
             tags = Set(SimpleTag(TagId("tag1"))),
-            start = None
+            start = DateTime.now()
           ))
       val organisationId: OrganisationId = OrganisationId()
-      val result: Future[Result] = controller.start(organisationId)(request)
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(organisationId)(request)
 
       status(result) must equalTo(FORBIDDEN)
+    }
+
+    "successful, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+      val from: DateTime = DateTime.now()
+
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
+        .withBody(
+          StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = tags,
+            start = from
+          ))
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        StartProjectBookingCommand(
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          projectReference = controller.project.reference,
+          tags = tags,
+          start = from
+        )
+      )
     }
   }
 
-  "edit booking" should {
+  "edit project booking" should {
 
     "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
       val projectId: ProjectId = ProjectId()
-      val request: FakeRequest[EditBookingRequest] = FakeRequest()
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
         .withBody(
-          EditBookingRequest(
-            projectId = Some(projectId),
-            tags = None,
-            start = None,
-            end = None
+          UpdateProjectBookingRequest(
+            projectId = Some(projectId)
           ))
       val result: Future[Result] =
-        controller.edit(controller.organisationId, BookingId())(request)
+        controller.updateProjectBooking(controller.organisationId, BookingId())(
+          request)
 
       status(result) must equalTo(FORBIDDEN)
     }
@@ -126,14 +187,18 @@ class TimeBookingControllerSpec
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
-      val request: FakeRequest[EditBookingRequest] = FakeRequest()
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
         .withBody(
-          EditBookingRequest(
+          UpdateProjectBookingRequest(
             projectId = Some(controller.project.id),
             tags = None,
             start = None,
@@ -141,7 +206,7 @@ class TimeBookingControllerSpec
           ))
       val organisationId: OrganisationId = OrganisationId()
       val result: Future[Result] =
-        controller.edit(organisationId, BookingId())(request)
+        controller.updateProjectBooking(organisationId, BookingId())(request)
 
       status(result) must equalTo(FORBIDDEN)
     }
@@ -150,52 +215,209 @@ class TimeBookingControllerSpec
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
       val from: DateTime = DateTime.now()
       val to: DateTime   = from.minusDays(1)
-      val request: FakeRequest[EditBookingRequest] = FakeRequest()
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
         .withBody(
-          EditBookingRequest(
+          UpdateProjectBookingRequest(
             projectId = None,
             tags = None,
             start = Some(from),
-            end = Some(Some(to))
+            end = Some(to)
           ))
       val result: Future[Result] =
-        controller.edit(controller.organisationId, BookingId())(request)
+        controller.updateProjectBooking(controller.organisationId, BookingId())(
+          request)
 
       status(result) must equalTo(BAD_REQUEST)
       contentAsString(result) must startWith(
         "Start date needs to be before end date")
     }
+
+    "badrequest providing end date and duration" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+
+      val bookingId = BookingId()
+      withDBSession() { implicit dbSession =>
+        bookingHistoryRepository.upsert(
+          BookingV3(
+            id = bookingId,
+            start = from.toLocalDateTimeWithZone,
+            end = None,
+            duration = new Duration(10),
+            tags = Set(),
+            userReference = controller.userReference,
+            organisationReference = controller.organisation.reference,
+            projectReference = controller.project.reference
+          )
+        )
+      }.awaitResult()
+
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
+        .withBody(
+          UpdateProjectBookingRequest(
+            projectId = None,
+            tags = None,
+            start = Some(from),
+            end = Some(to),
+            duration = Some(new Duration(1000))
+          ))
+      val result: Future[Result] =
+        controller.updateProjectBooking(controller.organisationId, bookingId)(
+          request)
+
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        "Provided non mutual values for 'end_date' and 'duration'")
+    }
+
+    "badrequest if booking does not exist in provided organisation" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
+        .withBody(
+          UpdateProjectBookingRequest(
+            projectId = None,
+            tags = None,
+            start = Some(from),
+            end = None,
+            duration = Some(new Duration(1000))
+          ))
+      val bookingId = BookingId()
+      val result: Future[Result] =
+        controller.updateProjectBooking(controller.organisationId, bookingId)(
+          request)
+
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        s"Cannot find booking ${bookingId.value} in organisation ${controller.organisation.key}")
+    }
+
+    "successful, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+
+      val bookingId = BookingId()
+      withDBSession() { implicit dbSession =>
+        bookingHistoryRepository.upsert(
+          BookingV3(
+            id = bookingId,
+            start = from.toLocalDateTimeWithZone,
+            end = None,
+            duration = new Duration(10),
+            tags = Set(),
+            userReference = controller.userReference,
+            organisationReference = controller.organisation.reference,
+            projectReference = controller.project.reference
+          )
+        )
+      }.awaitResult()
+
+      val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
+        .withBody(
+          UpdateProjectBookingRequest(
+            projectId = None,
+            tags = None,
+            start = Some(from),
+            end = Some(to)
+          ))
+      val result: Future[Result] =
+        controller.updateProjectBooking(controller.organisationId, bookingId)(
+          request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        UpdateBookingCommand(
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          bookingId = bookingId,
+          projectReference = None,
+          tags = None,
+          start = Some(from),
+          endOrDuration = Some(Left(to))
+        )
+      )
+    }
   }
 
-  "add booking" should {
+  "add project booking" should {
 
     "forbidden if for authenticated user project id does not exist" in new WithTestApplication {
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
       val from: DateTime       = DateTime.now()
       val to: DateTime         = from.plusHours(1)
       val projectId: ProjectId = ProjectId()
-      val request: FakeRequest[AddBookingRequest] = FakeRequest()
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
         .withBody(
-          models.AddBookingRequest(projectId = projectId,
-                                   tags = Set(SimpleTag(TagId("tag1"))),
-                                   start = from,
-                                   end = to))
+          models.StartOrAddProjectBookingRequest(
+            projectId = projectId,
+            tags = Set(SimpleTag(TagId("tag1"))),
+            start = from,
+            end = Some(to)))
       val result: Future[Result] =
-        controller.add(controller.organisationId)(request)
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
 
       status(result) must equalTo(FORBIDDEN)
     }
@@ -204,21 +426,28 @@ class TimeBookingControllerSpec
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
       val from: DateTime = DateTime.now()
       val to: DateTime   = from.plusHours(1)
-      val request: FakeRequest[AddBookingRequest] = FakeRequest()
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
         .withBody(
-          models.AddBookingRequest(projectId = controller.project.id,
-                                   tags = Set(SimpleTag(TagId("tag1"))),
-                                   start = from,
-                                   end = to))
+          models.StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = Set(SimpleTag(TagId("tag1"))),
+            start = from,
+            end = Some(to)))
       val organisationId: OrganisationId = OrganisationId()
-      val result: Future[Result] = controller.add(organisationId)(request)
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(organisationId)(request)
 
       status(result) must equalTo(FORBIDDEN)
     }
@@ -227,33 +456,334 @@ class TimeBookingControllerSpec
       implicit val executionContext: ExecutionContext = inject[ExecutionContext]
       val systemServices                              = inject[SystemServices]
       val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
       val controller: TimeBookingController
         with SecurityControllerMock
         with MockCacheAware =
-        TimeBookingControllerMock(systemServices, authConfig, reactiveMongoApi)
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
 
       val from: DateTime = DateTime.now()
       val to: DateTime   = from.minusHours(1)
-      val request: FakeRequest[AddBookingRequest] = FakeRequest()
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
         .withBody(
-          models.AddBookingRequest(projectId = controller.project.id,
-                                   tags = Set(SimpleTag(TagId("tag1"))),
-                                   start = from,
-                                   end = to))
+          models.StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = Set(SimpleTag(TagId("tag1"))),
+            start = from,
+            end = Some(to)))
       val result: Future[Result] =
-        controller.add(controller.organisationId)(request)
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
 
       status(result) must equalTo(BAD_REQUEST)
       contentAsString(result) must startWith(
         "Start date needs to be before end date")
     }
+
+    "badrequest providing end date and duration" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
+        .withBody(
+          models.StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = Set(SimpleTag(TagId("tag1"))),
+            start = from,
+            end = Some(to),
+            duration = Some(new Duration(1000))))
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        "Provided non mutual values for 'end_date' and 'duration'")
+    }
+
+    "successful with end date, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
+        .withBody(
+          StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = tags,
+            start = from,
+            end = Some(to)
+          ))
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        AddBookingCommand(
+          bookingType = ProjectBooking,
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          projectReference = Some(controller.project.reference),
+          tags = tags,
+          start = from,
+          endOrDuration = Left(to)
+        )
+      )
+    }
+
+    "successful with duration, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+      val from: DateTime = DateTime.now()
+      val duration       = new Duration(1000)
+
+      val request: FakeRequest[StartOrAddProjectBookingRequest] = FakeRequest()
+        .withBody(
+          StartOrAddProjectBookingRequest(
+            projectId = controller.project.id,
+            tags = tags,
+            start = from,
+            duration = Some(duration)
+          ))
+      val result: Future[Result] =
+        controller.startOrAddProjectBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        AddBookingCommand(
+          bookingType = ProjectBooking,
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          projectReference = Some(controller.project.reference),
+          tags = tags,
+          start = from,
+          endOrDuration = Right(duration)
+        )
+      )
+    }
+  }
+
+  "add absence booking" should {
+
+    "forbidden if for authenticated user organisation does not exist" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+        .withBody(
+          models.AddAbsenceBookingRequest(bookingType = HolidayBooking,
+                                          tags = Set(SimpleTag(TagId("tag1"))),
+                                          start = from,
+                                          end = Some(to)))
+      val organisationId: OrganisationId = OrganisationId()
+      val result: Future[Result] =
+        controller.addAbsenceBooking(organisationId)(request)
+
+      status(result) must equalTo(FORBIDDEN)
+    }
+
+    "badrequest if end date is before start date" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.minusHours(1)
+      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+        .withBody(
+          models.AddAbsenceBookingRequest(bookingType = HolidayBooking,
+                                          tags = Set(SimpleTag(TagId("tag1"))),
+                                          start = from,
+                                          end = Some(to)))
+      val result: Future[Result] =
+        controller.addAbsenceBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        "Start date needs to be before end date")
+    }
+
+    "badrequest providing end date and duration" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices                              = inject[SystemServices]
+      val authConfig                                  = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+        .withBody(
+          models.AddAbsenceBookingRequest(bookingType = HolidayBooking,
+                                          tags = Set(SimpleTag(TagId("tag1"))),
+                                          start = from,
+                                          end = Some(to),
+                                          duration = Some(new Duration(1000))))
+      val result: Future[Result] =
+        controller.addAbsenceBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        "Provided non mutual values for 'end_date' and 'duration'")
+    }
+
+    "successful with end date, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+      val from: DateTime = DateTime.now()
+      val to: DateTime   = from.plusHours(1)
+
+      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+        .withBody(
+          models.AddAbsenceBookingRequest(bookingType = HolidayBooking,
+                                          tags = Set(SimpleTag(TagId("tag1"))),
+                                          start = from,
+                                          end = Some(to)))
+      val result: Future[Result] =
+        controller.addAbsenceBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        AddBookingCommand(
+          bookingType = HolidayBooking,
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          projectReference = None,
+          tags = tags,
+          start = from,
+          endOrDuration = Left(to)
+        )
+      )
+    }
+
+    "successful with duration, producing expected command" in new WithTestApplication {
+      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+      val systemServices = inject[SystemServices].asInstanceOf[MockServices]
+      val authConfig     = inject[AuthConfig]
+      val bookingHistoryRepository = inject[BookingHistoryRepository]
+
+      val controller: TimeBookingController
+        with SecurityControllerMock
+        with MockCacheAware =
+        TimeBookingControllerMock(systemServices,
+                                  authConfig,
+                                  reactiveMongoApi,
+                                  bookingHistoryRepository)
+
+      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+      val from: DateTime = DateTime.now()
+      val duration       = new Duration(1000)
+
+      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+        .withBody(
+          models.AddAbsenceBookingRequest(bookingType = PublicHolidayBooking,
+                                          tags = Set(SimpleTag(TagId("tag1"))),
+                                          start = from,
+                                          duration = Some(duration)))
+      val result: Future[Result] =
+        controller.addAbsenceBooking(controller.organisationId)(request)
+
+      status(result) must equalTo(OK)
+      systemServices.timeBookingViewServiceProbe.expectMsg(
+        AddBookingCommand(
+          bookingType = PublicHolidayBooking,
+          userReference = controller.userReference,
+          organisationReference = controller.organisation.reference,
+          projectReference = None,
+          tags = tags,
+          start = from,
+          endOrDuration = Right(duration)
+        )
+      )
+    }
   }
 }
 
 object TimeBookingControllerMock extends MockAwaitable with Mockito {
+
   def apply(systemServices: SystemServices,
             authConfig: AuthConfig,
-            reactiveMongoApi: ReactiveMongoApi)(implicit
+            reactiveMongoApi: ReactiveMongoApi,
+            bookingHistoryRepository: BookingHistoryRepository)(implicit
       ec: ExecutionContext): TimeBookingController
     with SecurityControllerMock
     with MockCacheAware = {
@@ -263,6 +793,7 @@ object TimeBookingControllerMock extends MockAwaitable with Mockito {
       authConfig,
       MockCache,
       reactiveMongoApi,
-      systemServices) with SecurityControllerMock with MockCacheAware
+      systemServices,
+      bookingHistoryRepository) with SecurityControllerMock with MockCacheAware
   }
 }

@@ -102,10 +102,9 @@ class PluginHandler(userRepository: UserRepository,
     log.debug(s"initializeUserViews:$initializeViews")
     if (initializeViews) {
       userRepository.findAll().foreach { users =>
-        log.debug(s"findAllUsers:${users.map(_.getReference())}")
+        log.debug(s"findAllUsers:${users.map(_.reference)}")
         users.foreach(user =>
-          systemServices.loginHandler ! InitializeUserViews(
-            user.getReference()))
+          systemServices.loginHandler ! InitializeUserViews(user.reference))
       }
     }
   }

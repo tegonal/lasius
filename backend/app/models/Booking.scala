@@ -30,15 +30,25 @@ import models.BaseFormat._
 import scala.annotation.nowarn
 
 @SerialVersionUID(1241414)
-case class BookingStub(projectReference: ProjectReference,
+case class BookingStub(bookingType: BookingType,
+                       projectReference: Option[ProjectReference],
                        tags: Set[Tag],
                        bookingHash: Long)
 
 object BookingStub {
-  def apply(projectReference: ProjectReference, tags: Set[Tag]): BookingStub =
-    BookingStub(projectReference,
+  def apply(bookingType: BookingType,
+            projectReference: Option[ProjectReference],
+            tags: Set[Tag]): BookingStub =
+    BookingStub(bookingType,
+                projectReference,
                 tags,
                 BookingHash.createHash(projectReference, tags))
+
+  def apply(projectReference: ProjectReference, tags: Set[Tag]): BookingStub =
+    BookingStub(ProjectBooking,
+                Some(projectReference),
+                tags,
+                BookingHash.createHash(Some(projectReference), tags))
 
   implicit val bookingStubFormat: Format[BookingStub] =
     Json.using[Json.WithDefaultValues].format[BookingStub]
@@ -71,17 +81,17 @@ case class Booking(id: BookingId,
       .find(_.key == projectKey)
       .getOrElse(sys.error(
         s"Cannot migrate current booking $this, project with key $projectKey not found"))
-    val projectReference = project.getReference()
+    val projectReference = project.reference
     val allTags          = tags + SimpleTag(TagId(categoryId))
     BookingV2(
       id,
-      start.toLocalDateTimeWithZone(),
-      end.map(_.toLocalDateTimeWithZone()),
-      user.getReference(),
+      start.toLocalDateTimeWithZone,
+      end.map(_.toLocalDateTimeWithZone),
+      user.reference,
       project.organisationReference,
       projectReference,
       allTags,
-      BookingHash.createHash(projectReference, allTags)
+      BookingHash.createHash(Some(projectReference), allTags)
     )
   }
 }

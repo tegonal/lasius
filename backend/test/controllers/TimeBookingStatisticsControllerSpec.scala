@@ -38,7 +38,11 @@ import play.api.libs.json._
 import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.{BookingByProjectRepository, BookingByTagRepository}
+import repositories.{
+  BookingByProjectRepository,
+  BookingByTagRepository,
+  BookingByTypeRepository
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -120,6 +124,7 @@ object TimeBookingStatisticsControllerMock extends MockAwaitable with Mockito {
     with MockCacheAware = {
     val bookingByProjectRepository = mockAwaitable[BookingByProjectRepository]
     val bookingByTagRepository     = mockAwaitable[BookingByTagRepository]
+    val bookingByTypeRepository    = mockAwaitable[BookingByTypeRepository]
 
     new TimeBookingStatisticsController(
       Helpers.stubControllerComponents(),
@@ -128,6 +133,7 @@ object TimeBookingStatisticsControllerMock extends MockAwaitable with Mockito {
       MockCache,
       reactiveMongoApi,
       bookingByProjectRepository,
-      bookingByTagRepository) with SecurityControllerMock with MockCacheAware
+      bookingByTagRepository,
+      bookingByTypeRepository) with SecurityControllerMock with MockCacheAware
   }
 }

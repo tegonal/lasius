@@ -21,31 +21,34 @@
 
 package models
 
-import domain.UserTimeBookingAggregate.EditBookingCommand
 import models.OrganisationId.OrganisationReference
 import models.ProjectId.ProjectReference
-import org.joda.time.DateTime
+import models.UserId.UserReference
 import play.api.libs.json._
-import models.BaseFormat._
 
-case class EditBookingRequest(projectId: Option[ProjectId],
-                              tags: Option[Set[Tag]],
-                              start: Option[DateTime],
-                              end: Option[Option[DateTime]]) {
-  def toCommand(bookingId: BookingId,
-                organisationReference: OrganisationReference,
-                projectReference: Option[ProjectReference])(implicit
-      subject: Subject): EditBookingCommand =
-    EditBookingCommand(subject.userReference,
-                       organisationReference,
-                       bookingId,
-                       projectReference,
-                       tags,
-                       start,
-                       end)
+sealed trait BookingClass {
+  val bookingCategories: Set[Tag]
 }
 
-object EditBookingRequest {
-  implicit val editBookingFormat: OFormat[EditBookingRequest] =
-    Json.format[EditBookingRequest]
+case class Project(id: ProjectId,
+                   key: String,
+                   organisationReference: OrganisationReference,
+                   bookingCategories: Set[Tag],
+                   active: Boolean,
+                   createdBy: UserReference,
+                   deactivatedBy: Option[UserReference])
+    extends BaseEntityWithOrgRelation[ProjectId]
+    with BookingClass {
+  def reference: ProjectReference = EntityReference(id, key)
+}
+
+object Project {
+  implicit val format: Format[Project] = Json.format[Project]
+}
+
+case class AbsenceSettings(bookingCategories: Set[Tag]) extends BookingClass
+
+object AbsenceSettings {
+  implicit val format: Format[AbsenceSettings] =
+    Json.format[AbsenceSettings]
 }

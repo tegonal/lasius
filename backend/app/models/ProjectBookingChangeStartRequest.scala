@@ -25,9 +25,9 @@ import org.joda.time.DateTime
 import play.api.libs.json.{Json, OFormat}
 import BaseFormat._
 
-case class BookingChangeStartRequest(newStart: DateTime)
+case class ProjectBookingChangeStartRequest(newStart: DateTime)
 
-object BookingChangeStartRequest {
-  implicit val changeStartFormat: OFormat[BookingChangeStartRequest] =
-    Json.format[BookingChangeStartRequest]
+object ProjectBookingChangeStartRequest {
+  implicit val changeStartFormat: OFormat[ProjectBookingChangeStartRequest] =
+    Json.format[ProjectBookingChangeStartRequest]
 }

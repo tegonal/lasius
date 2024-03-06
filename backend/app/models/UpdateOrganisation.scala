@@ -23,7 +23,8 @@ package models
 
 import play.api.libs.json.{Format, Json}
 
-case class UpdateOrganisation(key: Option[String])
+case class UpdateOrganisation(key: Option[String],
+                              settings: Option[OrganisationSettings])
 
 object UpdateOrganisation {
   implicit val format: Format[UpdateOrganisation] =

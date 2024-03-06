@@ -28,9 +28,13 @@ import models._
 import org.joda.time._
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.{Action, ControllerComponents}
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.{BookingByProjectRepository, BookingByTagRepository}
+import repositories.{
+  BookingByProjectRepository,
+  BookingByTagRepository,
+  BookingByTypeRepository
+}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +46,8 @@ class TimeBookingStatisticsController @Inject() (
     override val cache: AsyncCacheApi,
     override val reactiveMongoApi: ReactiveMongoApi,
     val bookingByProjectRepository: BookingByProjectRepository,
-    val bookingByTagRepository: BookingByTagRepository)(implicit
+    val bookingByTagRepository: BookingByTagRepository,
+    val bookingByTypeRepository: BookingByTypeRepository)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
@@ -77,6 +82,15 @@ class TimeBookingStatisticsController @Inject() (
                                               "projectReference.key",
                                               granularity)
                 .map(result => Ok(Json.toJson(result)))
+            case "bookingType" =>
+              bookingByTypeRepository
+                .findAggregatedByUserAndRange(subject.userReference,
+                                              orgId,
+                                              from,
+                                              to,
+                                              "bookingType",
+                                              granularity)
+                .map(result => Ok(Json.toJson(result)))
             case s =>
               Future.failed(ValidationFailedException(s"Unsupported source:$s"))
           }
@@ -109,6 +123,14 @@ class TimeBookingStatisticsController @Inject() (
                                                       from,
                                                       to,
                                                       "projectReference.key",
+                                                      granularity)
+                .map(result => Ok(Json.toJson(result)))
+            case "bookingType" =>
+              bookingByTypeRepository
+                .findAggregatedByOrganisationAndRange(orgId,
+                                                      from,
+                                                      to,
+                                                      "bookingType",
                                                       granularity)
                 .map(result => Ok(Json.toJson(result)))
             case "user" =>
@@ -152,6 +174,14 @@ class TimeBookingStatisticsController @Inject() (
                                                    from,
                                                    to,
                                                    "projectReference.key",
+                                                   granularity)
+                  .map(result => Ok(Json.toJson(result)))
+              case "bookingType" =>
+                bookingByTypeRepository
+                  .findAggregatedByProjectAndRange(projectId,
+                                                   from,
+                                                   to,
+                                                   "bookingType",
                                                    granularity)
                   .map(result => Ok(Json.toJson(result)))
               case "user" =>

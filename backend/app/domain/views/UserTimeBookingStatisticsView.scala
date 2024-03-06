@@ -26,23 +26,18 @@ import akka.actor._
 import akka.pattern.StatusReply.Ack
 import core.{DBSupport, SystemServices}
 import domain.UserTimeBookingAggregate.UserTimeBooking
+import models.OrganisationId.OrganisationReference
+import models.ProjectId.ProjectReference
 import models.UserId.UserReference
 import models._
-import org.joda.time.{
-  DateTime,
-  Days,
-  Duration,
-  Interval,
-  LocalDate,
-  LocalDateTime
-}
+import org.joda.time.{Days, Duration, Interval, LocalDate}
 import play.modules.reactivemongo.ReactiveMongoApi
 import repositories._
 
-import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.language.postfixOps
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 
 object UserTimeBookingStatisticsView {
@@ -51,17 +46,17 @@ object UserTimeBookingStatisticsView {
             systemServices: SystemServices,
             bookingByProjectRepository: BookingByProjectRepository,
             bookingByTagRepository: BookingByTagRepository,
+            bookingByTypeRepository: BookingByTypeRepository,
             userReference: UserReference,
             reactiveMongoApi: ReactiveMongoApi): Props =
     Props(
-      classOf[UserTimeBookingStatisticsView],
-      clientReceiver,
-      systemServices,
-      bookingByProjectRepository,
-      bookingByTagRepository,
-      userReference,
-      reactiveMongoApi
-    )
+      new UserTimeBookingStatisticsView(clientReceiver,
+                                        systemServices,
+                                        bookingByProjectRepository,
+                                        bookingByTagRepository,
+                                        bookingByTypeRepository,
+                                        userReference,
+                                        reactiveMongoApi))
 }
 
 class UserTimeBookingStatisticsView(
@@ -69,6 +64,7 @@ class UserTimeBookingStatisticsView(
     systemServices: SystemServices,
     bookingByProjectRepository: BookingByProjectRepository,
     bookingByTagRepository: BookingByTagRepository,
+    bookingByTypeRepository: BookingByTypeRepository,
     userReference: UserReference,
     override val reactiveMongoApi: ReactiveMongoApi)
     extends JournalReadingView
@@ -86,7 +82,7 @@ class UserTimeBookingStatisticsView(
 
   override def restoreViewFromState(snapshot: UserTimeBooking): Unit = {
     println(
-      s"~~~~~~~~~~~~~~~~~ Started building STATISTICS FOR ${userReference}: ${snapshot.bookings.size}")
+      s"~~~~~~~~~~~~~~~~~ Started building STATISTICS FOR $userReference: ${snapshot.bookings.size}")
 
     val startTime = System.currentTimeMillis()
 
@@ -99,35 +95,58 @@ class UserTimeBookingStatisticsView(
       }
     }
 
-    val bookingsByProject = durations
-      .filter(_.isInstanceOf[BookingByProject])
-      .map(_.asInstanceOf[BookingByProject])
-      .groupBy(b => (b.day, b.organisationReference, b.projectReference))
-      .map { case ((day, organisationReference, projectReference), bookings) =>
-        val sum = bookings.map(_.duration).reduce((l, r) => l.plus(r))
-        BookingByProject(BookingByProjectId(),
-                         userReference,
-                         organisationReference,
-                         day,
-                         projectReference,
+    def getDurationsByType[T <: OperatorEntity[_, _], K](groupBy: T => K)(
+        reducer: (K, Duration) => T)(implicit ct: ClassTag[T]): Seq[T] = {
+      val clazz = ct.runtimeClass
+      durations
+        .filter(_.getClass.isAssignableFrom(clazz))
+        .map(_.asInstanceOf[T])
+        .groupBy(groupBy)
+        .map { case (key, bookings) =>
+          val sum = bookings.map(_.duration).reduce((l, r) => l.plus(r))
+          reducer(key, sum)
+        }
+        .toSeq
+    }
+
+    val bookingsByProject =
+      getDurationsByType[BookingByProject,
+                         (LocalDate, OrganisationReference, ProjectReference)] {
+        b => (b.day, b.organisationReference, b.projectReference)
+      } { (key, sum) =>
+        BookingByProject(_id = BookingByProjectId(),
+                         userReference = userReference,
+                         organisationReference = key._2,
+                         day = key._1,
+                         projectReference = key._3,
                          duration = sum)
       }
-      .toSeq
 
-    val bookingsByTag = durations
-      .filter(_.isInstanceOf[BookingByTag])
-      .map(_.asInstanceOf[BookingByTag])
-      .groupBy(b => (b.day, b.organisationReference, b.tagId))
-      .map { case ((day, organisationReference, tag), bookings) =>
-        val sum = bookings.map(_.duration).reduce((l, r) => l.plus(r))
-        BookingByTag(BookingByTagId(),
-                     userReference,
-                     organisationReference,
-                     day,
-                     tag,
+    val bookingsByTag =
+      getDurationsByType[BookingByTag,
+                         (LocalDate, OrganisationReference, TagId)] { b =>
+        (b.day, b.organisationReference, b.tagId)
+      } { (key, sum) =>
+        BookingByTag(_id = BookingByTagId(),
+                     userReference = userReference,
+                     organisationReference = key._2,
+                     day = key._1,
+                     tagId = key._3,
                      duration = sum)
       }
-      .toSeq
+
+    val bookingsByType =
+      getDurationsByType[BookingByType,
+                         (LocalDate, OrganisationReference, BookingType)] { b =>
+        (b.day, b.organisationReference, b.bookingType)
+      } { (key, sum) =>
+        BookingByType(_id = BookingByTypeId(),
+                      userReference = userReference,
+                      organisationReference = key._2,
+                      day = key._1,
+                      bookingType = key._3,
+                      duration = sum)
+      }
 
     withinTransaction { implicit dbSession =>
       for {
@@ -135,17 +154,18 @@ class UserTimeBookingStatisticsView(
         _ <- bookingByTagRepository.deleteByUserReference(userReference)
         _ <- bookingByProjectRepository.bulkInsert(bookingsByProject.toList)
         _ <- bookingByTagRepository.bulkInsert(bookingsByTag.toList)
+        _ <- bookingByTypeRepository.bulkInsert(bookingsByType.toList)
       } yield ()
     }.onComplete {
       case Success(_) =>
         println(
-          s"~~~~~~~~~~~~~~~~~ STATISTICS FOR ${userReference} COMPLETED IN ${System
+          s"~~~~~~~~~~~~~~~~~ STATISTICS FOR $userReference COMPLETED IN ${System
             .currentTimeMillis() - startTime}ms")
         notifyClient(UserTimeBookingByProjectEntryCleaned(userReference.id))
         notifyClient(UserTimeBookingByTagEntryCleaned(userReference.id))
       case Failure(th) =>
         println(
-          s"~~~~~~~~~~~~~~~~~ STATISTICS FOR ${userReference} FAILED IN ${System
+          s"~~~~~~~~~~~~~~~~~ STATISTICS FOR $userReference FAILED IN ${System
             .currentTimeMillis() - startTime}ms, failure:${th.getMessage}")
     }
   }
@@ -154,13 +174,13 @@ class UserTimeBookingStatisticsView(
     case _: UserTimeBookingInitializedV2 =>
       log.debug(s"UserTimeBookingStatisticsView -> initialize")
       sender() ! Ack
-    case UserTimeBookingStoppedV2(booking) =>
+    case UserTimeBookingStoppedV3(booking) =>
       handleBookingAddedOrStopped(booking)
-    case UserTimeBookingAddedV2(booking) =>
-      handleBookingAddedOrStopped(booking)
-    case UserTimeBookingEditedV3(oldBooking, editedBooking) =>
+    case e: UserTimeBookingAddedV3 =>
+      handleBookingAddedOrStopped(e.toBooking)
+    case UserTimeBookingEditedV4(oldBooking, editedBooking) =>
       handleBookingEdited(oldBooking, editedBooking)
-    case UserTimeBookingRemovedV2(booking) =>
+    case UserTimeBookingRemovedV3(booking) =>
       log.debug(s"UserTimeBookingStatisticsViews -> booking removed:$booking")
       val durations = calculateDurations(booking)
       removeDurations(durations)
@@ -172,8 +192,8 @@ class UserTimeBookingStatisticsView(
       sender() ! Ack
   }
 
-  protected def handleBookingAddedOrStopped(booking: BookingV2,
-                                            silent: Boolean = false): Unit = {
+  private def handleBookingAddedOrStopped(booking: BookingV3,
+                                          silent: Boolean = false): Unit = {
     if (booking.end.isDefined) {
       log.debug(
         s"UserTimeBookingStatisticsView -> handleBookingAddedOrStopped:$booking")
@@ -189,8 +209,8 @@ class UserTimeBookingStatisticsView(
     }
   }
 
-  protected def handleBookingEdited(oldBooking: BookingV2,
-                                    editedBooking: BookingV2): Unit = {
+  private def handleBookingEdited(oldBooking: BookingV3,
+                                  editedBooking: BookingV3): Unit = {
     // first remove durations of 'old' booking
     val durations = calculateDurations(oldBooking)
     removeDurations(durations)
@@ -205,8 +225,7 @@ class UserTimeBookingStatisticsView(
     sender() ! Ack
   }
 
-  protected def storeDurations(
-      durations: Seq[OperatorEntity[_, _]]): Seq[Any] = {
+  private def storeDurations(durations: Seq[OperatorEntity[_, _]]): Seq[Any] = {
     durations.map {
       case b: BookingByProject =>
         Await.ready(withDBSession()(implicit dbSession =>
@@ -221,7 +240,7 @@ class UserTimeBookingStatisticsView(
     }
   }
 
-  protected def removeDurations(
+  private def removeDurations(
       durations: Seq[OperatorEntity[_, _]]): Seq[Any] = {
     durations.map {
       case b: BookingByProject =>
@@ -237,8 +256,8 @@ class UserTimeBookingStatisticsView(
     }
   }
 
-  protected def getEventsDurations(durations: Seq[_],
-                                   add: Boolean): Seq[OutEvent] = {
+  private def getEventsDurations(durations: Seq[_],
+                                 add: Boolean): Seq[OutEvent] = {
     if (add) {
       durations.flatMap(_ match {
         case b: BookingByProject =>
@@ -258,16 +277,18 @@ class UserTimeBookingStatisticsView(
     }
   }
 
-  protected def calculateDurations(
-      booking: BookingV2): Seq[OperatorEntity[_, _]] = {
+  private def calculateDurations(
+      booking: BookingV3): Seq[OperatorEntity[_, _]] = {
     // split booking by dates
     booking.end match {
-      case None => Seq()
+      case None =>
+        // map all durations to start day of booking
+        getDurations(booking, booking.day, booking.duration)
       case Some(end) =>
-        val startDate           = booking.start.toDateTime()
-        val startDateStartOfDay = startDate.toDateTime().withTimeAtStartOfDay
-        val endDate             = end.toDateTime()
-        val endDateStartOfDay   = endDate.toDateTime().withTimeAtStartOfDay
+        val startDate           = booking.start.toDateTime
+        val startDateStartOfDay = startDate.toDateTime.withTimeAtStartOfDay
+        val endDate             = end.toDateTime
+        val endDateStartOfDay   = endDate.toDateTime.withTimeAtStartOfDay
 
         val daysBetween =
           Days.daysBetween(startDateStartOfDay, endDateStartOfDay).getDays
@@ -313,7 +334,6 @@ class UserTimeBookingStatisticsView(
 
             (startDurations ++ inBetweenDurations.flatten) ++ endDurations
           }
-
         }
     }
   }
@@ -326,17 +346,28 @@ class UserTimeBookingStatisticsView(
     }
   }
 
-  private def getDurations(booking: BookingV2,
+  private def getDurations(booking: BookingV3,
                            day: LocalDate,
                            duration: Duration): Seq[OperatorEntity[_, _]] = {
     Seq(
-      BookingByProject(BookingByProjectId(),
-                       booking.userReference,
-                       booking.organisationReference,
-                       day,
-                       booking.projectReference,
-                       duration)
+      BookingByType(BookingByTypeId(),
+                    booking.userReference,
+                    booking.organisationReference,
+                    day,
+                    booking.bookingType,
+                    duration)
     ) ++
+      booking.projectReference
+        .map { projectReference =>
+          Seq(
+            BookingByProject(BookingByProjectId(),
+                             booking.userReference,
+                             booking.organisationReference,
+                             day,
+                             projectReference,
+                             duration))
+        }
+        .getOrElse(Seq()) ++
       booking.tags.flatMap(extractTags).map { tagId =>
         BookingByTag(BookingByTagId(),
                      booking.userReference,

@@ -243,7 +243,7 @@ GET /user-organisations/organisations/:orgId/projects/:projectId/tags          c
 
 
 #######
-####### Current User Bookings #######
+####### User Bookings #######
 #######
 
 ###
@@ -251,36 +251,18 @@ GET /user-organisations/organisations/:orgId/projects/:projectId/tags          c
 #    - cookieAuth: []
 #  tags: 
 #    - user-bookings
-#  summary: Start booking time on selected organisation for the current user
-#  operationId: startUserBookingCurrent
+#  summary: Stop the currently running project booking by organisation and booking id for the current user
+#  operationId: stopCurrentUserProjectBooking
 #  requestBody:
 #    content:
 #      application/json:
 #        schema:
-#          $ref: '#/components/schemas/models.StartBookingRequest'
+#          $ref: '#/components/schemas/models.StopProjectBookingRequest'
 #  responses:
 #    200:
 #      description: success
 ###
-POST /user-bookings/organisations/:orgId/bookings/start         controllers.TimeBookingController.start(orgId: models.OrganisationId)
-
-###
-#  security:
-#    - cookieAuth: []
-#  tags: 
-#    - user-bookings
-#  summary: Stop the currently running booking by organisation and booking id for the current user
-#  operationId: stopUserBookingCurrent
-#  requestBody:
-#    content:
-#      application/json:
-#        schema:
-#          $ref: '#/components/schemas/models.StopBookingRequest'
-#  responses:
-#    200:
-#      description: success
-###
-POST /user-bookings/organisations/:orgId/bookings/:bookingId/stop       controllers.TimeBookingController.stop(orgId: models.OrganisationId, bookingId: models.BookingId)
+POST /user-bookings/organisations/:orgId/bookings/project/:bookingId/stop       controllers.TimeBookingController.stopProjectBooking(orgId: models.OrganisationId, bookingId: models.BookingId)
 
 ###
 #  security:
@@ -288,17 +270,17 @@ POST /user-bookings/organisations/:orgId/bookings/:bookingId/stop       controll
 #  tags: 
 #    - user-bookings
 #  summary: Change the currently running booking by organisation and booking id for the current user
-#  operationId: updateUserBookingCurrent
+#  operationId: changeUserProjectBookingStart
 #  requestBody:
 #    content:
 #      application/json:
 #        schema:
-#          $ref: '#/components/schemas/models.BookingChangeStartRequest'
+#          $ref: '#/components/schemas/models.ProjectBookingChangeStartRequest'
 #  responses:
 #    200:
 #      description: success
 ###
-POST /user-bookings/organisations/:orgId/bookings/:bookingId/start-time     controllers.TimeBookingController.changeStart(orgId: models.OrganisationId, bookingId:models.BookingId)
+POST /user-bookings/organisations/:orgId/bookings/project/:bookingId/start-time     controllers.TimeBookingController.changeProjectBookingStart(orgId: models.OrganisationId, bookingId:models.BookingId)
 
 ###
 #  security:
@@ -306,48 +288,66 @@ POST /user-bookings/organisations/:orgId/bookings/:bookingId/start-time     cont
 #  tags: 
 #    - user-bookings
 #  summary: Remove a booking by organisation and booking id for the current user
-#  operationId: deleteUserBooking
+#  operationId: removeUserBooking
 #  responses:
 #    200:
 #      description: success
 ###
-DELETE /user-bookings/organisations/:orgId/bookings/:bookingId          controllers.TimeBookingController.remove(orgId: models.OrganisationId, bookingId:models.BookingId)
+DELETE /user-bookings/organisations/:orgId/bookings/project/:bookingId          controllers.TimeBookingController.removeBooking(orgId: models.OrganisationId, bookingId:models.BookingId)
 
 ###
 #  security:
 #    - cookieAuth: []
 #  tags: 
 #    - user-bookings
-#  summary: Create a booking by organisation for the current user
-#  operationId: addUserBookingByOrganisation
+#  summary: Start or add a project booking by organisation for the current user
+#  operationId: startOrAddUserProjectBooking
 #  requestBody:
 #    content:
 #      application/json:
 #        schema:
-#          $ref: '#/components/schemas/models.AddBookingRequest'
+#          $ref: '#/components/schemas/models.StartOrAddProjectBookingRequest'
 #  responses:
 #    200:
 #      description: success
 ###
-POST /user-bookings/organisations/:orgId/bookings           controllers.TimeBookingController.add(orgId: models.OrganisationId)
+POST /user-bookings/organisations/:orgId/bookings/project           controllers.TimeBookingController.startOrAddProjectBooking(orgId: models.OrganisationId)
 
 ###
 #  security:
 #    - cookieAuth: []
 #  tags: 
 #    - user-bookings
-#  summary: Change a booking by organisation for the current user
-#  operationId: updateUserBooking
+#  summary: Update a project booking by organisation for the current user
+#  operationId: updateUserProjectBooking
 #  requestBody:
 #    content:
 #      application/json:
 #        schema:
-#          $ref: '#/components/schemas/models.EditBookingRequest'
+#          $ref: '#/components/schemas/models.UpdateProjectBookingRequest'
 #  responses:
 #    200:
 #      description: success
 ###
-POST /user-bookings/organisations/:orgId/bookings/:bookingId            controllers.TimeBookingController.edit(orgId: models.OrganisationId,bookingId: models.BookingId)
+POST /user-bookings/organisations/:orgId/bookings/project/:bookingId            controllers.TimeBookingController.updateProjectBooking(orgId: models.OrganisationId,bookingId: models.BookingId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  tags:
+#    - user-bookings
+#  summary: Add an absence booking by organisation for the current user
+#  operationId: addUserAbsenceBooking
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.AddAbsenceBookingRequest'
+#  responses:
+#    200:
+#      description: success
+###
+POST /user-bookings/organisations/:orgId/bookings/absence           controllers.TimeBookingController.addAbsenceBooking(orgId: models.OrganisationId)
 
 ###
 #  security:
@@ -420,20 +420,6 @@ GET /user-bookings/current                                  controllers.CurrentU
 #             $ref: '#/components/schemas/models.CurrentOrganisationTimeBookings'
 ###
 GET /user-bookings/organisations/:orgId/current           			            controllers.OrganisationTimeBookingsController.getOrganisationTimeBooking(orgId: models.OrganisationId)
-
-###
-#  security:
-#     - cookieAuth: []
-#  tags:
-#     - user-bookings
-#  summary: Get latest bookings of members in selected organisation
-#  operationId: getUserBookingLatestListByOrganisation
-#  responses:
-#     200:
-#       description: success
-###
-GET /user-bookings/organisations/:orgId/latest						controllers.LatestUserTimeBookingsController.getLatestTimeBooking(orgId: models.OrganisationId,maxHistory:Int?=5)
-
 
 #######
 ####### Current User Favorites #######
@@ -845,6 +831,82 @@ POST /organisations/:orgId/invite                                  controllers.O
 #      description: successfully removed user from organisation
 ###
 DELETE /organisations/:orgId/users/:userId                           controllers.OrganisationsController.unassignUser(orgId: models.OrganisationId, userId: models.UserId)
+
+#######
+####### Public Holidays #######
+#######
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: create a public holiday entry
+#  tags:
+#    - public-holidays
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.CreatePublicHoliday'
+#  responses:
+#    201:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.PublicHoliday'
+###
+POST /organisations/:orgId/public-holidays                 controllers.OrganisationsController.createPublicHoliday(orgId: models.OrganisationId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: get public holidays for an organisation and year. If no year is provided, the current user is queried
+#  tags:
+#    - public-holidays
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/components/schemas/models.PublicHoliday'
+###
+GET /organisations/:orgId/public-holidays                             controllers.OrganisationsController.getPublicHolidays(orgId: models.OrganisationId, year: Option[Int])
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: update a public holiday entry
+#  tags:
+#    - public-holidays
+#  requestBody:
+#    content:
+#      application/json:
+#        schema:
+#          $ref: '#/components/schemas/models.UpdatePublicHoliday'
+#  responses:
+#    200:
+#      description: success
+#      content:
+#        application/json:
+#          schema:
+#            $ref: '#/components/schemas/models.PublicHoliday'
+###
+POST /organisations/:orgId/public-holidays/:publicHolidayId           controllers.OrganisationsController.updatePublicHoliday(orgId: models.OrganisationId, publicHolidayId: models.PublicHolidayId)
+
+###
+#  security:
+#    - cookieAuth: []
+#  summary: delete a public holiday entry
+#  tags:
+#    - public-holidays
+#  responses:
+#    204:
+#      description: success
+###
+DELETE /organisations/:orgId/public-holidays/:publicHolidayId        controllers.OrganisationsController.deletePublicHoliday(orgId: models.OrganisationId, publicHolidayId: models.PublicHolidayId)
 
 
 #######

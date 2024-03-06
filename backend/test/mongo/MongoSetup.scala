@@ -41,17 +41,29 @@ import util.Awaitable
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
-object LazyMongo {
+class MongoDb {
 
-  lazy val mongo: ReactiveMongoApi = {
-    lazy val rnd    = new scala.util.Random
-    lazy val range  = 12000 to 12999
-    lazy val port   = range(rnd.nextInt(range length))
-    lazy val dbName = BSONObjectID.generate().stringify
+  val mongoDbName: String = BSONObjectID.generate().stringify
+  val mongoPort: Int = {
+    lazy val rnd   = new scala.util.Random
+    lazy val range = 12000 to 12999
+    range(rnd.nextInt(range length))
+  }
+  val mongoUri: String =
+    s"mongodb://localhost:$mongoPort/$mongoDbName?w=majority&readConcernLevel=majority&maxPoolSize=1&rm.nbChannelsPerNode=1"
+  val mongoConfiguration: Map[String, Any] = Map(
+    "mongodb.uri"      -> mongoUri,
+    "mongodb.channels" -> "1",
+    "akka.contrib.persistence.mongodb.mongo.mongouri" -> s"mongodb://localhost:$mongoPort/$mongoDbName",
+    "akka.contrib.persistence.mongodb.mongo.urls" -> List(
+      s"localhost:$mongoPort"),
+    "akka.contrib.persistence.mongodb.mongo.db" -> mongoDbName
+  )
 
+  val mongod: Mongod = {
     lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
-    logger.info(s"Start mongo on port:$port")
+    logger.info(s"Start mongo on port:$mongoPort")
 
     val mongod = new Mongod() {
       override def processOutput: Transition[ProcessOutput] = Start
@@ -67,19 +79,16 @@ object LazyMongo {
         .withTransitionLabel("create named console")
 
       override def net(): Transition[Net] =
-        Start.to(classOf[Net]).initializedWith(Net.defaults.withPort(port))
+        Start.to(classOf[Net]).initializedWith(Net.defaults.withPort(mongoPort))
     }
     mongod.start(Version.Main.V4_4)
+    mongod
+  }
+
+  val reactiveMongoApi: ReactiveMongoApi = {
 
     implicit lazy val app: Application = new GuiceApplicationBuilder()
-      .configure(Map(
-        ("mongodb.uri",
-         s"mongodb://localhost:$port/$dbName?w=majority&readConcernLevel=majority&maxPoolSize=1&rm.nbChannelsPerNode=1"),
-        ("mongodb.channels", "1"),
-        ("akka.contrib.persistence.mongodb.mongo.urls",
-         List(s"localhost:$port")),
-        ("akka.contrib.persistence.mongodb.mongo.db", dbName)
-      ))
+      .configure(mongoConfiguration)
       .build()
 
     lazy val reactiveMongoApi = app.injector.instanceOf[ReactiveMongoApi]
@@ -97,7 +106,9 @@ trait EmbedMongo
   sequential =>
   implicit val executionContext: ExecutionContext =
     ExecutionContext.Implicits.global
-  override val reactiveMongoApi: ReactiveMongoApi = LazyMongo.mongo
+
+  lazy val mongoDb: MongoDb                       = new MongoDb
+  override val reactiveMongoApi: ReactiveMongoApi = mongoDb.reactiveMongoApi
 
   override protected def around[R](r: => R)(implicit
       evidence$1: AsResult[R]): Result = {

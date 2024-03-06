@@ -25,10 +25,10 @@ import akka.util.Timeout
 import core.SystemServices
 import domain.UserTimeBookingAggregate._
 import models._
-import org.joda.time.DateTime
 import play.api.cache.AsyncCacheApi
 import play.api.mvc.{Action, ControllerComponents}
 import play.modules.reactivemongo.ReactiveMongoApi
+import repositories.BookingHistoryRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,66 +38,55 @@ class TimeBookingController @Inject() (
     override val authConfig: AuthConfig,
     override val cache: AsyncCacheApi,
     override val reactiveMongoApi: ReactiveMongoApi,
-    override val systemServices: SystemServices)(implicit ec: ExecutionContext)
+    override val systemServices: SystemServices,
+    val bookingHistoryRepository: BookingHistoryRepository)(implicit
+    ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
   override val supportTransaction: Boolean = systemServices.supportTransaction
 
   implicit val timeout: Timeout = systemServices.timeout
 
-  def start(orgId: OrganisationId): Action[StartBookingRequest] =
+  def stopProjectBooking(
+      orgId: OrganisationId,
+      bookingId: BookingId): Action[StopProjectBookingRequest] =
     HasUserRole(FreeUser,
-                validateJson[StartBookingRequest],
+                validateJson[StopProjectBookingRequest],
                 withinTransaction = false) {
       implicit dbSession => implicit subject => user => implicit request =>
         HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
-          HasProjectRole(userOrg, request.body.projectId, ProjectMember) {
-            userProject =>
-              val startBooking = request.body
-              logger.debug(
-                s"TimeBokingController -> start - userId:${subject.userReference.id}, projectId: ${startBooking.projectId.value}, tags:${startBooking.tags}, start:${startBooking.start}")
-
-              systemServices.timeBookingViewService ! startBooking.toCommand(
-                userOrg.organisationReference,
-                userProject.projectReference)
-              success()
-          }
-        }
-    }
-
-  def stop(orgId: OrganisationId,
-           bookingId: BookingId): Action[StopBookingRequest] =
-    HasUserRole(FreeUser,
-                validateJson[StopBookingRequest],
-                withinTransaction = false) {
-      implicit dbSession => implicit subject => user => implicit request =>
-        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
-          systemServices.timeBookingViewService ! EndBookingCommand(
+          systemServices.timeBookingViewService ! EndProjectBookingCommand(
             subject.userReference,
             userOrg.organisationReference,
             bookingId,
-            request.body.end.getOrElse(DateTime.now()))
+            request.body.end
+          )
           success()
         }
     }
 
-  def remove(orgId: OrganisationId, bookingId: BookingId): Action[Unit] =
+  def removeBooking(orgId: OrganisationId, bookingId: BookingId): Action[Unit] =
     HasUserRole(FreeUser, parse.empty, withinTransaction = false) {
       implicit dbSession => implicit subject => user => implicit request =>
-        HasOrganisationRole(user, orgId, OrganisationMember) {
-          userOrganisation =>
-            systemServices.timeBookingViewService ! RemoveBookingCommand(
+        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
+          for {
+            _ <- bookingHistoryRepository
+              .findByOrganisationAndId(userOrg.organisationReference, bookingId)
+              .noneToFailed(
+                s"Cannot find booking ${bookingId.value} in organisation ${userOrg.organisationReference.key}")
+            _ = systemServices.timeBookingViewService ! RemoveBookingCommand(
               subject.userReference,
-              userOrganisation.organisationReference,
+              userOrg.organisationReference,
               bookingId)
-            success()
+          } yield Ok
         }
     }
 
-  def edit(orgId: OrganisationId,
-           bookingId: BookingId): Action[EditBookingRequest] =
+  def updateProjectBooking(
+      orgId: OrganisationId,
+      bookingId: BookingId): Action[UpdateProjectBookingRequest] =
     HasUserRole(FreeUser,
-                validateJson[EditBookingRequest],
+                validateJson[UpdateProjectBookingRequest],
                 withinTransaction = false) {
       implicit dbSession => implicit subject => user => implicit request =>
         HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
@@ -107,22 +96,29 @@ class TimeBookingController @Inject() (
             for {
               _ <- request.body.start
                 .flatMap(start =>
-                  request.body.end.flatten.map(end =>
+                  request.body.end.map(end =>
                     validateStartBeforeEnd(start, end)))
                 .getOrElse(Future.successful(Ok))
-              _ = systemServices.timeBookingViewService ! request.body
+              _ <- bookingHistoryRepository
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         bookingId)
+                .noneToFailed(
+                  s"Cannot find booking ${bookingId.value} in organisation ${userOrg.organisationReference.key}")
+              command <- request.body
                 .toCommand(bookingId,
                            userOrg.organisationReference,
                            maybeUserProject.map(_.projectReference))
+              _ = systemServices.timeBookingViewService ! command
             } yield Ok
           }
         }
     }
 
-  def changeStart(orgId: OrganisationId,
-                  bookingId: BookingId): Action[BookingChangeStartRequest] =
+  def changeProjectBookingStart(
+      orgId: OrganisationId,
+      bookingId: BookingId): Action[ProjectBookingChangeStartRequest] =
     HasUserRole(FreeUser,
-                validateJson[BookingChangeStartRequest],
+                validateJson[ProjectBookingChangeStartRequest],
                 withinTransaction = false) {
       implicit dbSession => implicit subject => user => implicit request =>
         HasOrganisationRole(user, orgId, OrganisationMember) {
@@ -136,22 +132,40 @@ class TimeBookingController @Inject() (
         }
     }
 
-  def add(orgId: OrganisationId): Action[AddBookingRequest] =
+  def startOrAddProjectBooking(
+      orgId: OrganisationId): Action[StartOrAddProjectBookingRequest] =
     HasUserRole(FreeUser,
-                validateJson[AddBookingRequest],
+                validateJson[StartOrAddProjectBookingRequest],
                 withinTransaction = false) {
       implicit dbSession => implicit subject => user => implicit request =>
         HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
           HasProjectRole(userOrg, request.body.projectId, ProjectMember) {
             userProject =>
               for {
-                _ <- validateStartBeforeEnd(request.body.start,
-                                            request.body.end)
-                _ = systemServices.timeBookingViewService ! request.body
+                _ <- request.body.end.fold(success())(
+                  validateStartBeforeEnd(request.body.start, _))
+                command <- request.body
                   .toCommand(userOrg.organisationReference,
                              userProject.projectReference)
+                _ = systemServices.timeBookingViewService ! command
               } yield Ok
           }
+        }
+    }
+
+  def addAbsenceBooking(
+      orgId: OrganisationId): Action[AddAbsenceBookingRequest] =
+    HasUserRole(FreeUser,
+                validateJson[AddAbsenceBookingRequest],
+                withinTransaction = false) {
+      implicit dbSession => implicit subject => user => implicit request =>
+        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
+          for {
+            _ <- request.body.end.fold(success())(
+              validateStartBeforeEnd(request.body.start, _))
+            command <- request.body.toCommand(userOrg.organisationReference)
+            _ = systemServices.timeBookingViewService ! command
+          } yield Ok
         }
     }
 }

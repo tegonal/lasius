@@ -21,20 +21,14 @@
 
 package controllers
 
-import core.{CacheAware, DBSupport, SystemServices}
+import core.SystemServices
 import models._
-import org.joda.time.DateTime
-import play.api.Logging
+import org.joda.time.{DateTime, LocalDate}
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Json
-import play.api.mvc.{AbstractController, Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.{
-  InvitationRepository,
-  OrganisationRepository,
-  ProjectRepository,
-  UserRepository
-}
+import repositories._
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -46,6 +40,7 @@ class OrganisationsController @Inject() (
     userRepository: UserRepository,
     invitationRepository: InvitationRepository,
     projectRepository: ProjectRepository,
+    publicHolidayRepository: PublicHolidayRepository,
     override val authConfig: AuthConfig,
     override val cache: AsyncCacheApi,
     override val reactiveMongoApi: ReactiveMongoApi)(implicit
@@ -70,7 +65,7 @@ class OrganisationsController @Inject() (
         for {
           // create organisation
           organisation <- organisationRepository
-            .create(request.body.key, `private` = false)
+            .create(request.body.key, `private` = false, request.body.settings)
           // assign user as project administrator
           _ <- userRepository.assignUserToOrganisation(
             subject.userReference.id,
@@ -133,7 +128,7 @@ class OrganisationsController @Inject() (
           userOrg =>
             userRepository
               .findByOrganisation(userOrg.organisationReference)
-              .map(users => Ok(Json.toJson(users.map(_.toStub()))))
+              .map(users => Ok(Json.toJson(users.map(_.stub))))
         }
     }
 
@@ -206,6 +201,60 @@ class OrganisationsController @Inject() (
               subject.userReference.id,
               userOrg.organisationReference)
           } yield Ok("")
+        }
+    }
+
+  def getPublicHolidays(orgId: OrganisationId,
+                        year: Option[Int]): Action[Unit] =
+    HasUserRole(FreeUser, parse.empty, withinTransaction = false) {
+      implicit dbSession => implicit subject => user => implicit request =>
+        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
+          for {
+            publicHolidays <- publicHolidayRepository.findByOrganisationAndYear(
+              userOrg.organisationReference,
+              year.getOrElse(LocalDate.now().getYear))
+          } yield Ok(Json.toJson(publicHolidays))
+        }
+    }
+
+  def updatePublicHoliday(orgId: OrganisationId,
+                          id: PublicHolidayId): Action[UpdatePublicHoliday] =
+    HasUserRole(FreeUser,
+                validateJson[UpdatePublicHoliday],
+                withinTransaction = false) {
+      implicit dbSession => implicit subject => user => implicit request =>
+        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
+          for {
+            publicHoliday <- publicHolidayRepository.update(
+              userOrg.organisationReference,
+              id,
+              request.body)
+          } yield Ok(Json.toJson(publicHoliday))
+        }
+    }
+
+  def createPublicHoliday(orgId: OrganisationId): Action[CreatePublicHoliday] =
+    HasUserRole(FreeUser,
+                validateJson[CreatePublicHoliday],
+                withinTransaction = false) {
+      implicit dbSession => implicit subject => user => implicit request =>
+        HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
+          for {
+            publicHoliday <- publicHolidayRepository.create(
+              userOrg.organisationReference,
+              request.body)
+          } yield Created(Json.toJson(publicHoliday))
+        }
+    }
+
+  def deletePublicHoliday(orgId: OrganisationId,
+                          id: PublicHolidayId): Action[Unit] =
+    HasUserRole(FreeUser, parse.empty, withinTransaction = false) {
+      implicit dbSession => implicit subject => user => implicit request =>
+        HasOrganisationRole(user, orgId, OrganisationMember) { _ =>
+          for {
+            _ <- publicHolidayRepository.removeById(id)
+          } yield NoContent
         }
     }
 }

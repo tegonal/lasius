@@ -69,7 +69,7 @@ class ProjectsController @Inject() (
             _ <- userRepository.assignUserToProject(
               subject.userReference.id,
               userOrg.organisationReference,
-              project.getReference(),
+              project.reference,
               ProjectAdministrator)
           } yield Created(Json.toJson(project))
         }
@@ -87,12 +87,11 @@ class ProjectsController @Inject() (
                                                  ProjectAdministrator) {
           userOrg =>
             for {
-              project <- projectRepository
-                .findById(projectId)
-                .noneToFailed(s"Project ${projectId.value} does not exist")
-              _ <- validate(
-                project.organisationReference.id == orgId,
-                s"Project ${projectId.value} is not assigned to organisation ${orgId.value}")
+              _ <- projectRepository
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         projectId)
+                .noneToFailed(
+                  s"Project ${projectId.value} does not exist in organisation ${userOrg.organisationReference.key}")
               // update project
               updatedProject <- projectRepository
                 .update(userOrg.organisationReference, projectId, request.body)
@@ -118,12 +117,11 @@ class ProjectsController @Inject() (
                                                  ProjectAdministrator) {
           userOrg =>
             for {
-              project <- projectRepository
-                .findById(projectId)
-                .noneToFailed(s"Project ${projectId.value} does not exist")
-              _ <- validate(
-                project.organisationReference.id == orgId,
-                s"Project ${projectId.value} is not assigned to organisation ${orgId.value}")
+              _ <- projectRepository
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         projectId)
+                .noneToFailed(
+                  s"Project ${projectId.value} does not exist in organisation ${userOrg.organisationReference.key}")
               // remove from all users
               _ <- userRepository.unassignAllUsersFromProject(projectId)
               // deactivate project
@@ -142,7 +140,7 @@ class ProjectsController @Inject() (
                                                  ProjectMember) { _ =>
           userRepository
             .findByProject(projectId)
-            .map(users => Ok(Json.toJson(users.map(_.toStub()))))
+            .map(users => Ok(Json.toJson(users.map(_.stub))))
         }
     }
 
@@ -160,11 +158,10 @@ class ProjectsController @Inject() (
             for {
               _ <- validateEmail(request.body.email)
               project <- projectRepository
-                .findById(projectId)
-                .noneToFailed(s"Project ${projectId.value} does not exist")
-              _ <- validate(
-                project.organisationReference.id == orgId,
-                s"Project ${projectId.value} is not assigned to organisation ${orgId.value}")
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         projectId)
+                .noneToFailed(
+                  s"Project ${projectId.value} does not exist in organisation ${userOrg.organisationReference.key}")
               _ <- validate(
                 project.active,
                 s"Cannot invite to an inactive project ${project.key}")
@@ -180,7 +177,7 @@ class ProjectsController @Inject() (
                     .assignUserToProject(
                       userId = maybeExistingUser.get.id,
                       organisationReference = project.organisationReference,
-                      projectReference = project.getReference(),
+                      projectReference = project.reference,
                       role = request.body.role
                     )
                     .map(_ => None)
@@ -196,7 +193,7 @@ class ProjectsController @Inject() (
                       expiration = DateTime.now().plusDays(7),
                       sharedByOrganisationReference =
                         userOrg.organisationReference,
-                      projectReference = project.getReference(),
+                      projectReference = project.reference,
                       role = request.body.role,
                       outcome = None
                     ))
@@ -215,14 +212,17 @@ class ProjectsController @Inject() (
         isOrgAdminOrHasProjectRoleInOrganisation(user,
                                                  orgId,
                                                  projectId,
-                                                 ProjectAdministrator) { _ =>
-          for {
-            project <- projectRepository
-              .findById(projectId)
-              .noneToFailed(s"Project ${projectId.value} does not exist")
-            _ <- userRepository.unassignUserFromProject(userId,
-                                                        project.getReference())
-          } yield Ok("")
+                                                 ProjectAdministrator) {
+          userOrg =>
+            for {
+              project <- projectRepository
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         projectId)
+                .noneToFailed(
+                  s"Project ${projectId.value} does not exist in organisation ${userOrg.organisationReference.key}")
+              _ <- userRepository.unassignUserFromProject(userId,
+                                                          project.reference)
+            } yield Ok("")
         }
     }
 
@@ -233,12 +233,11 @@ class ProjectsController @Inject() (
         HasOrganisationRole(user, orgId, OrganisationMember) { userOrg =>
           HasProjectRole(userOrg, projectId, ProjectMember) { userProject =>
             for {
-              project <- projectRepository
-                .findById(projectId)
-                .noneToFailed(s"Project ${projectId.value} does not exist")
-              _ <- validate(
-                project.organisationReference.id == orgId,
-                s"Project ${projectId.value} is not assigned to organisation ${orgId.value}")
+              _ <- projectRepository
+                .findByOrganisationAndId(userOrg.organisationReference,
+                                         projectId)
+                .noneToFailed(
+                  s"Project ${projectId.value} does not exist in organisation ${userOrg.organisationReference.key}")
               _ <- userRepository.unassignUserFromProject(
                 subject.userReference.id,
                 userProject.projectReference)

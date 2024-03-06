@@ -41,7 +41,6 @@ import reactivemongo.play.json.compat.lax._
 import scala.language.postfixOps
 
 // Conversions from JSON to BSON
-import reactivemongo.play.json.compat.json2bson._
 import scala.concurrent.duration._
 
 class MongoDBCommandException(msg: String) extends RuntimeException
@@ -119,7 +118,6 @@ abstract class BaseReactiveMongoRepository[T <: BaseEntity[ID],
       .headOption
       .map(_.map(js => (js.as[T], id)))
   }
-
   protected[repositories] def updateFields(
       sel: JsObject,
       fields: Seq[(String, JsValueWrapper)])(implicit

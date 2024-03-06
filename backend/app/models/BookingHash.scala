@@ -25,7 +25,10 @@ import models.ProjectId.ProjectReference
 import net.openhft.hashing.LongHashFunction
 
 object BookingHash {
-  def createHash(projectReference: ProjectReference, tags: Set[Tag]): Long =
+  def createHash(projectReference: Option[ProjectReference],
+                 tags: Set[Tag]): Long =
     LongHashFunction.xx.hashChars(
-      (projectReference.id.value.toString :+ tags.map(_.hash)).mkString(","))
+      (projectReference
+        .map { _.id.value.toString }
+        .getOrElse("") :+ tags.map(_.hash)).mkString(","))
 }

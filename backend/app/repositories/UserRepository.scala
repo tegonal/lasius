@@ -347,7 +347,7 @@ class UserMongoRepository @Inject() (
                                         role: OrganisationRole,
                                         plannedWorkingHours: WorkingHours)(
       implicit dbSession: DBSession): Future[Boolean] = {
-    val organisationReference = organisation.getReference()
+    val organisationReference = organisation.reference
     for {
       existingAssignment <- findFirst(
         Json.obj(
@@ -443,7 +443,7 @@ class UserMongoRepository @Inject() (
         role = FreeUser,
         organisations = Seq(
           UserOrganisation(
-            organisationReference = organisation.getReference(),
+            organisationReference = organisation.reference,
             `private` = organisation.`private`,
             role = organisationRole,
             plannedWorkingHours =

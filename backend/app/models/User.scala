@@ -22,7 +22,6 @@
 package models
 
 import models.BaseFormat.UUIDBaseId
-import models.OrganisationId.OrganisationReference
 import models.UserId.UserReference
 import play.api.libs.json._
 
@@ -48,9 +47,9 @@ case class User(id: UserId,
                 organisations: Seq[UserOrganisation],
                 settings: Option[UserSettings])
     extends BaseEntity[UserId] {
-  def getReference(): UserReference = EntityReference(id, key)
+  def reference: UserReference = EntityReference(id, key)
 
-  def toDTO(): UserDTO = UserDTO(
+  def toDTO: UserDTO = UserDTO(
     id = id,
     key = key,
     email = email,
@@ -65,13 +64,13 @@ case class User(id: UserId,
       ))
   )
 
-  def toStub(): UserStub = UserStub(id = id,
-                                    key = key,
-                                    email = email,
-                                    firstName = firstName,
-                                    lastName = lastName,
-                                    active = active,
-                                    role = role)
+  def stub: UserStub = UserStub(id = id,
+                                key = key,
+                                email = email,
+                                firstName = firstName,
+                                lastName = lastName,
+                                active = active,
+                                role = role)
 }
 
 object User {
