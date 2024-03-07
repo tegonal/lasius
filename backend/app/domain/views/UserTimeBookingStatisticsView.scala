@@ -235,6 +235,10 @@ class UserTimeBookingStatisticsView(
         Await.ready(
           withDBSession()(implicit dbSession => bookingByTagRepository.add(b)),
           waitTime)
+      case b: BookingByType =>
+        Await.ready(
+          withDBSession()(implicit dbSession => bookingByTypeRepository.add(b)),
+          waitTime)
       case b @ _ =>
         log.warning(s"Unsupported duration:$b")
     }
@@ -251,6 +255,10 @@ class UserTimeBookingStatisticsView(
         Await.ready(withDBSession()(implicit dbSession =>
                       bookingByTagRepository.subtract(b)),
                     waitTime)
+      case b: BookingByType =>
+        Await.ready(withDBSession()(implicit dbSession =>
+                      bookingByTypeRepository.subtract(b)),
+                    waitTime)
       case b @ _ =>
         log.warning(s"Unsupported duration:$b")
     }
@@ -264,6 +272,8 @@ class UserTimeBookingStatisticsView(
           Some(UserTimeBookingByProjectEntryAdded(b))
         case b: BookingByTag =>
           Some(UserTimeBookingByTagEntryAdded(b))
+        case b: BookingByType =>
+          Some(UserTimeBookingByTypeEntryAdded(b))
         case _ => None
       })
     } else {
@@ -272,6 +282,8 @@ class UserTimeBookingStatisticsView(
           Some(UserTimeBookingByProjectEntryRemoved(b))
         case b: BookingByTag =>
           Some(UserTimeBookingByTagEntryRemoved(b))
+        case b: BookingByType =>
+          Some(UserTimeBookingByTypeEntryRemoved(b))
         case _ => None
       })
     }

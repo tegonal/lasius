@@ -21,16 +21,10 @@
 
 package controllers
 
-import core.{
-  DBSession,
-  MockCache,
-  MockCacheAware,
-  SystemServices,
-  TestApplication
-}
+import core._
 import models._
 import mongo.EmbedMongo
-import org.joda.time.{DateTime, Duration, LocalDate, LocalDateTime}
+import org.joda.time.LocalDate
 import org.specs2.mock.Mockito
 import org.specs2.mock.mockito.MockitoMatchers
 import util.MockAwaitable
@@ -55,17 +49,7 @@ class TimeBookingStatisticsControllerSpec
     with EmbedMongo {
 
   "getAggregatedStatistics" should {
-    "empty sequence if no bookingstatistics where found" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: TimeBookingStatisticsController
-        with SecurityControllerMock
-        with MockCacheAware =
-        TimeBookingStatisticsControllerMock(systemServices,
-                                            authConfig,
-                                            reactiveMongoApi)
-
+    "empty sequence if no bookingstatistics where found" in new WithTimeBookingStatisticsControllerMock {
       controller.bookingByTagRepository
         .findAggregatedByUserAndRange(any[EntityReference[UserId]],
                                       any[OrganisationId],
@@ -89,17 +73,7 @@ class TimeBookingStatisticsControllerSpec
       contentAsJson(result) must equalTo(Json.arr())
     }
 
-    "bad request if source was not found" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: TimeBookingStatisticsController
-        with SecurityControllerMock
-        with MockCacheAware =
-        TimeBookingStatisticsControllerMock(systemServices,
-                                            authConfig,
-                                            reactiveMongoApi)
-
+    "bad request if source was not found" in new WithTimeBookingStatisticsControllerMock {
       val to: LocalDate          = LocalDate.now()
       val from: LocalDate        = to.minusDays(1)
       val request: Request[Unit] = FakeRequest().withBody("")
@@ -112,6 +86,18 @@ class TimeBookingStatisticsControllerSpec
 
       status(result) must equalTo(BAD_REQUEST)
     }
+  }
+
+  trait WithTimeBookingStatisticsControllerMock extends WithTestApplication {
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: SystemServices              = inject[SystemServices]
+    val authConfig: AuthConfig                      = inject[AuthConfig]
+    val controller: TimeBookingStatisticsController
+      with SecurityControllerMock
+      with MockCacheAware =
+      TimeBookingStatisticsControllerMock(systemServices,
+                                          authConfig,
+                                          reactiveMongoApi)
   }
 }
 

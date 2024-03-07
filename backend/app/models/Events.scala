@@ -385,10 +385,16 @@ case class UserTimeBookingByProjectEntryAdded(booking: BookingByProject)
 case class UserTimeBookingByTagEntryAdded(booking: BookingByTag)
     extends OutEvent
 
+case class UserTimeBookingByTypeEntryAdded(booking: BookingByType)
+    extends OutEvent
+
 case class UserTimeBookingByProjectEntryRemoved(booking: BookingByProject)
     extends OutEvent
 
 case class UserTimeBookingByTagEntryRemoved(booking: BookingByTag)
+    extends OutEvent
+
+case class UserTimeBookingByTypeEntryRemoved(booking: BookingByType)
     extends OutEvent
 
 case class FavoriteAdded(userId: UserId,

@@ -44,16 +44,7 @@ class OrganisationsControllerSpec
 
   "create organisation" should {
 
-    "badrequest blank key was specified" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest blank key was specified" in new WithOrganisationsControllerMock {
       val request: FakeRequest[CreateOrganisation] = FakeRequest()
         .withBody(
           CreateOrganisation(
@@ -69,16 +60,7 @@ class OrganisationsControllerSpec
         "expected non-blank String for field 'key'")
     }
 
-    "badrequest creating organisation with an existing key" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest creating organisation with an existing key" in new WithOrganisationsControllerMock {
       val request: FakeRequest[CreateOrganisation] = FakeRequest()
         .withBody(
           CreateOrganisation(
@@ -94,15 +76,7 @@ class OrganisationsControllerSpec
         s"Cannot create organisation with same key ${controller.organisation.key}")
     }
 
-    "successful, user assigned to new organisation as OrganisationAdministrator" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "successful, user assigned to new organisation as OrganisationAdministrator" in new WithOrganisationsControllerMock {
       val newOrganisationKey: String = "someGreateOrg"
 
       val request: FakeRequest[CreateOrganisation] = FakeRequest()
@@ -133,15 +107,7 @@ class OrganisationsControllerSpec
   }
 
   "deactivate organisation" should {
-    "forbidden if organisation id does not exist" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "forbidden if organisation id does not exist" in new WithOrganisationsControllerMock {
       val newOrganisationId = OrganisationId()
 
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
@@ -151,15 +117,7 @@ class OrganisationsControllerSpec
       status(result) must equalTo(FORBIDDEN)
     }
 
-    "successful, organisation unassigned from all users" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "successful, organisation unassigned from all users" in new WithOrganisationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
         controller.deactivateOrganisation(controller.organisationId)(request)
@@ -179,16 +137,7 @@ class OrganisationsControllerSpec
   }
 
   "invite user to organisation" should {
-    "badrequest if incorrect email was provided" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest if incorrect email was provided" in new WithOrganisationsControllerMock {
       val request: FakeRequest[UserToOrganisationAssignment] =
         FakeRequest().withBody(
           UserToOrganisationAssignment(email = "noEmail",
@@ -201,15 +150,7 @@ class OrganisationsControllerSpec
         s"Not a valid email address 'noEmail'")
     }
 
-    "badrequest if organisation does not exist" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "badrequest if organisation does not exist" in new WithOrganisationsControllerMock {
       val email = "newUserEmail@test.com"
 
       // delete organisation
@@ -229,17 +170,9 @@ class OrganisationsControllerSpec
         s"Organisation ${controller.organisation.key} does not exist")
     }
 
-    "badrequest if organisation is inactive" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi,
-                                                organisationActive = false)
-      val email = "newUserEmail@test.com"
+    "badrequest if organisation is inactive" in new WithOrganisationsControllerMock {
+      override val organisationActive = false
+      val email                       = "newUserEmail@test.com"
 
       val request: FakeRequest[UserToOrganisationAssignment] =
         FakeRequest().withBody(
@@ -253,15 +186,7 @@ class OrganisationsControllerSpec
         s"Cannot invite to an inactive organisation ${controller.organisation.key}")
     }
 
-    "successful, invitation created" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "successful, invitation created" in new WithOrganisationsControllerMock {
       val email = "newUserEmail@test.com"
 
       val request: FakeRequest[UserToOrganisationAssignment] =
@@ -279,16 +204,8 @@ class OrganisationsControllerSpec
   }
 
   "remove other user from organisation" should {
-    "forbidden if user is not assigned as Administrator to organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi,
-                                                OrganisationMember)
+    "forbidden if user is not assigned as Administrator to organisation" in new WithOrganisationsControllerMock {
+      override val organisationRole: OrganisationRole = OrganisationMember
 
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
@@ -297,16 +214,7 @@ class OrganisationsControllerSpec
       status(result) must equalTo(FORBIDDEN)
     }
 
-    "badrequest if user is single active organisation administrator" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest if user is single active organisation administrator" in new WithOrganisationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
         controller.unassignUser(controller.organisationId, controller.userId)(
@@ -317,16 +225,8 @@ class OrganisationsControllerSpec
         s"RemovalDenied.UserIsLastUserReference")
     }
 
-    "badrequest if user want's to remove himself from his private organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi,
-                                                isOrganisationPrivate = true)
+    "badrequest if user want's to remove himself from his private organisation" in new WithOrganisationsControllerMock {
+      override val isOrganisationPrivate: Boolean = true
 
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
@@ -338,16 +238,7 @@ class OrganisationsControllerSpec
         s"Cannot remove user from own private organisation")
     }
 
-    "successful" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "successful" in new WithOrganisationsControllerMock {
       // initialize second user
       val userProject2 = UserProject(
         sharedByOrganisationReference = None,
@@ -398,16 +289,7 @@ class OrganisationsControllerSpec
   }
 
   "remove own user from organisation" should {
-    "forbidden if user is not assigned to organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "forbidden if user is not assigned to organisation" in new WithOrganisationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
         controller.unassignMyUser(OrganisationId())(request)
@@ -415,16 +297,7 @@ class OrganisationsControllerSpec
       status(result) must equalTo(FORBIDDEN)
     }
 
-    "badrequest if user is single active organisation administrator" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest if user is single active organisation administrator" in new WithOrganisationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
         controller.unassignMyUser(controller.organisationId)(request)
@@ -434,16 +307,8 @@ class OrganisationsControllerSpec
         s"RemovalDenied.UserIsLastUserReference")
     }
 
-    "badrequest if user want's to remove himself from his private organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi,
-                                                isOrganisationPrivate = true)
+    "badrequest if user want's to remove himself from his private organisation" in new WithOrganisationsControllerMock {
+      override val isOrganisationPrivate: Boolean = true
 
       val request: FakeRequest[Unit] = FakeRequest().withBody(())
       val result: Future[Result] =
@@ -454,16 +319,8 @@ class OrganisationsControllerSpec
         s"Cannot remove user from own private organisation")
     }
 
-    "successful as OrganisationMember" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi,
-                                                OrganisationMember)
+    "successful as OrganisationMember" in new WithOrganisationsControllerMock {
+      override val organisationRole: OrganisationRole = OrganisationMember
 
       // initialize second user to be able to remove ourself
       val userProject2 = UserProject(
@@ -507,16 +364,7 @@ class OrganisationsControllerSpec
   }
 
   "update organisaton" should {
-    "badrequest no update was provided" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest no update was provided" in new WithOrganisationsControllerMock {
       val request: FakeRequest[UpdateOrganisation] =
         FakeRequest().withBody(UpdateOrganisation(key = None, settings = None))
       val result: Future[Result] =
@@ -527,16 +375,7 @@ class OrganisationsControllerSpec
         s"cannot update organisation ${controller.organisation.key}, at least one field must be specified")
     }
 
-    "badrequest update with empty key was provided" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest update with empty key was provided" in new WithOrganisationsControllerMock {
       val request: FakeRequest[UpdateOrganisation] =
         FakeRequest().withBody(
           UpdateOrganisation(key = Some(""), settings = None))
@@ -548,16 +387,7 @@ class OrganisationsControllerSpec
         s"expected non-blank String for field 'key'")
     }
 
-    "badrequest if duplicate organisation key was provided" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest if duplicate organisation key was provided" in new WithOrganisationsControllerMock {
       val organisation2Key: String = "org2"
 
       withDBSession()(implicit dbSession =>
@@ -582,15 +412,7 @@ class OrganisationsControllerSpec
         s"Cannot create organisation with same key ${organisation2Key}")
     }
 
-    "successful updated key in all references of main-entities" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
+    "successful updated key in all references of main-entities" in new WithOrganisationsControllerMock {
       val newKey       = "newOrgKey"
       val invitationId = InvitationId()
 
@@ -682,5 +504,25 @@ class OrganisationsControllerSpec
         .filter(_.organisationReference.id != controller.organisationId)
         .map(_.organisationReference.key) must not contain (newKey)
     }
+  }
+
+  trait WithOrganisationsControllerMock extends WithTestApplication {
+    // overrides
+    val organisationActive: Boolean        = true
+    val organisationRole: OrganisationRole = OrganisationAdministrator
+    val isOrganisationPrivate: Boolean     = false
+
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: SystemServices              = inject[SystemServices]
+    val authConfig: AuthConfig                      = inject[AuthConfig]
+    lazy val controller: OrganisationsControllerMock =
+      controllers.OrganisationsControllerMock(
+        systemServices = systemServices,
+        authConfig = authConfig,
+        reactiveMongoApi = reactiveMongoApi,
+        organisationRole = organisationRole,
+        isOrganisationPrivate = isOrganisationPrivate,
+        organisationActive = organisationActive
+      )
   }
 }

@@ -95,15 +95,7 @@ class InvitationsControllerSpec
 
   "check status" should {
 
-    "badrequest for non existing invitation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest for non existing invitation" in new WithInvitationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest()
         .withBody(())
       val result: Future[Result] =
@@ -113,15 +105,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_not_found")
     }
 
-    "badrequest if invitation is expired" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if invitation is expired" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(
           expiration = DateTime.now().minusDays(1))
@@ -135,15 +119,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_expired")
     }
 
-    "badrequest if invitation was already accepted or declined" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if invitation was already accepted or declined" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(
           outcome = Some(
@@ -160,15 +136,8 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_invalid_state")
     }
 
-    "badrequest if invited user was deactivated in the meantime" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi,
-                                              userActive = false)
+    "badrequest if invited user was deactivated in the meantime" in new WithInvitationsControllerMock {
+      override val userActive = false
 
       val invitationId =
         createJoinProjectInvitation(controller)(
@@ -183,15 +152,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("user_deactivated")
     }
 
-    "ok with status UnregisteredUser if user does not exist" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "ok with status UnregisteredUser if user does not exist" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)()
 
@@ -208,15 +169,7 @@ class InvitationsControllerSpec
       response.invitation.id === invitationId
     }
 
-    "ok with status InvitationOk if user does already exist" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "ok with status InvitationOk if user does already exist" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(
           invitedEmail = controller.user.email)
@@ -235,15 +188,7 @@ class InvitationsControllerSpec
   }
 
   "register user" should {
-    "badrequest for non existing invitation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest for non existing invitation" in new WithInvitationsControllerMock {
       val request: FakeRequest[UserRegistration] = FakeRequest()
         .withBody(
           UserRegistration(key = "someUserKey",
@@ -258,15 +203,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_not_found")
     }
 
-    "badrequest if provided user key is blank" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if provided user key is blank" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)()
 
@@ -285,15 +222,7 @@ class InvitationsControllerSpec
         "expected non-blank String for field 'key'")
     }
 
-    "badrequest if user key already exist" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if user key already exist" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)()
 
@@ -311,15 +240,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("user_key_already_exists")
     }
 
-    "badrequest if user email already exist" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if user email already exist" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(
           invitedEmail = controller.user.email)
@@ -338,15 +259,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("user_already_registered")
     }
 
-    "badrequest if organisation with user key already exists" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if organisation with user key already exists" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)()
       val newUserKey = "newUserKey"
@@ -375,15 +288,7 @@ class InvitationsControllerSpec
         s"Cannot create organisation with same key $newUserKey")
     }
 
-    "badrequest if password does not match password policy" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if password does not match password policy" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)()
 
@@ -401,14 +306,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("password policy not satisfied")
     }
 
-    "successful user created with private organisation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
+    "successful user created with private organisation" in new WithInvitationsControllerMock {
       val email = "testUser@lasius.ch"
 
       val invitationId =
@@ -456,15 +354,7 @@ class InvitationsControllerSpec
   }
 
   "decline invitation" should {
-    "badrequest for non existing invitation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest for non existing invitation" in new WithInvitationsControllerMock {
       val request: FakeRequest[Unit] = FakeRequest()
         .withBody(())
       val result: Future[Result] =
@@ -474,15 +364,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_not_found")
     }
 
-    "badrequest if logged in user does not match invited email" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if logged in user does not match invited email" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(invitedEmail = "someOtherEmail")
 
@@ -495,15 +377,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("illegal_access")
     }
 
-    "successful initation declined" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "successful initation declined" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(
           invitedEmail = controller.user.email)
@@ -521,15 +395,7 @@ class InvitationsControllerSpec
   }
 
   "accept invitation" should {
-    "badrequest for non existing invitation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest for non existing invitation" in new WithInvitationsControllerMock {
       val request: FakeRequest[AcceptInvitationRequest] = FakeRequest()
         .withBody(AcceptInvitationRequest(organisationReference = None))
       val result: Future[Result] =
@@ -539,15 +405,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("invitation_not_found")
     }
 
-    "badrequest if logged in user does not match invited email" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "badrequest if logged in user does not match invited email" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(invitedEmail = "someOtherEmail")
 
@@ -560,15 +418,7 @@ class InvitationsControllerSpec
       contentAsString(result) must equalTo("illegal_access")
     }
 
-    "forbidden if user is not a member of the provided organisation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: InvitationsControllerMock =
-        controllers.InvitationsControllerMock(systemServices,
-                                              authConfig,
-                                              reactiveMongoApi)
-
+    "forbidden if user is not a member of the provided organisation" in new WithInvitationsControllerMock {
       val invitationId =
         createJoinProjectInvitation(controller)(invitedEmail = "someOtherEmail")
 
@@ -583,16 +433,7 @@ class InvitationsControllerSpec
     }
 
     "for JoinProjectInvitation" in {
-      "badrequest if no organisationReference was provided" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest if no organisationReference was provided" in new WithInvitationsControllerMock {
         val invitationId =
           createJoinProjectInvitation(controller)(
             invitedEmail = controller.user.email)
@@ -607,16 +448,7 @@ class InvitationsControllerSpec
           "Need to specify binding organisation when joining a project")
       }
 
-      "badrequest if user is already assigned to project and organisation" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest if user is already assigned to project and organisation" in new WithInvitationsControllerMock {
         val invitationId =
           createJoinProjectInvitation(controller)(
             invitedEmail = controller.user.email)
@@ -633,16 +465,7 @@ class InvitationsControllerSpec
           s"User already assigned to project ${controller.project.key} and organisation ${controller.organisation.key}")
       }
 
-      "badrequest project does not exist" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest project does not exist" in new WithInvitationsControllerMock {
         val invitationId =
           createJoinProjectInvitation(controller)(
             invitedEmail = controller.user.email,
@@ -661,16 +484,7 @@ class InvitationsControllerSpec
           s"Project nonExistingProject does not exist")
       }
 
-      "badrequest if project is inactive" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest if project is inactive" in new WithInvitationsControllerMock {
         val project = Project(
           id = ProjectId(),
           key = "newProject",
@@ -701,16 +515,7 @@ class InvitationsControllerSpec
           s"Cannot join inactive project newProject")
       }
 
-      "successful user assigned to project in provided organisation with correct role" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "successful user assigned to project in provided organisation with correct role" in new WithInvitationsControllerMock {
         val project = Project(
           id = ProjectId(),
           key = "newProject",
@@ -760,16 +565,7 @@ class InvitationsControllerSpec
     }
 
     "for JoinOrganisationInvitation" in {
-      "badrequest organisation does not exist" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest organisation does not exist" in new WithInvitationsControllerMock {
         val invitationId =
           createJoinOrganisationInvitation(controller)(
             invitedEmail = controller.user.email,
@@ -786,16 +582,7 @@ class InvitationsControllerSpec
           s"Organisation nonExistingOrganisation does not exist")
       }
 
-      "badrequest if organisation is inactive" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "badrequest if organisation is inactive" in new WithInvitationsControllerMock {
         val organisation = Organisation(
           id = OrganisationId(),
           key = "newOrganisation",
@@ -823,16 +610,7 @@ class InvitationsControllerSpec
           s"Cannot join inactive organisation newOrganisation")
       }
 
-      "successful user assigned to organisation with correct role" in new WithTestApplication {
-        implicit val executionContext: ExecutionContext =
-          inject[ExecutionContext]
-        val systemServices: SystemServices = inject[SystemServices]
-        val authConfig: AuthConfig         = inject[AuthConfig]
-        val controller: InvitationsControllerMock =
-          controllers.InvitationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+      "successful user assigned to organisation with correct role" in new WithInvitationsControllerMock {
         val organisation = Organisation(
           id = OrganisationId(),
           key = "newOrganisation",
@@ -872,5 +650,19 @@ class InvitationsControllerSpec
         userOrg.get.role === OrganisationMember
       }
     }
+  }
+
+  trait WithInvitationsControllerMock extends WithTestApplication {
+    // overrides
+    val userActive: Boolean = true
+
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: SystemServices              = inject[SystemServices]
+    val authConfig: AuthConfig                      = inject[AuthConfig]
+    lazy val controller: InvitationsControllerMock =
+      controllers.InvitationsControllerMock(systemServices = systemServices,
+                                            authConfig = authConfig,
+                                            reactiveMongoApi = reactiveMongoApi,
+                                            userActive = userActive)
   }
 }

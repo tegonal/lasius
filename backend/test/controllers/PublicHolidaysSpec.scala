@@ -42,16 +42,7 @@ class PublicHolidaysSpec
     with TestApplication {
 
   "create public holiday entry" should {
-    "badrequest creating duplicate entry (same date) in the same organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest creating duplicate entry (same date) in the same organisation" in new WithOrganisationsControllerMock {
       val date = LocalDate.now()
       withDBSession() { implicit dbSession =>
         controller.publicHolidayRepository.upsert(
@@ -79,16 +70,7 @@ class PublicHolidaysSpec
         s"Cannot create duplicate public holidays entry with same date $date in organisation ${controller.organisation.key}")
     }
 
-    "successful, even if for the same date another entry in another org exists" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "successful, even if for the same date another entry in another org exists" in new WithOrganisationsControllerMock {
       val org2 = Organisation(
         id = OrganisationId(),
         key = "Some key",
@@ -131,16 +113,7 @@ class PublicHolidaysSpec
 
   "update public holiday entry" should {
 
-    "badrequest if public holidays is not assigned to the provided organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "badrequest if public holidays is not assigned to the provided organisation" in new WithOrganisationsControllerMock {
       val org2 = Organisation(
         id = OrganisationId(),
         key = "Some key",
@@ -178,16 +151,7 @@ class PublicHolidaysSpec
       status(result) must equalTo(BAD_REQUEST)
     }
 
-    "forbidden if user is not assigned to organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "forbidden if user is not assigned to organisation" in new WithOrganisationsControllerMock {
       val org2 = Organisation(
         id = OrganisationId(),
         key = "Some key",
@@ -224,16 +188,7 @@ class PublicHolidaysSpec
       status(result) must equalTo(FORBIDDEN)
     }
 
-    "successful" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "successful" in new WithOrganisationsControllerMock {
       val publicHolidayId = PublicHolidayId()
       withDBSession() { implicit dbSession =>
         controller.publicHolidayRepository.upsert(
@@ -263,16 +218,7 @@ class PublicHolidaysSpec
   }
 
   "delete a public holiday entry" should {
-    "forbidden if user is not assigned to organisation" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: OrganisationsControllerMock =
-        controllers.OrganisationsControllerMock(systemServices,
-                                                authConfig,
-                                                reactiveMongoApi)
-
+    "forbidden if user is not assigned to organisation" in new WithOrganisationsControllerMock {
       val org2 = Organisation(
         id = OrganisationId(),
         key = "Some key",
@@ -304,5 +250,15 @@ class PublicHolidaysSpec
 
       status(result) must equalTo(FORBIDDEN)
     }
+  }
+
+  trait WithOrganisationsControllerMock extends WithTestApplication {
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: SystemServices              = inject[SystemServices]
+    val authConfig: AuthConfig                      = inject[AuthConfig]
+    val controller: OrganisationsControllerMock =
+      controllers.OrganisationsControllerMock(systemServices,
+                                              authConfig,
+                                              reactiveMongoApi)
   }
 }

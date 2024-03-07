@@ -21,16 +21,7 @@
 
 package controllers
 
-import controllers.TimeBookingStatisticsControllerMock.mock
-import core.{
-  DBSession,
-  DBSupport,
-  MockCache,
-  MockCacheAware,
-  SystemServices,
-  TestApplication,
-  TestDBSupport
-}
+import core._
 import models._
 import mongo.EmbedMongo
 import org.specs2.mock.Mockito
@@ -53,15 +44,7 @@ class UsersControllerSpec
     with TestApplication {
 
   "update personal user data" should {
-    "badrequest if no update field is specified" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "badrequest if no update field is specified" in new WithUsersControllerMock {
       val request: FakeRequest[PersonalDataUpdate] = FakeRequest()
         .withBody(
           PersonalDataUpdate(
@@ -76,14 +59,7 @@ class UsersControllerSpec
         "At least one field needs to be defined as update for user: someUserId")
     }
 
-    "badrequest if tried to update with no email" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "badrequest if tried to update with no email" in new WithUsersControllerMock {
       val request: FakeRequest[PersonalDataUpdate] = FakeRequest()
         .withBody(
           PersonalDataUpdate(
@@ -98,16 +74,7 @@ class UsersControllerSpec
         "Not a valid email address 'incorrectEmail'")
     }
 
-    "badrequest email address user already exists" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: UsersController
-        with SecurityControllerMock
-        with MockCacheAware
-        with TestDBSupport =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "badrequest email address user already exists" in new WithUsersControllerMock {
       // initialize
       val user2: User = User(UserId(),
                              "user2",
@@ -138,14 +105,7 @@ class UsersControllerSpec
       contentAsString(result) must equalTo("Email Address already registered")
     }
 
-    "update all fields correctly" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "update all fields correctly" in new WithUsersControllerMock {
       val request: FakeRequest[PersonalDataUpdate] = FakeRequest()
         .withBody(
           PersonalDataUpdate(
@@ -172,14 +132,7 @@ class UsersControllerSpec
   }
 
   "update other user data" should {
-    "forbidden user does not exist" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "forbidden user does not exist" in new WithUsersControllerMock {
       val request: FakeRequest[PersonalDataUpdate] = FakeRequest()
         .withBody(
           PersonalDataUpdate(
@@ -197,14 +150,7 @@ class UsersControllerSpec
   }
 
   "change password" should {
-    "badrequest if password does not match" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "badrequest if password does not match" in new WithUsersControllerMock {
       val request: FakeRequest[PasswordChangeRequest] = FakeRequest()
         .withBody(
           PasswordChangeRequest(
@@ -217,14 +163,7 @@ class UsersControllerSpec
       contentAsString(result) must equalTo("Provided password does not match")
     }
 
-    "badrequest if new password does not match policy" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "badrequest if new password does not match policy" in new WithUsersControllerMock {
       val request: FakeRequest[PasswordChangeRequest] = FakeRequest()
         .withBody(
           PasswordChangeRequest(
@@ -237,16 +176,7 @@ class UsersControllerSpec
       contentAsString(result) must equalTo("password policy not satisfied")
     }
 
-    "ok" in new WithTestApplication {
-
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller: UsersController
-        with SecurityControllerMock
-        with MockCacheAware
-        with TestDBSupport =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
+    "ok" in new WithUsersControllerMock {
       val newPassword = "1d3dsaAad34212"
 
       val request: FakeRequest[PasswordChangeRequest] = FakeRequest()
@@ -271,14 +201,7 @@ class UsersControllerSpec
   }
 
   "updateUserOrganisation" should {
-    "forbidden if user is not assigned to organisation" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "forbidden if user is not assigned to organisation" in new WithUsersControllerMock {
       val request: FakeRequest[UpdateUserOrganisation] = FakeRequest()
         .withBody(
           UpdateUserOrganisation(
@@ -290,14 +213,7 @@ class UsersControllerSpec
       status(result) must equalTo(FORBIDDEN)
     }
 
-    "ok" in new WithTestApplication {
-      implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-      val systemServices: SystemServices              = inject[SystemServices]
-      val authConfig: AuthConfig                      = inject[AuthConfig]
-      val controller
-          : UsersController with SecurityControllerMock with MockCacheAware =
-        UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
-
+    "ok" in new WithUsersControllerMock {
       val workingHours: WorkingHours =
         WorkingHours(monday = 8, tuesday = 4, wednesday = 2, sunday = 1)
       val request: FakeRequest[UpdateUserOrganisation] = FakeRequest()
@@ -315,6 +231,17 @@ class UsersControllerSpec
         .find(_.organisationReference.id == controller.organisationId)
         .map(_.plannedWorkingHours) must beSome(workingHours)
     }
+  }
+
+  trait WithUsersControllerMock extends WithTestApplication {
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: SystemServices              = inject[SystemServices]
+    val authConfig: AuthConfig                      = inject[AuthConfig]
+    val controller: UsersController
+      with SecurityControllerMock
+      with MockCacheAware
+      with TestDBSupport =
+      UsersControllerMock(systemServices, authConfig, reactiveMongoApi)
   }
 }
 

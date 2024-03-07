@@ -23,6 +23,7 @@ package domain.views
 
 import actors.ClientReceiver
 import akka.PersistentActorTestScope
+import akka.actor.ActorRef
 import akka.pattern.StatusReply.Ack
 import akka.testkit._
 import domain.AggregateRoot.InitializeViewLive
@@ -43,39 +44,27 @@ class CurrentUserTimeBookingsViewSpec
     with PersistentActorTestScope {
 
   "CurrentUserTimeBookingsView UserTimeBookingStarted" should {
-    "booking to current state" in new WithPersistentActorTestScope {
+    "booking to current state" in new WithCurrentUserTimeBookingsView {
+      val day: LocalDate  = LocalDate.now()
+      val start: DateTime = DateTime.now().minusHours(2)
 
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
+      val tag1: SimpleTag = SimpleTag(TagId("tag1"))
+      val tag2: SimpleTag = SimpleTag(TagId("tag2"))
 
-      val userReference =
-        EntityReference(UserId(), "noob")
-      val projectReference =
-        EntityReference(ProjectId(), "proj")
-      val orgReference =
-        EntityReference(OrganisationId(), "team")
-      val actorRef = system.actorOf(
-        CurrentUserTimeBookingsView.props(clientReceiver, userReference))
-
-      val day   = LocalDate.now()
-      val start = DateTime.now().minusHours(2)
-
-      val tag1 = SimpleTag(TagId("tag1"))
-      val tag2 = SimpleTag(TagId("tag2"))
-
-      val bookingStartedEvent = UserTimeBookingStartedV3(
-        id = BookingId(),
-        start = start.toLocalDateTimeWithZone,
-        userReference = userReference,
-        organisationReference = orgReference,
-        projectReference = projectReference,
-        tags = Set(tag1, tag2)
-      )
+      val bookingStartedEvent: UserTimeBookingStartedV3 =
+        UserTimeBookingStartedV3(
+          id = BookingId(),
+          start = start.toLocalDateTimeWithZone,
+          userReference = userReference,
+          organisationReference = orgReference,
+          projectReference = projectReference,
+          tags = Set(tag1, tag2)
+        )
 
       probe.send(actorRef, InitializeViewLive(userReference, 0))
       probe.expectMsg(JournalReadingViewIsLive)
 
-      val state = CurrentUserTimeBookingEvent(
+      val state: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference,
                                day,
                                Some(bookingStartedEvent),
@@ -93,33 +82,21 @@ class CurrentUserTimeBookingsViewSpec
   }
 
   "CurrentUserTimeBookingsView UserTimeBookingStartTimeChanged" should {
-    "adjust time of current booking" in new WithPersistentActorTestScope {
-
-      val userReference =
-        EntityReference(UserId(), "noob")
-      val projectReference =
-        EntityReference(ProjectId(), "proj")
-      val teamReference =
-        EntityReference(OrganisationId(), "team")
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
-      val actorRef = system.actorOf(
-        CurrentUserTimeBookingsView.props(clientReceiver, userReference))
-
+    "adjust time of current booking" in new WithCurrentUserTimeBookingsView {
       probe.send(actorRef, InitializeViewLive(userReference, 0))
       probe.expectMsg(JournalReadingViewIsLive)
 
-      val day      = LocalDate.now()
-      val start    = DateTime.now().minusHours(2)
-      val tag1     = SimpleTag(TagId("tag1"))
-      val tag2     = SimpleTag(TagId("tag2"))
-      val newStart = start.minusHours(2)
+      val day: LocalDate     = LocalDate.now()
+      val start: DateTime    = DateTime.now().minusHours(2)
+      val tag1: SimpleTag    = SimpleTag(TagId("tag1"))
+      val tag2: SimpleTag    = SimpleTag(TagId("tag2"))
+      val newStart: DateTime = start.minusHours(2)
 
-      val booking = UserTimeBookingStartedV3(
+      val booking: UserTimeBookingStartedV3 = UserTimeBookingStartedV3(
         id = BookingId(),
         start = start.toLocalDateTimeWithZone,
         userReference = userReference,
-        organisationReference = teamReference,
+        organisationReference = orgReference,
         projectReference = projectReference,
         tags = Set(tag1, tag2)
       )
@@ -133,8 +110,9 @@ class CurrentUserTimeBookingsViewSpec
                  UserTimeBookingStartTimeChanged(booking.id, start, newStart))
       probe.expectMsg(Ack)
 
-      val newBooking = booking.copy(start = newStart.toLocalDateTimeWithZone)
-      val state = CurrentUserTimeBookingEvent(
+      val newBooking: UserTimeBookingStartedV3 =
+        booking.copy(start = newStart.toLocalDateTimeWithZone)
+      val state: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference,
                                day,
                                Some(newBooking),
@@ -148,35 +126,24 @@ class CurrentUserTimeBookingsViewSpec
   }
 
   "CurrentUserTimeBookingsView UserTimeBookingEdited" should {
-    "update currently active booking when edited" in new WithPersistentActorTestScope {
-
-      val userReference =
-        EntityReference(UserId(), "noob")
-      val projectReference =
-        EntityReference(ProjectId(), "proj")
-      val project2Reference =
+    "update currently active booking when edited" in new WithCurrentUserTimeBookingsView {
+      val project2Reference: EntityReference[ProjectId] =
         EntityReference(ProjectId(), "proj2")
-      val teamReference =
-        EntityReference(OrganisationId(), "team")
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
-      val actorRef = system.actorOf(
-        CurrentUserTimeBookingsView.props(clientReceiver, userReference))
 
       probe.send(actorRef, InitializeViewLive(userReference, 0))
       probe.expectMsg(JournalReadingViewIsLive)
 
-      val day   = LocalDate.now()
-      val end   = DateTime.now()
-      val start = end.minusHours(2)
-      val tag1  = SimpleTag(TagId("tag1"))
-      val tag2  = SimpleTag(TagId("tag2"))
+      val day: LocalDate  = LocalDate.now()
+      val end: DateTime   = DateTime.now()
+      val start: DateTime = end.minusHours(2)
+      val tag1: SimpleTag = SimpleTag(TagId("tag1"))
+      val tag2: SimpleTag = SimpleTag(TagId("tag2"))
 
-      val booking = UserTimeBookingStartedV3(
+      val booking: UserTimeBookingStartedV3 = UserTimeBookingStartedV3(
         id = BookingId(),
         start = start.toLocalDateTimeWithZone,
         userReference = userReference,
-        organisationReference = teamReference,
+        organisationReference = orgReference,
         projectReference = projectReference,
         tags = Set(tag1, tag2)
       )
@@ -186,13 +153,13 @@ class CurrentUserTimeBookingsViewSpec
       probe.expectMsg(Ack)
 
       // then move start time
-      val editedBooking =
+      val editedBooking: UserTimeBookingStartedV3 =
         booking.copy(projectReference = Some(project2Reference))
       probe.send(actorRef,
                  UserTimeBookingInProgressEdited(booking, editedBooking))
       probe.expectMsg(Ack)
 
-      val state = CurrentUserTimeBookingEvent(
+      val state: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference,
                                day,
                                Some(editedBooking),
@@ -204,41 +171,29 @@ class CurrentUserTimeBookingsViewSpec
           List(userReference.id))))
     }
 
-    "adjusted daily total of booking when editing booking" in new WithPersistentActorTestScope {
-
-      val userReference =
-        EntityReference(UserId(), "noob")
-      val projectReference =
-        EntityReference(ProjectId(), "proj")
-      val teamReference =
-        EntityReference(OrganisationId(), "team")
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
-      val actorRef = system.actorOf(
-        CurrentUserTimeBookingsView.props(clientReceiver, userReference))
-
+    "adjusted daily total of booking when editing booking" in new WithCurrentUserTimeBookingsView {
       probe.send(actorRef, InitializeViewLive(userReference, 0))
       probe.expectMsg(JournalReadingViewIsLive)
 
-      val day      = LocalDate.now()
-      val end      = DateTime.now()
-      val start    = end.minusHours(2)
-      val tag1     = SimpleTag(TagId("tag1"))
-      val tag2     = SimpleTag(TagId("tag2"))
-      val duration = Duration.standardHours(2)
+      val day: LocalDate     = LocalDate.now()
+      val end: DateTime      = DateTime.now()
+      val start: DateTime    = end.minusHours(2)
+      val tag1: SimpleTag    = SimpleTag(TagId("tag1"))
+      val tag2: SimpleTag    = SimpleTag(TagId("tag2"))
+      val duration: Duration = Duration.standardHours(2)
 
-      val booking = BookingV3(
+      val booking: BookingV3 = BookingV3(
         id = BookingId(),
         start = start.toLocalDateTimeWithZone,
         end = Some(end.toLocalDateTimeWithZone),
         duration = new Duration(start, end),
         userReference = userReference,
-        organisationReference = teamReference,
+        organisationReference = orgReference,
         projectReference = projectReference,
         tags = Set(tag1, tag2)
       )
 
-      val state = CurrentUserTimeBookingEvent(
+      val state: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference, day, None, None, duration))
 
       probe.send(actorRef, UserTimeBookingStoppedV3(booking))
@@ -250,12 +205,12 @@ class CurrentUserTimeBookingsViewSpec
           List(userReference.id))))
 
       // edit time booking
-      val newDuration = Duration.standardHours(4)
+      val newDuration: Duration = Duration.standardHours(4)
       // expect new duration of current booking, without booking in progress
-      val newState = CurrentUserTimeBookingEvent(
+      val newState: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference, day, None, None, newDuration))
 
-      val newStart = start.minusHours(2)
+      val newStart: DateTime = start.minusHours(2)
       probe.send(actorRef,
                  UserTimeBookingEditedV4(
                    booking,
@@ -271,41 +226,29 @@ class CurrentUserTimeBookingsViewSpec
   }
 
   "CurrentUserTimeBookingsView UserTimeBookingRemoved" should {
-    "adjusted daily total of booking when stopped booking in same day was deleted" in new WithPersistentActorTestScope {
+    "adjusted daily total of booking when stopped booking in same day was deleted" in new WithCurrentUserTimeBookingsView {
+      val day: LocalDate     = LocalDate.now()
+      val end: DateTime      = DateTime.now()
+      val start: DateTime    = end.minusHours(2)
+      val tag1: SimpleTag    = SimpleTag(TagId("tag1"))
+      val tag2: SimpleTag    = SimpleTag(TagId("tag2"))
+      val duration: Duration = Duration.standardHours(2)
 
-      val userReference =
-        EntityReference(UserId(), "noob")
-      val projectReference =
-        EntityReference(ProjectId(), "proj")
-      val teamReference =
-        EntityReference(OrganisationId(), "team")
-      val probe          = TestProbe()
-      val clientReceiver = mock[ClientReceiver]
-      val actorRef = system.actorOf(
-        CurrentUserTimeBookingsView.props(clientReceiver, userReference))
-
-      val day      = LocalDate.now()
-      val end      = DateTime.now()
-      val start    = end.minusHours(2)
-      val tag1     = SimpleTag(TagId("tag1"))
-      val tag2     = SimpleTag(TagId("tag2"))
-      val duration = Duration.standardHours(2)
-
-      val booking = UserTimeBookingStartedV3(
+      val booking: UserTimeBookingStartedV3 = UserTimeBookingStartedV3(
         id = BookingId(),
         start = start.toLocalDateTimeWithZone,
         userReference = userReference,
-        organisationReference = teamReference,
+        organisationReference = orgReference,
         projectReference = projectReference,
         tags = Set(tag1, tag2)
       )
-      val booking2 = BookingV3(
+      val booking2: BookingV3 = BookingV3(
         id = BookingId(),
         start = start.toLocalDateTimeWithZone,
         end = Some(end.toLocalDateTimeWithZone),
         duration = new Duration(start, end),
         userReference = userReference,
-        organisationReference = teamReference,
+        organisationReference = orgReference,
         projectReference = EntityReference(ProjectId(), "project2"),
         tags = Set(tag1, tag2)
       )
@@ -326,7 +269,7 @@ class CurrentUserTimeBookingsViewSpec
       probe.expectMsg(Ack)
 
       // validate new state
-      val newState = CurrentUserTimeBookingEvent(
+      val newState: CurrentUserTimeBookingEvent = CurrentUserTimeBookingEvent(
         CurrentUserTimeBooking(userReference,
                                day,
                                Some(booking),
@@ -338,5 +281,19 @@ class CurrentUserTimeBookingsViewSpec
           userReference.id), ArgumentMatchers.eq(newState), ArgumentMatchers.eq(
           List(userReference.id))))
     }
+  }
+
+  trait WithCurrentUserTimeBookingsView extends WithPersistentActorTestScope {
+    val probe: TestProbe               = TestProbe()
+    val clientReceiver: ClientReceiver = mock[ClientReceiver]
+
+    val userReference: EntityReference[UserId] =
+      EntityReference(UserId(), "noob")
+    val projectReference: EntityReference[ProjectId] =
+      EntityReference(ProjectId(), "proj")
+    val orgReference: EntityReference[OrganisationId] =
+      EntityReference(OrganisationId(), "team")
+    val actorRef: ActorRef = system.actorOf(
+      CurrentUserTimeBookingsView.props(clientReceiver, userReference))
   }
 }
