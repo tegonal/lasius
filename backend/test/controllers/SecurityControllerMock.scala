@@ -23,7 +23,7 @@ package controllers
 
 import core.{CacheAware, DBSession, DBSupport}
 import helpers.UserHelper
-import models._
+import models.{WorkingHours, _}
 import org.mindrot.jbcrypt.BCrypt
 import org.specs2.mock.Mockito
 import play.api.Logging
@@ -41,7 +41,7 @@ trait SecurityControllerMock
     with MockAwaitable
     with Mockito {
   self: BaseController with CacheAware with DBSupport with SecurityComponent =>
-  val userRepository = mockAwaitable[UserRepository]
+  val userRepository: UserRepository = mockAwaitable[UserRepository]
 
   val token: String                          = ""
   val userId: UserId                         = UserId()
@@ -62,7 +62,7 @@ trait SecurityControllerMock
   )
 
   val projectActive: Boolean = true
-  val project =
+  val project: Project =
     Project(
       id = ProjectId(),
       key = "project1",
@@ -74,16 +74,18 @@ trait SecurityControllerMock
     )
   val password                 = "password"
   val projectRole: ProjectRole = ProjectAdministrator
-  val userProject = UserProject(
+  val userProject: UserProject = UserProject(
     sharedByOrganisationReference = None,
     projectReference = project.reference,
     role = projectRole
   )
-  val userOrganisation = UserOrganisation(
+
+  val plannedWorkingHours: WorkingHours = WorkingHours()
+  val userOrganisation: UserOrganisation = UserOrganisation(
     organisationReference = organisation.reference,
     `private` = organisation.`private`,
     role = organisationRole,
-    plannedWorkingHours = WorkingHours(),
+    plannedWorkingHours = plannedWorkingHours,
     projects = Seq(userProject)
   )
   val userActive: Boolean = true

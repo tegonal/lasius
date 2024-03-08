@@ -30,13 +30,14 @@ import domain.UserTimeBookingAggregate.{
 import models.LocalDateTimeWithTimeZone._
 import models._
 import mongo.EmbedMongo
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.{DateTime, DateTimeConstants, Duration}
 import org.specs2.mock.Mockito
 import org.specs2.mock.mockito.MockitoMatchers
+import org.specs2.specification.core.Fragments
 import play.api.mvc._
 import play.api.test._
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.BookingHistoryRepository
+import repositories.{BookingHistoryRepository, PublicHolidayRepository}
 import util.MockAwaitable
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -164,7 +165,7 @@ class TimeBookingControllerSpec
       val from: DateTime = DateTime.now()
       val to: DateTime   = from.plusHours(1)
 
-      val bookingId = BookingId()
+      val bookingId: BookingId = BookingId()
       withDBSession() { implicit dbSession =>
         bookingHistoryRepository.upsert(
           BookingV3(
@@ -200,7 +201,6 @@ class TimeBookingControllerSpec
 
     "badrequest if booking does not exist in provided organisation" in new WithTimeBookingControllerMock {
       val from: DateTime = DateTime.now()
-      val to: DateTime   = from.plusHours(1)
       val request: FakeRequest[UpdateProjectBookingRequest] = FakeRequest()
         .withBody(
           UpdateProjectBookingRequest(
@@ -210,7 +210,7 @@ class TimeBookingControllerSpec
             end = None,
             duration = Some(new Duration(1000))
           ))
-      val bookingId = BookingId()
+      val bookingId: BookingId = BookingId()
       val result: Future[Result] =
         controller.updateProjectBooking(controller.organisationId, bookingId)(
           request)
@@ -224,7 +224,7 @@ class TimeBookingControllerSpec
       val from: DateTime = DateTime.now()
       val to: DateTime   = from.plusHours(1)
 
-      val bookingId = BookingId()
+      val bookingId: BookingId = BookingId()
       withDBSession() { implicit dbSession =>
         bookingHistoryRepository.upsert(
           BookingV3(
@@ -454,76 +454,227 @@ class TimeBookingControllerSpec
         "Provided non mutual values for 'end_date' and 'duration'")
     }
 
-    "successful with end date, producing expected command" in new WithTimeBookingControllerMock {
-      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
-      val from: DateTime = DateTime.now()
-      val to: DateTime   = from.plusHours(1)
+    "badrequest if adding an absence to a date-range including a day not having non-working hours" >> {
+      Fragments.foreach(NonWorkingTimeBooking.values) { bookingType =>
+        s"bookingType=$bookingType" >> new WithTimeBookingControllerMock {
+          override val plannedWorkingHours: WorkingHours = WorkingHours(
+            monday = 8,
+            wednesday = 4
+          )
 
-      val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
-        .withBody(
-          models.AddAbsenceBookingRequest(bookingType = HolidayBooking,
-                                          tags = Set(SimpleTag(TagId("tag1"))),
-                                          start = from,
-                                          end = Some(to)))
-      val result: Future[Result] =
-        controller.addAbsenceBooking(controller.organisationId)(request)
+          val from: DateTime = DateTime
+            .now()
+            .withHourOfDay(5)
+            .withDayOfWeek(DateTimeConstants.MONDAY)
+          val to: DateTime = from.plusDays(2).plusHours(3)
 
-      status(result) must equalTo(OK)
-      systemServices.timeBookingViewServiceProbe.expectMsg(
-        AddBookingCommand(
-          bookingType = HolidayBooking,
-          userReference = controller.userReference,
-          organisationReference = controller.organisation.reference,
-          projectReference = None,
-          tags = tags,
-          start = from,
-          endOrDuration = Left(to)
-        )
-      )
+          val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+            .withBody(
+              models.AddAbsenceBookingRequest(bookingType = bookingType,
+                                              tags =
+                                                Set(SimpleTag(TagId("tag1"))),
+                                              start = from,
+                                              end = Some(to)))
+          val result: Future[Result] =
+            controller.addAbsenceBooking(controller.organisationId)(request)
+
+          status(result) must equalTo(BAD_REQUEST)
+          contentAsString(result) must startWith(
+            "Tried to add absence booking to the following non-working day(s) Tuesday")
+        }
+      }
     }
 
-    "successful with duration, producing expected command" in new WithTimeBookingControllerMock {
-      val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
-      val from: DateTime = DateTime.now()
-      val duration       = new Duration(1000)
+    "badrequest if adding a public holiday booking to a date-range not marked as public holiday in the org" in new WithTimeBookingControllerMock {
+      override val plannedWorkingHours: WorkingHours = WorkingHours(
+        monday = 8,
+        tuesday = 6,
+        wednesday = 4
+      )
+
+      val from: DateTime = DateTime
+        .now()
+        .withHourOfDay(5)
+        .withDayOfWeek(DateTimeConstants.MONDAY)
+      val to: DateTime = from.plusDays(2).plusHours(3)
+
+      withDBSession() { implicit dbSession =>
+        controller.publicHolidayRepository.bulkInsert(
+          List(
+            PublicHoliday(
+              id = PublicHolidayId(),
+              organisationReference = controller.organisation.reference,
+              date = from.toLocalDate,
+              year = from.getYear,
+              name = "Start Day"
+            ),
+            PublicHoliday(
+              id = PublicHolidayId(),
+              organisationReference = controller.organisation.reference,
+              date = to.toLocalDate,
+              year = to.getYear,
+              name = "End Day"
+            )
+          )
+        )
+      }
+        .awaitResult()
 
       val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
         .withBody(
           models.AddAbsenceBookingRequest(bookingType = PublicHolidayBooking,
                                           tags = Set(SimpleTag(TagId("tag1"))),
                                           start = from,
-                                          duration = Some(duration)))
+                                          end = Some(to)))
       val result: Future[Result] =
         controller.addAbsenceBooking(controller.organisationId)(request)
 
-      status(result) must equalTo(OK)
-      systemServices.timeBookingViewServiceProbe.expectMsg(
-        AddBookingCommand(
-          bookingType = PublicHolidayBooking,
-          userReference = controller.userReference,
-          organisationReference = controller.organisation.reference,
-          projectReference = None,
-          tags = tags,
-          start = from,
-          endOrDuration = Right(duration)
-        )
-      )
+      status(result) must equalTo(BAD_REQUEST)
+      contentAsString(result) must startWith(
+        s"The following dates of the public holiday booking ${from.plusDays(1).toLocalDate} do not match an existing public holiday")
+    }
+
+    "successful with end date, producing expected command" >> {
+      Fragments.foreach(NonWorkingTimeBooking.values) { bookingType =>
+        s"bookingType=$bookingType" >> new WithTimeBookingControllerMock {
+          override val plannedWorkingHours: WorkingHours = WorkingHours(
+            monday = 1,
+            tuesday = 2,
+            wednesday = 3,
+            thursday = 4,
+            friday = 5,
+            saturday = 2.5f,
+            sunday = 3.6f
+          )
+
+          val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+          val from: DateTime = DateTime.now()
+          val to: DateTime   = from.plusHours(1)
+
+          // create public holiday
+          if (bookingType == PublicHolidayBooking) {
+            withDBSession() { implicit dbSession =>
+              controller.publicHolidayRepository.upsert(
+                PublicHoliday(
+                  id = PublicHolidayId(),
+                  organisationReference = controller.organisation.reference,
+                  date = from.toLocalDate,
+                  year = from.getYear,
+                  name = "Start Day"
+                )
+              )
+            }
+              .awaitResult()
+          }
+
+          val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+            .withBody(
+              models.AddAbsenceBookingRequest(bookingType = bookingType,
+                                              tags = tags,
+                                              start = from,
+                                              end = Some(to)))
+          val result: Future[Result] =
+            controller.addAbsenceBooking(controller.organisationId)(request)
+
+          status(result) must equalTo(OK)
+          systemServices.timeBookingViewServiceProbe.expectMsg(
+            AddBookingCommand(
+              bookingType = bookingType,
+              userReference = controller.userReference,
+              organisationReference = controller.organisation.reference,
+              projectReference = None,
+              tags = tags,
+              start = from,
+              endOrDuration = Left(to)
+            )
+          )
+        }
+      }
+    }
+
+    "successful with duration, producing expected command" >> {
+      Fragments.foreach(NonWorkingTimeBooking.values) { bookingType =>
+        s"bookingType=$bookingType" >> new WithTimeBookingControllerMock {
+          override val plannedWorkingHours: WorkingHours = WorkingHours(
+            monday = 1,
+            tuesday = 2,
+            wednesday = 3,
+            thursday = 4,
+            friday = 5,
+            saturday = 2.5f,
+            sunday = 3.6f
+          )
+
+          val tags: Set[Tag] = Set(SimpleTag(TagId("tag1")))
+          val from: DateTime = DateTime.now()
+          val duration       = new Duration(1000)
+
+          // create public holiday
+          if (bookingType == PublicHolidayBooking) {
+            withDBSession() { implicit dbSession =>
+              controller.publicHolidayRepository.upsert(
+                PublicHoliday(
+                  id = PublicHolidayId(),
+                  organisationReference = controller.organisation.reference,
+                  date = from.toLocalDate,
+                  year = from.getYear,
+                  name = "Start Day"
+                )
+              )
+            }
+              .awaitResult()
+          }
+
+          val request: FakeRequest[AddAbsenceBookingRequest] = FakeRequest()
+            .withBody(
+              models.AddAbsenceBookingRequest(bookingType = bookingType,
+                                              tags = tags,
+                                              start = from,
+                                              duration = Some(duration)))
+          val result: Future[Result] =
+            controller.addAbsenceBooking(controller.organisationId)(request)
+
+          status(result) must equalTo(OK)
+          systemServices.timeBookingViewServiceProbe.expectMsg(
+            AddBookingCommand(
+              bookingType = bookingType,
+              userReference = controller.userReference,
+              organisationReference = controller.organisation.reference,
+              projectReference = None,
+              tags = tags,
+              start = from,
+              endOrDuration = Right(duration)
+            )
+          )
+        }
+      }
     }
   }
 
   trait WithTimeBookingControllerMock extends WithTestApplication {
-    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
-    val systemServices = inject[SystemServices].asInstanceOf[MockServices]
-    val authConfig     = inject[AuthConfig]
-    val bookingHistoryRepository = inject[BookingHistoryRepository]
+    // overrides
+    val plannedWorkingHours: WorkingHours = WorkingHours()
 
-    val controller: TimeBookingController
+    implicit val executionContext: ExecutionContext = inject[ExecutionContext]
+    val systemServices: MockServices =
+      inject[SystemServices].asInstanceOf[MockServices]
+    val authConfig: AuthConfig = inject[AuthConfig]
+    val bookingHistoryRepository: BookingHistoryRepository =
+      inject[BookingHistoryRepository]
+    val publicHolidayRepository: PublicHolidayRepository =
+      inject[PublicHolidayRepository]
+
+    lazy val controller: TimeBookingController
       with SecurityControllerMock
       with MockCacheAware =
-      TimeBookingControllerMock(systemServices,
-                                authConfig,
-                                reactiveMongoApi,
-                                bookingHistoryRepository)
+      TimeBookingControllerMock(
+        systemServices = systemServices,
+        authConfig = authConfig,
+        reactiveMongoApi = reactiveMongoApi,
+        bookingHistoryRepository = bookingHistoryRepository,
+        publicHolidayRepository = publicHolidayRepository,
+        plannedWorkingHours = plannedWorkingHours
+      )
   }
 }
 
@@ -532,17 +683,41 @@ object TimeBookingControllerMock extends MockAwaitable with Mockito {
   def apply(systemServices: SystemServices,
             authConfig: AuthConfig,
             reactiveMongoApi: ReactiveMongoApi,
-            bookingHistoryRepository: BookingHistoryRepository)(implicit
-      ec: ExecutionContext): TimeBookingController
-    with SecurityControllerMock
-    with MockCacheAware = {
+            bookingHistoryRepository: BookingHistoryRepository,
+            publicHolidayRepository: PublicHolidayRepository,
+            plannedWorkingHours: WorkingHours = WorkingHours())(implicit
+      ec: ExecutionContext): TimeBookingControllerMock = {
 
-    new TimeBookingController(
-      Helpers.stubControllerComponents(),
-      authConfig,
-      MockCache,
-      reactiveMongoApi,
-      systemServices,
-      bookingHistoryRepository) with SecurityControllerMock with MockCacheAware
+    new TimeBookingControllerMock(
+      controllerComponents = Helpers.stubControllerComponents(),
+      authConfig = authConfig,
+      reactiveMongoApi = reactiveMongoApi,
+      systemServices = systemServices,
+      bookingHistoryRepository = bookingHistoryRepository,
+      publicHolidayRepository = publicHolidayRepository,
+      plannedWorkingHours = plannedWorkingHours)
+      with SecurityControllerMock
+      with MockCacheAware
   }
 }
+
+class TimeBookingControllerMock(
+    controllerComponents: ControllerComponents,
+    authConfig: AuthConfig,
+    systemServices: SystemServices,
+    reactiveMongoApi: ReactiveMongoApi,
+    bookingHistoryRepository: BookingHistoryRepository,
+    publicHolidayRepository: PublicHolidayRepository,
+    override val plannedWorkingHours: WorkingHours
+)(implicit ec: ExecutionContext)
+    extends TimeBookingController(
+      controllerComponents = controllerComponents,
+      authConfig = authConfig,
+      cache = MockCache,
+      reactiveMongoApi = reactiveMongoApi,
+      systemServices = systemServices,
+      bookingHistoryRepository = bookingHistoryRepository,
+      publicHolidayRepository = publicHolidayRepository
+    )
+    with SecurityControllerMock
+    with MockCacheAware

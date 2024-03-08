@@ -22,16 +22,19 @@
 package controllers
 
 import akka.util.Timeout
-import core.SystemServices
+import controllers.TimeBookingController.DAY_NAMES
+import core.{DBSession, SystemServices}
 import domain.UserTimeBookingAggregate._
 import models._
+import org.joda.time.{DateTimeConstants, Days, LocalDate}
 import play.api.cache.AsyncCacheApi
 import play.api.mvc.{Action, ControllerComponents}
 import play.modules.reactivemongo.ReactiveMongoApi
-import repositories.BookingHistoryRepository
+import repositories.{BookingHistoryRepository, PublicHolidayRepository}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 class TimeBookingController @Inject() (
     controllerComponents: ControllerComponents,
@@ -39,7 +42,8 @@ class TimeBookingController @Inject() (
     override val cache: AsyncCacheApi,
     override val reactiveMongoApi: ReactiveMongoApi,
     override val systemServices: SystemServices,
-    val bookingHistoryRepository: BookingHistoryRepository)(implicit
+    val bookingHistoryRepository: BookingHistoryRepository,
+    val publicHolidayRepository: PublicHolidayRepository)(implicit
     ec: ExecutionContext)
     extends BaseLasiusController(controllerComponents) {
 
@@ -164,8 +168,97 @@ class TimeBookingController @Inject() (
             _ <- request.body.end.fold(success())(
               validateStartBeforeEnd(request.body.start, _))
             command <- request.body.toCommand(userOrg.organisationReference)
+            end <- Future {
+              request.body.end.orElse(request.body.duration.map(duration =>
+                request.body.start.plus(duration)))
+            }.noneToFailed("Either end or duration must be specified")
+
+            startDate = request.body.start.toLocalDate
+            noOfDays  = Days.daysBetween(startDate, end.toLocalDate).getDays + 1
+            bookingDates         = (0 until noOfDays).map(startDate.plusDays)
+            bookingDatesWeekDays = bookingDates.map(_.getDayOfWeek)
+
+            // verify plans to work on those days
+            _ <- validateBookedAbsenceDaysAreWorkingDays(userOrg,
+                                                         bookingDatesWeekDays)
+
+            // validate public holiday bookings
+            _ <- request.body.bookingType match {
+              case PublicHolidayBooking =>
+                validateBookingPublicHolidaysExists(userOrg, bookingDates)
+              case _ => success()
+            }
+
             _ = systemServices.timeBookingViewService ! command
           } yield Ok
         }
     }
+
+  /** Validate for all booked week days a planned working days entry > 0 hours
+    * exist
+    */
+  private def validateBookedAbsenceDaysAreWorkingDays(
+      userOrg: UserOrganisation,
+      bookingDatesWeekDays: Seq[Int]): Future[Unit] =
+    Future {
+      bookingDatesWeekDays
+        .filter {
+          case DateTimeConstants.MONDAY =>
+            userOrg.plannedWorkingHours.monday == 0
+          case DateTimeConstants.TUESDAY =>
+            userOrg.plannedWorkingHours.tuesday == 0
+          case DateTimeConstants.WEDNESDAY =>
+            userOrg.plannedWorkingHours.wednesday == 0
+          case DateTimeConstants.THURSDAY =>
+            userOrg.plannedWorkingHours.thursday == 0
+          case DateTimeConstants.FRIDAY =>
+            userOrg.plannedWorkingHours.friday == 0
+          case DateTimeConstants.SATURDAY =>
+            userOrg.plannedWorkingHours.saturday == 0
+          case DateTimeConstants.SUNDAY =>
+            userOrg.plannedWorkingHours.sunday == 0
+        }
+        .map(day => DAY_NAMES(day - 1))
+        .pipe { list =>
+          if (list.isEmpty) {
+            None
+          } else {
+            Some(list)
+          }
+        }
+    }.someToFailed(days =>
+      s"Tried to add absence booking to the following non-working day(s) ${days
+        .mkString(",")}")
+
+  /** Validate for public holiday bookings that all booked days exists as public
+    * holiday within the organisation
+    */
+  private def validateBookingPublicHolidaysExists(
+      userOrg: UserOrganisation,
+      bookingDatesList: Seq[LocalDate])(implicit
+      dbSession: DBSession): Future[Unit] = {
+    for {
+      publicHolidays <- publicHolidayRepository.findByOrganisationAndDateRange(
+        userOrg.organisationReference,
+        bookingDatesList.head,
+        bookingDatesList.last)
+      publicHolidayDates = publicHolidays.map(_.date)
+      _ <- validate(
+        publicHolidayDates.containsSlice(bookingDatesList),
+        s"The following dates of the public holiday booking ${bookingDatesList.filterNot(publicHolidayDates.contains).mkString(",")} do not match an existing public holiday"
+      )
+    } yield ()
+  }
+}
+
+object TimeBookingController {
+  val DAY_NAMES: List[String] = List(
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  )
 }

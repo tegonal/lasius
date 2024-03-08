@@ -32,5 +32,12 @@ trait FutureHelper {
       case Some(result) => Future.successful(result)
       case _            => Future.failed(ValidationFailedException(errorMsg))
     }
+
+    def someToFailed(errorMsg: T => String)(implicit
+        executionContext: ExecutionContext): Future[Unit] = self.flatMap {
+      case None => Future.successful(())
+      case Some(value) =>
+        Future.failed(ValidationFailedException(errorMsg(value)))
+    }
   }
 }

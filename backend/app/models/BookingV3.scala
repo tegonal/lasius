@@ -42,13 +42,16 @@ case object AbsenceBooking         extends NonWorkingTimeBooking
 object BookingType {
   implicit val format: Format[BookingType] = enumFormat[BookingType]
 
-  val values =
+  val values: Seq[BookingType] =
     Seq(ProjectBooking, HolidayBooking, PublicHolidayBooking, AbsenceBooking)
 }
 
 object NonWorkingTimeBooking {
   implicit val format: Format[NonWorkingTimeBooking] =
     enumFormat[NonWorkingTimeBooking]
+
+  val values: Seq[NonWorkingTimeBooking] =
+    Seq(HolidayBooking, PublicHolidayBooking, AbsenceBooking)
 }
 
 case class BookingV3(id: BookingId,

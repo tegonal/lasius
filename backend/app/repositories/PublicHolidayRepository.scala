@@ -29,6 +29,7 @@ import models._
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import reactivemongo.api.bson.collection.BSONCollection
+import repositories.MongoDBCommandSet.{GreaterOrEqualsThan, LowerOrEqualsThan}
 
 import javax.inject.Inject
 import scala.concurrent._
@@ -41,6 +42,11 @@ trait PublicHolidayRepository
   def findByOrganisationAndYear(organisationReference: OrganisationReference,
                                 year: Int)(implicit
       dbSession: DBSession): Future[Seq[PublicHoliday]]
+
+  def findByOrganisationAndDateRange(
+      organisationReference: OrganisationReference,
+      from: LocalDate,
+      to: LocalDate)(implicit dbSession: DBSession): Future[Seq[PublicHoliday]]
 
   def create(organisationReference: OrganisationReference,
              createObject: CreatePublicHoliday)(implicit
@@ -70,6 +76,19 @@ class PublicHolidayMongoRepository @Inject() (
     find(
       Json.obj("organisationReference.id" -> organisationReference.id,
                "year"                     -> year)).map { result =>
+      result.map(_._1).toSeq
+    }
+  }
+
+  def findByOrganisationAndDateRange(
+      organisationReference: OrganisationReference,
+      from: LocalDate,
+      to: LocalDate)(implicit
+      dbSession: DBSession): Future[Seq[PublicHoliday]] = {
+    find(
+      Json.obj("organisationReference.id" -> organisationReference.id,
+               "date"                     -> Json.obj(LowerOrEqualsThan -> to),
+               "date" -> Json.obj(GreaterOrEqualsThan -> from))).map { result =>
       result.map(_._1).toSeq
     }
   }
