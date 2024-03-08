@@ -8411,10 +8411,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jose@npm:^4.11.4, jose@npm:^4.15.1":
+"jose@npm:^4.15.1":
   version: 4.15.4
   resolution: "jose@npm:4.15.4"
   checksum: 10/20fa941597150dffc7af3f41d994500cc3e71cd650b755243dbd80d91cf26c1053f95b78af588f05cfc4371e492a67c5c7a48f689b8605145a8fe28b484d725b
+  languageName: node
+  linkType: hard
+
+"jose@npm:^4.15.5":
+  version: 4.15.5
+  resolution: "jose@npm:4.15.5"
+  checksum: 10/17944fcc0d9afa07387eef23127c30ecfcc77eafddc4b4f1a349a8eee0536bee9b08ecd745406eaa0af65d531f738b94d2467976479cbfe8b3b60f8fc8082b8d
   languageName: node
   linkType: hard
 
@@ -8716,7 +8723,7 @@ __metadata:
     json-stable-stringify: "npm:^1.1.1"
     lodash: "npm:^4.17.21"
     next: "npm:^14.1.2"
-    next-auth: "npm:4.24.6"
+    next-auth: "npm:4.24.7"
     next-i18next: "npm:^15.2.0"
     next-plausible: "npm:^3.12.0"
     next-pwa: "npm:^5.6.0"
@@ -9319,14 +9326,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next-auth@npm:4.24.6":
-  version: 4.24.6
-  resolution: "next-auth@npm:4.24.6"
+"next-auth@npm:4.24.7":
+  version: 4.24.7
+  resolution: "next-auth@npm:4.24.7"
   dependencies:
     "@babel/runtime": "npm:^7.20.13"
     "@panva/hkdf": "npm:^1.0.2"
     cookie: "npm:^0.5.0"
-    jose: "npm:^4.11.4"
+    jose: "npm:^4.15.5"
     oauth: "npm:^0.9.15"
     openid-client: "npm:^5.4.0"
     preact: "npm:^10.6.3"
@@ -9340,7 +9347,7 @@ __metadata:
   peerDependenciesMeta:
     nodemailer:
       optional: true
-  checksum: 10/908e90dcb9c023b566ccf89674a2a50524bb600e000d5720bb8f699109176271c0c68fc284abdf3a4369b0373f402a0295f479cd49849db8569797d6692830e8
+  checksum: 10/f226254dac02e31dc28589344ca077fc975261242cc8484f2d9b7c5916f29f29877d75a213168403fbf75d0c84b324c19d68c5a3283cbc683d720a6ea6f3872d
   languageName: node
   linkType: hard
 
