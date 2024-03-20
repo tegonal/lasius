@@ -2504,8 +2504,8 @@ __metadata:
   linkType: hard
 
 "@openapitools/openapi-generator-cli@npm:^2.10.0":
-  version: 2.10.0
-  resolution: "@openapitools/openapi-generator-cli@npm:2.10.0"
+  version: 2.13.1
+  resolution: "@openapitools/openapi-generator-cli@npm:2.13.1"
   dependencies:
     "@nestjs/axios": "npm:3.0.1"
     "@nestjs/common": "npm:10.3.0"
@@ -2526,7 +2526,7 @@ __metadata:
     tslib: "npm:2.6.2"
   bin:
     openapi-generator-cli: main.js
-  checksum: 10/48b11a8060ff37f467bb415d5a64a111a3289f857a0b207991d2d18b3fb068926e5a2eaf4cdadd69817cd75ec5a4b1b6ab499c6c55db573021041ec2b53b5c12
+  checksum: 10/99c827f05249c228eec0f1281199db22cdd691ef1eab40126cc748fddab3da947127b7fe60e4c37cff3e79b86a083ee6a21eeb373dc4280cf827b988efcee5ce
   languageName: node
   linkType: hard
 
