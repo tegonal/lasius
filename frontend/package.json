@@ -96,7 +96,7 @@
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-react": "^7.34.0",
     "i18next-parser": "^8.13.0",
-    "orval": "6.23.0",
+    "orval": "6.31.0",
     "prettier": "^3.2.5",
     "svgo": "^3.2.0",
     "svgstore-cli": "^2.0.1",
