@@ -84,6 +84,7 @@ class DefaultSystemServices @Inject() (
     organisationRepository: OrganisationRepository,
     jiraConfigRepository: JiraConfigRepository,
     gitlabConfigRepository: GitlabConfigRepository,
+    planeConfigRepository: PlaneConfigRepository,
     clientReceiver: ClientReceiver,
     bookingByProjectRepository: BookingByProjectRepository,
     bookingByTagRepository: BookingByTagRepository,
@@ -153,14 +154,17 @@ class DefaultSystemServices @Inject() (
       .result(supervisor ? TagCache.props(this, clientReceiver), duration)
       .asInstanceOf[ActorRef]
   val pluginHandler: ActorRef = Await
-    .result(supervisor ? PluginHandler
-              .props(userRepository,
-                     jiraConfigRepository,
-                     gitlabConfigRepository,
-                     this,
-                     wsClient,
-                     reactiveMongoApi),
-            duration)
+    .result(
+      supervisor ? PluginHandler
+        .props(userRepository,
+               jiraConfigRepository,
+               gitlabConfigRepository,
+               planeConfigRepository,
+               this,
+               wsClient,
+               reactiveMongoApi),
+      duration
+    )
     .asInstanceOf[ActorRef]
 
   val loginHandler: ActorRef = Await

@@ -37,6 +37,7 @@ object PluginHandler {
   def props(userRepository: UserRepository,
             jiraConfigRepository: JiraConfigRepository,
             gitlabConfigRepository: GitlabConfigRepository,
+            planeConfigRepository: PlaneConfigRepository,
             systemServices: SystemServices,
             wsClient: WSClient,
             reactiveMongoApi: ReactiveMongoApi): Props =
@@ -44,6 +45,7 @@ object PluginHandler {
           userRepository,
           jiraConfigRepository,
           gitlabConfigRepository,
+          planeConfigRepository,
           systemServices,
           wsClient,
           reactiveMongoApi)
