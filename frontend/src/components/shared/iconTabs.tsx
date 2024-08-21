@@ -23,7 +23,6 @@ import { Box, Flex, Grid } from 'theme-ui';
 import { Button } from '@theme-ui/components';
 import { Icon } from 'components/shared/icon';
 import { SelectedTabIcon } from 'components/shared/motion/selectedTabIcon';
-import { useEffectOnce } from 'usehooks-ts';
 import { IconNames } from 'types/iconNames';
 import { fullWidthHeight } from 'styles/shortcuts';
 import { ScrollContainer } from 'components/scrollContainer';
@@ -53,11 +52,12 @@ export const IconTabs: React.FC<Props> = ({ tabs, position = 'top' }) => {
 
   const [selected, setSelected] = useState(0);
 
-  useEffectOnce(() => {
+  useEffect(() => {
     if (!tabViews.find((tab) => tab.id === tabId)) {
       dispatch({ type: 'tabview.add', payload: { id: tabId, activeIndex: 0 } });
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const tabView = tabViews.find((tab) => tab.id === tabId);

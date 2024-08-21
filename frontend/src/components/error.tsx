@@ -17,25 +17,25 @@
  *
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Box, Flex, Heading } from 'theme-ui';
 import { PageError } from 'dynamicTranslationStrings';
 import { usePlausible } from 'next-plausible';
 import { LasiusPlausibleEvents } from 'lib/telemetry/plausibleEvents';
-import { useEffectOnce } from 'usehooks-ts';
 
 export const Error: React.FC<{ statusCode: number }> = ({ statusCode }) => {
   const plausible = usePlausible<LasiusPlausibleEvents>();
 
-  useEffectOnce(() => {
+  useEffect(() => {
     plausible('error', {
       props: {
         status: statusCode.toString(),
         message: PageError[statusCode.toString()],
       },
     });
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Flex sx={{ label: 'Error', height: '66vh', justifyContent: 'center', alignItems: 'center' }}>

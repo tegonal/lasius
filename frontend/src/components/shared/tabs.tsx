@@ -23,7 +23,6 @@ import { Box, Flex } from 'theme-ui';
 import { Button } from '@theme-ui/components';
 import { SelectedTab } from 'components/shared/motion/selectedTab';
 import { useStore } from 'storeContext/store';
-import { useEffectOnce } from 'usehooks-ts';
 
 type TabItem = { label: string; component: React.ReactNode; icon?: string };
 
@@ -41,11 +40,12 @@ export const Tabs: React.FC<Props> = ({ tabs }) => {
 
   const tabId = useId();
 
-  useEffectOnce(() => {
+  useEffect(() => {
     if (!tabViews.find((tab) => tab.id === tabId)) {
       dispatch({ type: 'tabview.add', payload: { id: tabId, activeIndex: 0 } });
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const tabView = tabViews.find((tab) => tab.id === tabId);

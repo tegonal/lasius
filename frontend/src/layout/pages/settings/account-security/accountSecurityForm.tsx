@@ -35,7 +35,7 @@ import { updateUserPassword } from 'lib/api/lasius/user/user';
 import { useProfile } from 'lib/api/hooks/useProfile';
 import { useIsClient } from 'usehooks-ts';
 import { useToast } from 'components/toasts/hooks/useToast';
-import { LASIUS_DEMO_MODE } from 'projectConfig/constants';
+import { DEV, LASIUS_DEMO_MODE } from 'projectConfig/constants';
 
 type Form = {
   password: string;
@@ -46,7 +46,7 @@ export const AccountSecurityForm: React.FC = () => {
   const [showPasswords, setShowPasswords] = useState<boolean>(false);
   const hookForm = useForm<Form>({
     defaultValues: { password: '', newPassword: '', confirmPassword: '' },
-    mode: 'onChange',
+    mode: 'onSubmit',
     criteriaMode: 'all',
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -63,7 +63,7 @@ export const AccountSecurityForm: React.FC = () => {
   };
 
   const onSubmit = async (data: any) => {
-    if (LASIUS_DEMO_MODE === 'true') {
+    if (LASIUS_DEMO_MODE === 'true' && !DEV) {
       addToast({ message: t('Profile changes are not allowed in demo mode'), type: 'ERROR' });
       resetForm();
       setIsSubmitting(false);
@@ -75,9 +75,18 @@ export const AccountSecurityForm: React.FC = () => {
       password,
       newPassword,
     };
-    await updateUserPassword(payload);
-    addToast({ message: t('Password updated'), type: 'SUCCESS' });
-    resetForm();
+    try {
+      await updateUserPassword(payload);
+      addToast({ message: t('Password updated'), type: 'SUCCESS' });
+      resetForm();
+    } catch (error) {
+      addToast({
+        message: t(
+          'Password update failed. Make sure you entered your current password and that it is correct.'
+        ),
+        type: 'ERROR',
+      });
+    }
     setIsSubmitting(false);
   };
 
