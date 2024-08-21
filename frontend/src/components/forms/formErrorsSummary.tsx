@@ -41,10 +41,10 @@ export const FormErrorsSummary: React.FC<Props> = ({ errors }) => {
           {Object.keys(errors[field].types).map((key) => (
             <Badge key={key} variant="warning">
               <ErrorSign />
-              {/*
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore */}
-              {t(FormError[key])}
+              {
+                // @ts-expect-error - error.type is a string
+                t(FormError[key])
+              }
             </Badge>
           ))}
         </Flex>

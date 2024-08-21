@@ -34,10 +34,10 @@ export const FormErrorBadge: React.FC<Props> = ({ error }) => {
     <Box sx={{ bottom: 0, position: 'absolute', right: 0, transform: 'translate(6px, 50%)' }}>
       <Badge variant="warning">
         <ErrorSign />
-        {/*
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore */}
-        {FormError[error.type]}
+        {
+          // @ts-expect-error - error.type is a string
+          FormError[error.type]
+        }
       </Badge>
     </Box>
   );

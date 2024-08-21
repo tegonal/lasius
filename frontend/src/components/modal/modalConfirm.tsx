@@ -22,9 +22,8 @@ import { ModalResponsive } from 'components/modal/modalResponsive';
 import { FormElement } from 'components/forms/formElement';
 import { Button } from '@theme-ui/components';
 import { useTranslation } from 'next-i18next';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box } from 'theme-ui';
-import { useEffectOnce } from 'usehooks-ts';
 
 type Props = {
   text?: {
@@ -60,9 +59,10 @@ export const ModalConfirm: React.FC<Props> = ({
     closeModal();
   };
 
-  useEffectOnce(() => {
+  useEffect(() => {
     openModal();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ModalResponsive modalId={modalId} blockViewport>
