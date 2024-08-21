@@ -44,7 +44,7 @@ val playVersion              = "2.8.20"
 libraryDependencies ++= Seq(
   ("org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoPlayVersion)
     .exclude("org.apache.logging.log4j", "log4j-api"),
-  "com.github.scullxbones"      %% "akka-persistence-mongo-rxmongo" % "3.1.2",
+  "com.github.scullxbones"      %% "akka-persistence-mongo-rxmongo" % "3.1.3",
   "com.tegonal"                 %% "play-json-typedid"              % "1.0.3",
   "org.julienrf"                %% "play-json-derived-codecs"       % "10.1.0",
   "com.typesafe.play"           %% "play-json-joda"                 % "2.10.1",
