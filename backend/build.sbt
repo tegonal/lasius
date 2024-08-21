@@ -60,7 +60,7 @@ libraryDependencies ++= Seq(
   "de.flapdoodle.embed"  % "de.flapdoodle.embed.mongo" % "4.9.2"    % "test",
   "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.5.15.2" % "test",
   "io.kontainers"       %% "purecsv"                   % "1.3.10",
-  "com.chuusai"         %% "shapeless"                 % "2.3.10",
+  "com.chuusai"         %% "shapeless"                 % "2.3.12",
   "net.openhft"          % "zero-allocation-hashing"   % "0.16",
   // depend on this plugin to be able to provide custom OutputTransformer
   "io.github.play-swagger" %% "play-swagger" % "1.4.4",
