@@ -47,7 +47,7 @@ libraryDependencies ++= Seq(
   "com.github.scullxbones"      %% "akka-persistence-mongo-rxmongo" % "3.1.2",
   "com.tegonal"                 %% "play-json-typedid"              % "1.0.3",
   "org.julienrf"                %% "play-json-derived-codecs"       % "10.1.0",
-  "com.typesafe.play"           %% "play-json-joda"                 % "2.10.1",
+  "com.typesafe.play"           %% "play-json-joda"                 % "2.10.6",
   "com.google.inject"            % "guice"                          % "5.1.0",
   "com.google.inject.extensions" % "guice-assistedinject"           % "5.1.0",
   // support more than 22 fields in case classes
