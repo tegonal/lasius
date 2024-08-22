@@ -57,7 +57,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit"           % akkaVersion % "test",
   // reativemongo based connector for persistent akka
   "org.mindrot"          % "jbcrypt"                   % "0.4",
-  "de.flapdoodle.embed"  % "de.flapdoodle.embed.mongo" % "4.9.2"    % "test",
+  "de.flapdoodle.embed"  % "de.flapdoodle.embed.mongo" % "4.17.0"    % "test",
   "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.5.15.2" % "test",
   "io.kontainers"       %% "purecsv"                   % "1.3.10",
   "com.chuusai"         %% "shapeless"                 % "2.3.10",
