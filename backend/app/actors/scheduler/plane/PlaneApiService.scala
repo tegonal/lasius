@@ -58,7 +58,7 @@ class PlaneApiServiceImpl(override val ws: WSClient,
       executionContext: ExecutionContext): Future[PlaneIssuesSearchResult] = {
 
     val params = getParamList(Some(paramString),
-                              getParam("page", page),
+                              getParam("cursor", """${maxResults}:${page}:0"""),
                               getParam("per_page", maxResults))
 
     val url = findIssuesUrl.format(projectId) + params
@@ -66,23 +66,21 @@ class PlaneApiServiceImpl(override val ws: WSClient,
       PlaneIssuesSearchResult(
         pair._1,
         pair._2
-          .get("X-Total")
+          .get("total_results")
           .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
         pair._2
-          .get("X-Total-Pages")
+          .get("total_pages")
+          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
+        maxResults,
+        pair._2
+          .get("count")
           .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
         pair._2
-          .get("X-Per-Page")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
+          .get("next_page_results")
+          .flatMap(_.headOption.flatMap(v => Try(v.toBoolean).toOption)),
         pair._2
-          .get("X-Page")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
-        pair._2
-          .get("X-Next-Page")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
-        pair._2
-          .get("X-Prev-Page")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption))
+          .get("prev_page_results")
+          .flatMap(_.headOption.flatMap(v => Try(v.toBoolean).toOption))
       )
     }
   }

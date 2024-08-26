@@ -68,7 +68,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
   var cancellable: Option[Cancellable] = None
   val apiService      = new PlaneApiServiceImpl(wsClient, config)
   val defaultParams   = s"state=opened&order_by=created_at&sort=desc"
-  val maxResults: Int = projectSettings.maxResults.getOrElse(500)
+  val maxResults: Int = projectSettings.maxResults.getOrElse(100)
 
   val receive: Receive = { case StartParsing =>
     cancellable = Some(
@@ -81,7 +81,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
       .map { result =>
         // fetched all results, notify
         if (log.isDebugEnabled) {
-          val keys = result.map(i => s"#${i.iid}")
+          val keys = result.map(i => s"#${i.id}")
           log.debug(s"Parsed keys:$keys")
         }
 
@@ -104,15 +104,10 @@ class PlaneTagParseWorker(wsClient: WSClient,
   }
 
   def toPlaneIssueTag(issue: PlaneIssue): PlaneIssueTag = {
-    // create tag for milestone
-    val milestoneTag = projectSettings.tagConfiguration.useMilestone match {
-      case false => None
-      case _     => issue.milestone.map(m => SimpleTag(TagId(m.title)))
-    }
 
-    val titleTag = projectSettings.tagConfiguration.useTitle match {
+    val nameTag = projectSettings.tagConfiguration.useTitle match {
       case false => None
-      case _     => Some(SimpleTag(TagId(issue.title)))
+      case _     => Some(SimpleTag(TagId(issue.name)))
     }
 
     val labelTags = projectSettings.tagConfiguration.useLabels match {
@@ -124,24 +119,17 @@ class PlaneTagParseWorker(wsClient: WSClient,
     }
 
     val tags =
-      milestoneTag
-        .map { m =>
-          labelTags ++ titleTag
-            .map(t => Seq(m, t))
-            .getOrElse(Seq(m))
-        }
-        .getOrElse {
-          titleTag.map(t => labelTags :+ t).getOrElse(labelTags)
-        }
+      nameTag.map(t => labelTags :+ t).getOrElse(labelTags)
 
-    val issueLink = issue.web_url
+    val issueLink =
+      s"https://organise.tegonal.com/tegonal-intern/projects/${issue.project}/issues/${issue.id}"
 
     PlaneIssueTag(
       TagId(
         projectSettings.projectKeyPrefix.getOrElse("") +
-          issue.references.map(_.short).getOrElse(s"#${issue.iid}")),
-      issue.project_id,
-      Some(issue.title),
+          issue.sequence_id.toString),
+      99, // TODO get priority from issue?
+      Some(issue.name),
       tags,
       issueLink
     )
@@ -163,12 +151,12 @@ class PlaneTagParseWorker(wsClient: WSClient,
           .getOrElse(Int.MaxValue)) {
         // fetched all pages
         Future.successful(concat)
-      } else if (result.nextPage.isEmpty || 1 > result.nextPage.get) {
+      } else if (result.nextPage.isEmpty || !result.nextPage.get) {
         // no next page
         Future.successful(concat)
       } else {
         // load next page
-        loadIssues(result.nextPage.get, max, concat)
+        loadIssues(offset + 1, max, concat)
       }
     }
   }
