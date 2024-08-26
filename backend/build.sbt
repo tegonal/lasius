@@ -37,17 +37,17 @@ resolvers += "Sonatype OSS Releases".at(
   "https://oss.sonatype.org/content/repositories/releases")
 
 val akkaVersion              = "2.6.21"
-val reactiveMongoVersion     = "1.0.10"
-val reactiveMongoPlayVersion = s"$reactiveMongoVersion-play28"
-val playVersion              = "2.8.20"
+val reactiveMongoVersion     = "1.1.0"
+val reactiveMongoPlayVersion = s"$reactiveMongoVersion-play29.RC13"
+val playVersion              = "2.9.5"
 
 libraryDependencies ++= Seq(
   ("org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoPlayVersion)
     .exclude("org.apache.logging.log4j", "log4j-api"),
-  "com.github.scullxbones"      %% "akka-persistence-mongo-rxmongo" % "3.1.2",
+  "com.github.scullxbones"      %% "akka-persistence-mongo-rxmongo" % "3.1.3",
   "com.tegonal"                 %% "play-json-typedid"              % "1.0.3",
-  "org.julienrf"                %% "play-json-derived-codecs"       % "10.1.0",
-  "com.typesafe.play"           %% "play-json-joda"                 % "2.10.1",
+  "org.julienrf"                %% "play-json-derived-codecs"       % "11.0.0",
+  "com.typesafe.play"           %% "play-json-joda"                 % "2.10.6",
   "com.google.inject"            % "guice"                          % "5.1.0",
   "com.google.inject.extensions" % "guice-assistedinject"           % "5.1.0",
   // support more than 22 fields in case classes
@@ -57,22 +57,22 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit"           % akkaVersion % "test",
   // reativemongo based connector for persistent akka
   "org.mindrot"          % "jbcrypt"                   % "0.4",
-  "de.flapdoodle.embed"  % "de.flapdoodle.embed.mongo" % "4.9.2"    % "test",
+  "de.flapdoodle.embed"  % "de.flapdoodle.embed.mongo" % "4.17.0"    % "test",
   "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.5.15.2" % "test",
   "io.kontainers"       %% "purecsv"                   % "1.3.10",
-  "com.chuusai"         %% "shapeless"                 % "2.3.10",
+  "com.chuusai"         %% "shapeless"                 % "2.3.12",
   "net.openhft"          % "zero-allocation-hashing"   % "0.16",
   // depend on this plugin to be able to provide custom OutputTransformer
-  "io.github.play-swagger" %% "play-swagger" % "1.4.4",
+  "io.github.play-swagger" %% "play-swagger" % "2.0.2",
   ehcache,
   ws,
   specs2 % Test,
   guice,
-  "org.webjars" % "swagger-ui" % "5.9.0"
+  "org.webjars" % "swagger-ui" % "5.17.14"
 )
 
 dependencyOverrides ++= Seq(
-  "com.fasterxml.jackson.module" % "jackson-module-scala_2.13" % "2.14.2",
+  "com.fasterxml.jackson.module" % "jackson-module-scala_2.13" % "2.17.2",
 )
 
 Test / javaOptions += "-Dconfig.file=conf/test.conf"
