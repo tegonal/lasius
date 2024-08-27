@@ -55,7 +55,7 @@ trait ApiServiceBase extends Logging {
     logger.debug(s"getList(url:$url")
     WebServiceHelper.call(ws, config, url).flatMap {
       case Success((json: JsArray, headers)) =>
-        logger.debug(s"getList:Success -> $json")
+        logger.debug(s"getList:Success (JsArray) -> $json")
         Json
           .fromJson[Seq[T]](json)
           .asEither match {
@@ -65,7 +65,7 @@ trait ApiServiceBase extends Logging {
             Future.failed(new RuntimeException(s"Could not parse $json"))
         }
       case Success((json, headers)) =>
-        logger.debug(s"getList:Success -> $json")
+        logger.debug(s"getList:Success (json) -> $json")
         Json
           .fromJson[T](json)
           .asEither match {
@@ -86,10 +86,10 @@ trait ApiServiceBase extends Logging {
       reads: Reads[T])
       : Future[(T, Map[String, scala.collection.Seq[String]])] = {
     val url = config.baseUrl + relUrl
-    logger.debug(s"getOption(url:$url")
+    logger.debug(s"getSingleValue(url:$url")
     WebServiceHelper.call(ws, config, url).flatMap {
       case Success((json, headers)) =>
-        logger.debug(s"getOption:Success -> $json")
+        logger.debug(s"getOption:Success (json) -> $json")
         Json
           .fromJson[T](json)
           .asEither match {

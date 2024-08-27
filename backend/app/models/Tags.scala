@@ -117,11 +117,11 @@ case class PlaneIssueTag(id: TagId,
                          relatedTags: Seq[SimpleTag],
                          issueLink: String,
                          // type attribute only needed to generate correct swagger definition
-                         `type`: String = classOf[GitlabIssueTag].getSimpleName)
+                         `type`: String = classOf[PlaneIssueTag].getSimpleName)
     extends GroupedTags
     with NamedTag
 
 object PlaneIssueTag {
-  implicit val issueTagFormat: Format[GitlabIssueTag] =
-    Json.format[GitlabIssueTag]
+  implicit val issueTagFormat: Format[PlaneIssueTag] =
+    Json.format[PlaneIssueTag]
 }

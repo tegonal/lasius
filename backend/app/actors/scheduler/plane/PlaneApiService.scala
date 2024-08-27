@@ -21,6 +21,7 @@
 
 package actors.scheduler.plane
 
+import actors.scheduler.jira.JiraVersion
 import actors.scheduler.{
   ApiServiceBase,
   ServiceAuthentication,
@@ -42,6 +43,10 @@ trait PlaneApiService {
                  maxResults: Option[Int] = None)(implicit
       auth: ServiceAuthentication,
       executionContext: ExecutionContext): Future[PlaneIssuesSearchResult]
+
+  def getLabels(projectId: String)(implicit
+      auth: ServiceAuthentication,
+      executionContext: ExecutionContext): Future[Seq[PlaneLabel]]
 }
 
 class PlaneApiServiceImpl(override val ws: WSClient,
@@ -50,6 +55,15 @@ class PlaneApiServiceImpl(override val ws: WSClient,
     with ApiServiceBase {
 
   val findIssuesUrl = s"/api/v1/workspaces/tegonal-intern/projects/%s/issues/?"
+  val fetchLabelUrl = s"/api/v1/workspaces/tegonal-intern/projects/%s/labels/?"
+
+  def getLabels(projectId: String)(implicit
+      auth: ServiceAuthentication,
+      executionContext: ExecutionContext): Future[Seq[PlaneLabel]] = {
+    val params = getParamList(getParam("per_page", 100))
+    val url    = fetchLabelUrl.format(projectId) + params
+    getList[PlaneLabel](url).map(_._1)
+  }
 
   def findIssues(projectId: String,
                  paramString: String,
@@ -62,30 +76,21 @@ class PlaneApiServiceImpl(override val ws: WSClient,
     val currentMaxResults = maxResults.getOrElse(100)
 
     val params = getParamList(
+      Some(paramString),
       getParam("cursor", s"${currentMaxResults}:${currentPage}:0"),
       getParam("per_page", currentMaxResults))
 
     val url = findIssuesUrl.format(projectId) + params
     logger.debug(s"findIssues: $url")
-    getList[PlaneIssue](url).map { pair =>
+    getSingleValue[PlaneIssueWrapper](url).map { pair =>
       PlaneIssuesSearchResult(
-        pair._1,
-        pair._2
-          .get("total_results")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
-        pair._2
-          .get("total_pages")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
+        pair._1.results,
+        Some(pair._1.total_results),
+        Some(pair._1.total_pages),
         maxResults,
-        pair._2
-          .get("count")
-          .flatMap(_.headOption.flatMap(v => Try(v.toInt).toOption)),
-        pair._2
-          .get("next_page_results")
-          .flatMap(_.headOption.flatMap(v => Try(v.toBoolean).toOption)),
-        pair._2
-          .get("prev_page_results")
-          .flatMap(_.headOption.flatMap(v => Try(v.toBoolean).toOption))
+        Some(pair._1.count),
+        Some(pair._1.next_page_results),
+        Some(pair._1.prev_page_results)
       )
     }
   }

@@ -67,7 +67,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
 
   var cancellable: Option[Cancellable] = None
   val apiService      = new PlaneApiServiceImpl(wsClient, config)
-  val defaultParams   = ""
+  val defaultParams   = "expand=labels,state,project"
   val maxResults: Int = projectSettings.maxResults.getOrElse(100)
 
   val receive: Receive = { case StartParsing =>
@@ -84,7 +84,6 @@ class PlaneTagParseWorker(wsClient: WSClient,
           val keys = result.map(i => s"#${i.id}")
           log.debug(s"Parsed keys:$keys")
         }
-
         // assemble issue tags
         val tags = result.map(toPlaneIssueTag)
         systemServices.tagCache ! TagsUpdated[PlaneIssueTag](
@@ -92,7 +91,6 @@ class PlaneTagParseWorker(wsClient: WSClient,
           projectId,
           tags)
 
-        // handle new parsed issue keys
       }
       .andThen { case s =>
         // restart timer
@@ -113,9 +111,14 @@ class PlaneTagParseWorker(wsClient: WSClient,
     val labelTags = projectSettings.tagConfiguration.useLabels match {
       case false => Seq()
       case _ =>
-        issue.labels
-          .filterNot(projectSettings.tagConfiguration.labelFilter.contains(_))
-          .map(l => SimpleTag(TagId(l)))
+        issue.labels match {
+          case Some(labels) =>
+            labels
+              .filterNot(l =>
+                projectSettings.tagConfiguration.labelFilter.contains(l.name))
+              .map(l => SimpleTag(TagId(l.name)))
+          case None => Seq()
+        }
     }
 
     val tags =
@@ -126,9 +129,9 @@ class PlaneTagParseWorker(wsClient: WSClient,
 
     PlaneIssueTag(
       TagId(
-        projectSettings.projectKeyPrefix.getOrElse("") +
+        issue.project.identifier + "-" +
           issue.sequence_id.toString),
-      issue.project,
+      issue.project.id,
       Some(issue.name),
       tags,
       issueLink
@@ -140,6 +143,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
       max: Option[Int],
       lastResult: Set[PlaneIssue] = Set()): Future[Set[PlaneIssue]] = {
     val newMax = max.getOrElse(maxResults)
+
     issues(offset, newMax).flatMap { result =>
       val concat: Set[PlaneIssue] = lastResult ++ result.issues.toSet
       log.debug(
@@ -159,6 +163,14 @@ class PlaneTagParseWorker(wsClient: WSClient,
         loadIssues(offset + 1, max, concat)
       }
     }
+  }
+
+  def labels(): Future[Seq[PlaneLabel]] = {
+    log.debug(
+      s"Parse label projectId=${projectId.value}, project=${projectSettings.planeProjectId}")
+    val query = projectSettings.params.getOrElse(defaultParams)
+    apiService
+      .getLabels(projectSettings.planeProjectId)
   }
 
   def issues(offset: Int, max: Int): Future[PlaneIssuesSearchResult] = {
