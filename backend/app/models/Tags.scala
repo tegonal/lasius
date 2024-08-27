@@ -112,7 +112,7 @@ object JiraIssueTag {
 
 // Plane tags
 case class PlaneIssueTag(id: TagId,
-                         projectId: Int,
+                         projectId: String,
                          summary: Option[String],
                          relatedTags: Seq[SimpleTag],
                          issueLink: String,

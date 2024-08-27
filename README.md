@@ -119,6 +119,8 @@ To bring up a local dev Environment please install:
 - docker
 - node
 
+Copy the frontent `frontend/.env.template` file to `frontend/.env.local`.
+
 Start the backend with `yarn run backend` and the frontend with `yarn run dev` from the `frontend` directory.
 
 ## Test Environment

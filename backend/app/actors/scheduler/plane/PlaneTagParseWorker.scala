@@ -67,7 +67,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
 
   var cancellable: Option[Cancellable] = None
   val apiService      = new PlaneApiServiceImpl(wsClient, config)
-  val defaultParams   = s"state=opened&order_by=created_at&sort=desc"
+  val defaultParams   = ""
   val maxResults: Int = projectSettings.maxResults.getOrElse(100)
 
   val receive: Receive = { case StartParsing =>
@@ -103,7 +103,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
       }
   }
 
-  def toPlaneIssueTag(issue: PlaneIssue): PlaneIssueTag = {
+  private def toPlaneIssueTag(issue: PlaneIssue): PlaneIssueTag = {
 
     val nameTag = projectSettings.tagConfiguration.useTitle match {
       case false => None
@@ -128,7 +128,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
       TagId(
         projectSettings.projectKeyPrefix.getOrElse("") +
           issue.sequence_id.toString),
-      99, // TODO get priority from issue?
+      issue.project,
       Some(issue.name),
       tags,
       issueLink

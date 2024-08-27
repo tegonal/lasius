@@ -39,6 +39,8 @@ object WebServiceHelper {
       executionContext: ExecutionContext)
       : Future[Try[(JsValue, Map[String, scala.collection.Seq[String]])]] = {
     auth match {
+      case apiKey: ApiKeyAuthentication =>
+        callWithApiKey(wsClient, config, url, apiKey)
       case oauth: OAuthAuthentication =>
         callWithOAuth(wsClient, config, url, oauth)
       case oauth2: OAuth2Authentication =>
@@ -59,6 +61,25 @@ object WebServiceHelper {
       ),
       use10a = true
     )
+  }
+
+  def callWithApiKey(wsClient: WSClient,
+                     config: ServiceConfiguration,
+                     url: String,
+                     auth: ApiKeyAuthentication)(implicit
+      executionContext: ExecutionContext)
+      : Future[Try[(JsValue, Map[String, scala.collection.Seq[String]])]] = {
+    wsClient
+      .url(url)
+      .addHttpHeaders(s"x-api-key" -> s"${auth.apiKey}")
+      .get()
+      .map { result =>
+        result.status match {
+          case 200 => Success((result.json, result.headers))
+          case error =>
+            Failure(new IOException(s"Http status:$error:${result.statusText}"))
+        }
+      }
   }
 
   def callWithOAuth(wsClient: WSClient,

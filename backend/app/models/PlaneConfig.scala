@@ -46,9 +46,7 @@ case class PlaneProjectSettings(planeProjectId: String,
 case class PlaneProjectMapping(projectId: ProjectId,
                                settings: PlaneProjectSettings)
 
-case class PlaneAuth(consumerKey: String,
-                     privateKey: String,
-                     accessToken: String)
+case class PlaneAuth(apiKey: String)
 
 case class PlaneConfig(_id: PlaneConfigId,
                        name: String,

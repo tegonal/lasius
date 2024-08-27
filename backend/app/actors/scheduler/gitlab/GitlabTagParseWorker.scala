@@ -103,7 +103,7 @@ class GitlabTagParseWorker(wsClient: WSClient,
       }
   }
 
-  def toGitlabIssueTag(issue: GitlabIssue): GitlabIssueTag = {
+  private def toGitlabIssueTag(issue: GitlabIssue): GitlabIssueTag = {
     // create tag for milestone
     val milestoneTag = projectSettings.tagConfiguration.useMilestone match {
       case false => None

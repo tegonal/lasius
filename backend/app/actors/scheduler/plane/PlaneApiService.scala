@@ -26,6 +26,7 @@ import actors.scheduler.{
   ServiceAuthentication,
   ServiceConfiguration
 }
+import akka.actor.ActorLogging
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,7 +49,7 @@ class PlaneApiServiceImpl(override val ws: WSClient,
     extends PlaneApiService
     with ApiServiceBase {
 
-  val findIssuesUrl = s"/api/v1/workspaces/tegonal-intern/projects/%s/issues/"
+  val findIssuesUrl = s"/api/v1/workspaces/tegonal-intern/projects/%s/issues/?"
 
   def findIssues(projectId: String,
                  paramString: String,
@@ -57,11 +58,15 @@ class PlaneApiServiceImpl(override val ws: WSClient,
       auth: ServiceAuthentication,
       executionContext: ExecutionContext): Future[PlaneIssuesSearchResult] = {
 
-    val params = getParamList(Some(paramString),
-                              getParam("cursor", """${maxResults}:${page}:0"""),
-                              getParam("per_page", maxResults))
+    val currentPage       = page.getOrElse(0)
+    val currentMaxResults = maxResults.getOrElse(100)
+
+    val params = getParamList(
+      getParam("cursor", s"${currentMaxResults}:${currentPage}:0"),
+      getParam("per_page", currentMaxResults))
 
     val url = findIssuesUrl.format(projectId) + params
+    logger.debug(s"findIssues: $url")
     getList[PlaneIssue](url).map { pair =>
       PlaneIssuesSearchResult(
         pair._1,

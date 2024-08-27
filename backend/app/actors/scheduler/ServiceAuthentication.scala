@@ -35,4 +35,6 @@ case class OAuth2Authentication(consumerKey: String,
                                 token: String)
     extends ServiceAuthentication
 
+case class ApiKeyAuthentication(apiKey: String) extends ServiceAuthentication
+
 case class ServiceConfiguration(baseUrl: String)

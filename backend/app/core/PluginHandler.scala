@@ -24,7 +24,11 @@ package core
 import actors.scheduler.gitlab.GitlabTagParseScheduler
 import actors.scheduler.jira.JiraTagParseScheduler
 import actors.scheduler.plane.PlaneTagParseScheduler
-import actors.scheduler.{OAuth2Authentication, ServiceConfiguration}
+import actors.scheduler.{
+  ApiKeyAuthentication,
+  OAuth2Authentication,
+  ServiceConfiguration
+}
 import akka.actor._
 import core.LoginHandler.InitializeUserViews
 import play.api.libs.ws.WSClient
@@ -100,6 +104,7 @@ class PluginHandler(userRepository: UserRepository,
     initializeUserViews()
     initializeGitlabPlugin()
     initializeJiraPlugin()
+    initializePlanePlugin()
   }
 
   private def initializeUserViews()(implicit dbSession: DBSession): Unit = {
@@ -193,9 +198,7 @@ class PluginHandler(userRepository: UserRepository,
         s.map { config =>
           log.debug(s"Start Plane Scheduler for config:$config")
           val serviceConfig = ServiceConfiguration(config.baseUrl.toString)
-          val auth = OAuth2Authentication(config.auth.consumerKey,
-                                          config.auth.privateKey,
-                                          config.auth.accessToken)
+          val auth          = ApiKeyAuthentication(config.auth.apiKey)
 
           config.projects.map { proj =>
             log.debug(
