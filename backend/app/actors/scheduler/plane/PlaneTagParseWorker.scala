@@ -125,7 +125,7 @@ class PlaneTagParseWorker(wsClient: WSClient,
       nameTag.map(t => labelTags :+ t).getOrElse(labelTags)
 
     val issueLink =
-      s"https://organise.tegonal.com/tegonal-intern/projects/${issue.project}/issues/${issue.id}"
+      s"https://organise.tegonal.com/tegonal-intern/projects/${issue.project.id}/issues/${issue.id}"
 
     PlaneIssueTag(
       TagId(
