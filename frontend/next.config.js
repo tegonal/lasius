@@ -7,14 +7,14 @@
 const { redirects } = require('./next.redirects');
 const { generateBuildId, generateBuildIdSync } = require('./next.buildId');
 const { i18n } = require('./next-i18next.config');
-const { runtimeCaching } = require('./next.pwa-cache');
+// const { runtimeCaching } = require('./next.pwa-cache');
 const { withPlausibleProxy } = require('next-plausible');
 
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  runtimeCaching,
-});
+// const withPWA = require('next-pwa')({
+//   dest: 'public',
+//   disable: process.env.NODE_ENV === 'development',
+//   runtimeCaching,
+// });
 
 // const withBundleAnalyzer = require('@next/bundle-analyzer')({
 //   enabled: process.env.ANALYZE === 'true',

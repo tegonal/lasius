@@ -18,22 +18,22 @@
  */
 
 import { Alert, Box, Close, Flex } from 'theme-ui';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { ToastViewType } from 'types/dynamicViews';
-import { useEffectOnce, useIsClient } from 'usehooks-ts';
+import { useIsClient } from 'usehooks-ts';
 import { useToast } from 'components/toasts/hooks/useToast';
 
 const ToastItem: React.FC<{ item: ToastViewType }> = ({ item }) => {
   const { removeToast } = useToast();
 
-  // eslint-disable-next-line consistent-return
-  useEffectOnce(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       removeToast(item);
     }, item.ttl);
     return () => clearTimeout(timer);
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Box sx={{ pt: 3 }}>

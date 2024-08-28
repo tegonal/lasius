@@ -46,10 +46,10 @@ export const FormErrorsMultiple: React.FC<Props> = ({ errors = null }) => {
         {Object.keys(types).map((key) => (
           <Badge key={key} sx={{ transform: 'translate(6px, -50%)' }} variant="warning">
             <ErrorSign />
-            {/*
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore */}
-            {t(FormError[key])}
+            {
+              // @ts-expect-error - error.type is a string
+              t(FormError[key])
+            }
           </Badge>
         ))}
       </Flex>

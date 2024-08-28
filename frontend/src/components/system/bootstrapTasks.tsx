@@ -17,8 +17,7 @@
  *
  */
 
-import React from 'react';
-import { useEffectOnce } from 'usehooks-ts';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { logger } from 'lib/logger';
 import { useContextMenu } from 'components/contextMenuBar/hooks/useContextMenu';
@@ -36,7 +35,7 @@ export const BootstrapTasks: React.FC = () => {
     logger.error('[BootstrapTasks][onRouteChangeError]', errorRoute);
   };
 
-  useEffectOnce(() => {
+  useEffect(() => {
     logger.info('[initializer][loadOnRefresh]');
     events.on('routeChangeComplete', handleRouteChangeComplete);
     events.on('routeChangeError', handleRouteChangeError);
@@ -45,7 +44,8 @@ export const BootstrapTasks: React.FC = () => {
       events.off('routeChangeStart', handleRouteChangeComplete);
       events.off('routeChangeError', handleRouteChangeError);
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 };

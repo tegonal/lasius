@@ -26,7 +26,6 @@ import { useTranslation } from 'next-i18next';
 import React, { useEffect, useRef } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Select } from 'theme-ui';
-import { useEffectOnce } from 'usehooks-ts';
 import { isAfter, isBefore } from 'date-fns';
 
 type Props = {
@@ -58,9 +57,10 @@ export const DateRangeFilter: React.FC<Props> = ({ name: rangeFieldName }) => {
     parentFormContext.trigger();
   };
 
-  useEffectOnce(() => {
+  useEffect(() => {
     resetForm();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const watchFrom = parentFormContext.watch('from');
   const watchTo = parentFormContext.watch('to');
