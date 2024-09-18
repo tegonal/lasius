@@ -189,7 +189,12 @@ class InitialDemoDataLoader @Inject() (
       checkFrequency = 60000
     )
 
-    val projectConfigList = projects.map(p =>
+    val projectConfigList = projects.map(p => {
+      val labels = p.key match {
+        case "KnowHow" => Set("Infrastructure")
+        case _         => Set.empty[String]
+      }
+
       PlaneProjectMapping(
         p.getReference().id,
         PlaneProjectSettings(config.getString(
@@ -198,8 +203,9 @@ class InitialDemoDataLoader @Inject() (
                              maxResults = Some(100),
                              None,
                              Some(p.key),
-                             PlaneTagConfiguration(useLabels = true, Set()))
-      ))
+                             PlaneTagConfiguration(useLabels = true, labels))
+      )
+    })
 
     val planeConfig = PlaneConfig(
       PlaneConfigId(),
