@@ -35,6 +35,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build backend
+        working-directory: ./backend
+        run: sbt clean update compile test dist
       - name: Add COMMIT_SHORT_SHA env property
         run: echo "COMMIT_SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -44,14 +52,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Setup JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Build backend
-        working-directory: ./backend
-        run: sbt clean update compile test dist
       - name: Build & push backend image to docker hub
         uses: docker/build-push-action@v3
         with:
