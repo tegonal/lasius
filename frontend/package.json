@@ -23,7 +23,7 @@
     "up": "yarn upgrade-interactive",
     "i18n-extract": "i18next",
     "_dev-backend-proxy": "docker run --add-host=host.docker.internal:host-gateway -p 3000:3000 -v $(pwd)/nginx-dev-proxy.conf:/etc/nginx/nginx.conf:ro --rm nginx:latest",
-    "_dev-backend-db": "docker run -p 27017:27017 --rm mongo:5.0.9",
+    "_dev-backend-db": "docker run -p 27017:27017 --rm mongo:7.0.12",
     "_dev-backend-sbt": "cd ../backend && sbt run -Dconfig.resource=demo.conf",
     "backend": "concurrently --kill-others-on-fail --names \"BACKEND,PROXY,DB\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"sleep 3 && yarn run _dev-backend-sbt\" \"yarn run _dev-backend-proxy\" \"yarn run _dev-backend-db\"",
     "orval": "rm -rf ./src/lib/api/lasius && orval --config ./orval.config.js && yarn run lint-fix",

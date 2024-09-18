@@ -25,6 +25,7 @@ components:
         - $ref: '#/components/schemas/models.TagGroup'
         - $ref: '#/components/schemas/models.GitlabIssueTag'
         - $ref: '#/components/schemas/models.JiraIssueTag'
+        - $ref: '#/components/schemas/models.PlaneIssueTag'
       discriminator:
         propertyName: type
         mapping:

@@ -109,3 +109,19 @@ case class JiraIssueTag(id: TagId,
 object JiraIssueTag {
   implicit val issueTagFormat: Format[JiraIssueTag] = Json.format[JiraIssueTag]
 }
+
+// Plane tags
+case class PlaneIssueTag(id: TagId,
+                         projectId: String,
+                         summary: Option[String],
+                         relatedTags: Seq[SimpleTag],
+                         issueLink: String,
+                         // type attribute only needed to generate correct swagger definition
+                         `type`: String = classOf[PlaneIssueTag].getSimpleName)
+    extends GroupedTags
+    with NamedTag
+
+object PlaneIssueTag {
+  implicit val issueTagFormat: Format[PlaneIssueTag] =
+    Json.format[PlaneIssueTag]
+}

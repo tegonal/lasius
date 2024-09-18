@@ -87,12 +87,16 @@ export const Tag: React.FC<PropsTagContainer> = ({
 
   const summary = 'summary' in item && item.summary ? item.summary : '';
 
+  function clickTag(item: ModelsTags) {
+    if (clickHandler) {
+      clickHandler(item);
+    } else if ('issueLink' in item) {
+      window.open(item.issueLink, '_blank');
+    }
+  }
+
   return (
-    <Badge
-      variant={tagVariant}
-      onClick={clickableAndNotRemovable ? () => clickHandler(item) : noop}
-      sx={active ? outlineStyle : {}}
-    >
+    <Badge variant={tagVariant} onClick={() => clickTag(item)} sx={active ? outlineStyle : {}}>
       <ItemLabel label={item.id} summary={summary} />
       {clickableAndRemovable && (
         <Box

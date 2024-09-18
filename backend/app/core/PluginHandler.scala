@@ -23,7 +23,12 @@ package core
 
 import actors.scheduler.gitlab.GitlabTagParseScheduler
 import actors.scheduler.jira.JiraTagParseScheduler
-import actors.scheduler.{OAuth2Authentication, ServiceConfiguration}
+import actors.scheduler.plane.PlaneTagParseScheduler
+import actors.scheduler.{
+  ApiKeyAuthentication,
+  OAuth2Authentication,
+  ServiceConfiguration
+}
 import akka.actor._
 import core.LoginHandler.InitializeUserViews
 import play.api.libs.ws.WSClient
@@ -37,6 +42,7 @@ object PluginHandler {
   def props(userRepository: UserRepository,
             jiraConfigRepository: JiraConfigRepository,
             gitlabConfigRepository: GitlabConfigRepository,
+            planeConfigRepository: PlaneConfigRepository,
             systemServices: SystemServices,
             wsClient: WSClient,
             reactiveMongoApi: ReactiveMongoApi): Props =
@@ -44,6 +50,7 @@ object PluginHandler {
           userRepository,
           jiraConfigRepository,
           gitlabConfigRepository,
+          planeConfigRepository,
           systemServices,
           wsClient,
           reactiveMongoApi)
@@ -56,6 +63,7 @@ object PluginHandler {
 class PluginHandler(userRepository: UserRepository,
                     jiraConfigRepository: JiraConfigRepository,
                     gitlabConfigRepository: GitlabConfigRepository,
+                    planeConfigRepository: PlaneConfigRepository,
                     systemServices: SystemServices,
                     wsClient: WSClient,
                     override val reactiveMongoApi: ReactiveMongoApi)
@@ -74,6 +82,8 @@ class PluginHandler(userRepository: UserRepository,
     context.actorOf(JiraTagParseScheduler.props(wsClient, systemServices))
   val gitlabTagParseScheduler: ActorRef =
     context.actorOf(GitlabTagParseScheduler.props(wsClient, systemServices))
+  val planeTagParseScheduler: ActorRef =
+    context.actorOf(PlaneTagParseScheduler.props(wsClient, systemServices))
 
   log.debug(s"PluginHandler started")
 
@@ -94,6 +104,7 @@ class PluginHandler(userRepository: UserRepository,
     initializeUserViews()
     initializeGitlabPlugin()
     initializeJiraPlugin()
+    initializePlanePlugin()
   }
 
   private def initializeUserViews()(implicit dbSession: DBSession): Unit = {
@@ -174,6 +185,38 @@ class PluginHandler(userRepository: UserRepository,
           log.debug(s"Successfully loaded gitlab plugins")
         case Failure(exception) =>
           log.warning(s"Failed loading gitlab configuration", exception)
+      }
+    ()
+  }
+
+  private def initializePlanePlugin()(implicit dbSession: DBSession): Unit = {
+    log.debug(s"PluginHandler initializePlanePlugin:$planeConfigRepository")
+    // start plane parse scheduler for every project attached to a plane configuration
+    planeConfigRepository.getPlaneConfigurations
+      .map { s =>
+        log.debug(s"Got plane configs:$s")
+        s.map { config =>
+          log.debug(s"Start Plane Scheduler for config:$config")
+          val serviceConfig = ServiceConfiguration(config.baseUrl.toString)
+          val auth          = ApiKeyAuthentication(config.auth.apiKey)
+
+          config.projects.map { proj =>
+            log.debug(
+              s"Start parsing for the following configuration:$serviceConfig - $proj")
+            planeTagParseScheduler ! PlaneTagParseScheduler.StartScheduler(
+              serviceConfig,
+              config.settings,
+              proj.settings,
+              auth,
+              proj.projectId)
+          }
+        }
+      }
+      .onComplete {
+        case Success(_) =>
+          log.debug(s"Successfully loaded plane plugins")
+        case Failure(exception) =>
+          log.warning(s"Failed loading plane configuration", exception)
       }
     ()
   }

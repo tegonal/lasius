@@ -31,6 +31,7 @@ Lasius is a modern web application with a backend written in Scala and a NextJS 
 * Issue trackers: Connect your issue tracker to Lasius and use issue numbers as labels. Currently supported:
   * GitLab
   * Jira
+  * Plane.io
 
 ## Personal Time Management
 
@@ -41,7 +42,7 @@ Lasius is a modern web application with a backend written in Scala and a NextJS 
 
 We plan to implement the following features in the near future (no specific order, no ETA):
 
-* [ ] Make GitLab and Jira integration configurable in the frontend (currently hardcoded)
+* [ ] Make GitLab, Jira and Plane integration configurable in the frontend (currently hardcoded)
 * [ ] Add support for GitHub issue tracker
 * [ ] Make tags and labels configuration configurable in the frontend (currently hardcoded)
 * [ ] Add support for sending E-Mails via SMTP for password reset, invitation links, etc.
@@ -117,6 +118,8 @@ To bring up a local dev Environment please install:
 - sbt
 - docker
 - node
+
+Copy the frontent `frontend/.env.template` file to `frontend/.env.local`.
 
 Start the backend with `yarn run backend` and the frontend with `yarn run dev` from the `frontend` directory.
 

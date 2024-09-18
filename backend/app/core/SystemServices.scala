@@ -84,6 +84,7 @@ class DefaultSystemServices @Inject() (
     organisationRepository: OrganisationRepository,
     jiraConfigRepository: JiraConfigRepository,
     gitlabConfigRepository: GitlabConfigRepository,
+    planeConfigRepository: PlaneConfigRepository,
     clientReceiver: ClientReceiver,
     bookingByProjectRepository: BookingByProjectRepository,
     bookingByTagRepository: BookingByTagRepository,
@@ -153,14 +154,17 @@ class DefaultSystemServices @Inject() (
       .result(supervisor ? TagCache.props(this, clientReceiver), duration)
       .asInstanceOf[ActorRef]
   val pluginHandler: ActorRef = Await
-    .result(supervisor ? PluginHandler
-              .props(userRepository,
-                     jiraConfigRepository,
-                     gitlabConfigRepository,
-                     this,
-                     wsClient,
-                     reactiveMongoApi),
-            duration)
+    .result(
+      supervisor ? PluginHandler
+        .props(userRepository,
+               jiraConfigRepository,
+               gitlabConfigRepository,
+               planeConfigRepository,
+               this,
+               wsClient,
+               reactiveMongoApi),
+      duration
+    )
     .asInstanceOf[ActorRef]
 
   val loginHandler: ActorRef = Await
@@ -169,9 +173,6 @@ class DefaultSystemServices @Inject() (
 
   // initialite login handler
   LoginHandler.subscribe(loginHandler, system.eventStream)
-
-  // start pluginhandler
-  pluginHandler ! PluginHandler.Startup
 
   override def initialize(): Unit = {
 
@@ -198,6 +199,9 @@ class DefaultSystemServices @Inject() (
             .asInstanceOf[Class[InitialDataLoader]])
       Await.result(dataLoader.initializeData(supportTransaction), 1 minute)
     }
+
+    // start pluginhandler
+    pluginHandler ! PluginHandler.Startup
 
     currentOrganisationTimeBookingsView ! CurrentOrganisationTimeBookingsView.Initialize
   }

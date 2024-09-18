@@ -19,7 +19,7 @@
  * along with Lasius. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package actors.scheduler.gitlab
+package actors.scheduler.plane
 
 import actors.TagCache.TagsUpdated
 import actors.scheduler.{ServiceAuthentication, ServiceConfiguration}
@@ -33,15 +33,15 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-object GitlabTagParseWorker {
+object PlaneTagParseWorker {
   def props(wsClient: WSClient,
             systemServices: SystemServices,
             config: ServiceConfiguration,
-            settings: GitlabSettings,
-            projectSettings: GitlabProjectSettings,
+            settings: PlaneSettings,
+            projectSettings: PlaneProjectSettings,
             auth: ServiceAuthentication,
             projectId: ProjectId): Props =
-    Props(classOf[GitlabTagParseWorker],
+    Props(classOf[PlaneTagParseWorker],
           wsClient,
           systemServices,
           config,
@@ -54,21 +54,21 @@ object GitlabTagParseWorker {
   case object Parse
 }
 
-class GitlabTagParseWorker(wsClient: WSClient,
-                           systemServices: SystemServices,
-                           config: ServiceConfiguration,
-                           settings: GitlabSettings,
-                           projectSettings: GitlabProjectSettings,
-                           implicit val auth: ServiceAuthentication,
-                           projectId: ProjectId)
+class PlaneTagParseWorker(wsClient: WSClient,
+                          systemServices: SystemServices,
+                          config: ServiceConfiguration,
+                          settings: PlaneSettings,
+                          projectSettings: PlaneProjectSettings,
+                          implicit val auth: ServiceAuthentication,
+                          projectId: ProjectId)
     extends Actor
     with ActorLogging {
-  import GitlabTagParseWorker._
+  import PlaneTagParseWorker._
 
   var cancellable: Option[Cancellable] = None
-  val apiService      = new GitlabApiServiceImpl(wsClient, config)
-  val defaultParams   = s"state=opened&order_by=created_at&sort=desc"
-  val maxResults: Int = projectSettings.maxResults.getOrElse(500)
+  val apiService      = new PlaneApiServiceImpl(wsClient, config)
+  val defaultParams   = "expand=labels,state,project"
+  val maxResults: Int = projectSettings.maxResults.getOrElse(100)
 
   val receive: Receive = { case StartParsing =>
     cancellable = Some(
@@ -81,18 +81,16 @@ class GitlabTagParseWorker(wsClient: WSClient,
       .map { result =>
         // fetched all results, notify
         if (log.isDebugEnabled) {
-          val keys = result.map(i => s"#${i.iid}")
+          val keys = result.map(i => s"#${i.id}")
           log.debug(s"Parsed keys:$keys")
         }
-
         // assemble issue tags
-        val tags = result.map(toGitlabIssueTag)
-        systemServices.tagCache ! TagsUpdated[GitlabIssueTag](
-          projectSettings.gitlabProjectId,
+        val tags = result.map(toPlaneIssueTag)
+        systemServices.tagCache ! TagsUpdated[PlaneIssueTag](
+          projectSettings.planeProjectId,
           projectId,
           tags)
 
-        // handle new parsed issue keys
       }
       .andThen { case s =>
         // restart timer
@@ -103,45 +101,38 @@ class GitlabTagParseWorker(wsClient: WSClient,
       }
   }
 
-  private def toGitlabIssueTag(issue: GitlabIssue): GitlabIssueTag = {
-    // create tag for milestone
-    val milestoneTag = projectSettings.tagConfiguration.useMilestone match {
-      case false => None
-      case _     => issue.milestone.map(m => SimpleTag(TagId(m.title)))
-    }
+  private def toPlaneIssueTag(issue: PlaneIssue): PlaneIssueTag = {
 
-    val titleTag = projectSettings.tagConfiguration.useTitle match {
+    val nameTag = projectSettings.tagConfiguration.useTitle match {
       case false => None
-      case _     => Some(SimpleTag(TagId(issue.title)))
+      case _     => Some(SimpleTag(TagId(issue.name)))
     }
 
     val labelTags = projectSettings.tagConfiguration.useLabels match {
       case false => Seq()
       case _ =>
-        issue.labels
-          .filterNot(projectSettings.tagConfiguration.labelFilter.contains(_))
-          .map(l => SimpleTag(TagId(l)))
+        issue.labels match {
+          case Some(labels) =>
+            labels
+              .filterNot(l =>
+                projectSettings.tagConfiguration.labelFilter.contains(l.name))
+              .map(l => SimpleTag(TagId(l.name)))
+          case None => Seq()
+        }
     }
 
     val tags =
-      milestoneTag
-        .map { m =>
-          labelTags ++ titleTag
-            .map(t => Seq(m, t))
-            .getOrElse(Seq(m))
-        }
-        .getOrElse {
-          titleTag.map(t => labelTags :+ t).getOrElse(labelTags)
-        }
+      nameTag.map(t => labelTags :+ t).getOrElse(labelTags)
 
-    val issueLink = issue.web_url
+    val issueLink =
+      s"https://organise.tegonal.com/tegonal-intern/projects/${issue.project.id}/issues/${issue.id}"
 
-    GitlabIssueTag(
+    PlaneIssueTag(
       TagId(
-        projectSettings.projectKeyPrefix.getOrElse("") +
-          issue.references.map(_.short).getOrElse(s"#${issue.iid}")),
-      issue.project_id,
-      Some(issue.title),
+        issue.project.identifier + "-" +
+          issue.sequence_id.toString),
+      issue.project.id,
+      Some(issue.name),
       tags,
       issueLink
     )
@@ -150,10 +141,11 @@ class GitlabTagParseWorker(wsClient: WSClient,
   def loadIssues(
       offset: Int,
       max: Option[Int],
-      lastResult: Set[GitlabIssue] = Set()): Future[Set[GitlabIssue]] = {
+      lastResult: Set[PlaneIssue] = Set()): Future[Set[PlaneIssue]] = {
     val newMax = max.getOrElse(maxResults)
+
     issues(offset, newMax).flatMap { result =>
-      val concat: Set[GitlabIssue] = lastResult ++ result.issues.toSet
+      val concat: Set[PlaneIssue] = lastResult ++ result.issues.toSet
       log.debug(
         s"loaded issues: maxResults:${result.totalNumberOfItems}, fetch count${concat.size}")
       if (concat.size >= result.totalNumberOfItems.getOrElse(Int.MaxValue)) {
@@ -163,22 +155,30 @@ class GitlabTagParseWorker(wsClient: WSClient,
           .getOrElse(Int.MaxValue)) {
         // fetched all pages
         Future.successful(concat)
-      } else if (result.nextPage.isEmpty || 1 > result.nextPage.get) {
+      } else if (result.nextPage.isEmpty || !result.nextPage.get) {
         // no next page
         Future.successful(concat)
       } else {
         // load next page
-        loadIssues(result.nextPage.get, max, concat)
+        loadIssues(offset + 1, max, concat)
       }
     }
   }
 
-  def issues(offset: Int, max: Int): Future[GitlabIssuesSearchResult] = {
+  def labels(): Future[Seq[PlaneLabel]] = {
     log.debug(
-      s"Parse issues projectId=${projectId.value}, project=${projectSettings.gitlabProjectId}, offset:$offset, max:$max")
+      s"Parse label projectId=${projectId.value}, project=${projectSettings.planeProjectId}")
     val query = projectSettings.params.getOrElse(defaultParams)
     apiService
-      .findIssues(projectSettings.gitlabProjectId,
+      .getLabels(projectSettings.planeProjectId)
+  }
+
+  def issues(offset: Int, max: Int): Future[PlaneIssuesSearchResult] = {
+    log.debug(
+      s"Parse issues projectId=${projectId.value}, project=${projectSettings.planeProjectId}, offset:$offset, max:$max")
+    val query = projectSettings.params.getOrElse(defaultParams)
+    apiService
+      .findIssues(projectSettings.planeProjectId,
                   query,
                   Some(offset),
                   Some(max))
