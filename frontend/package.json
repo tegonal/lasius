@@ -43,7 +43,7 @@
     "@theme-ui/match-media": "^0.16.2",
     "axios": "^1.7.4",
     "boring-avatars": "^1.10.2",
-    "cookie": "^0.6.0",
+    "cookie": "^0.7.0",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.1",
     "framer-motion": "^11.3.29",
