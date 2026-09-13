@@ -111,7 +111,7 @@
     "eslint-plugin-react": "^7.37.5",
     "i18next-cli": "^1.50.3",
     "jsonc-eslint-parser": "^3.1.0",
-    "orval": "8.5.3",
+    "orval": "8.22.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "svgo": "^4.0.1",
