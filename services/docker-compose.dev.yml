@@ -1,7 +1,7 @@
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:8.0.15
+    image: mongo:8.3.9
     container_name: lasius-dev-db
     ports:
       - "27017:27017"
